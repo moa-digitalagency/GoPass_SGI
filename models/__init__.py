@@ -118,6 +118,27 @@ class GoPass(db.Model):
             'scan_date': self.scan_date.isoformat() if self.scan_date else None
         }
 
+class AccessLog(db.Model):
+    __tablename__ = 'access_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    pass_id = db.Column(db.Integer, db.ForeignKey('gopasses.id'))
+    validator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    validation_time = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='valid')
+
+    pass_record = db.relationship('GoPass')
+    validator = db.relationship('User')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'validation_time': self.validation_time.isoformat() if self.validation_time else None,
+            'pass_record': self.pass_record.to_dict() if self.pass_record else None,
+            'validator': self.validator.to_dict() if self.validator else None,
+            'status': self.status
+        }
+
 # Keeping these for backward compatibility if needed, or we can drop them later.
 class AuditLog(db.Model):
     __tablename__ = 'audit_logs'
