@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from services.pass_service import PassService
 from services.user_service import UserService
 from datetime import datetime, timedelta
+from models import AccessLog
+from sqlalchemy.orm import joinedload
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
@@ -12,10 +14,14 @@ def index():
     pass_stats = PassService.get_statistics()
     user_stats = UserService.get_statistics()
     
+    recent_validations = AccessLog.query.options(joinedload(AccessLog.pass_record)).order_by(
+        AccessLog.validation_time.desc()
+    ).limit(10).all()
+
     return render_template('dashboard/index.html',
         pass_stats=pass_stats,
         user_stats=user_stats,
-        recent_validations=[],
+        recent_validations=recent_validations,
         recent_passes=[],
         pass_type_stats=[],
         daily_validations=[]
