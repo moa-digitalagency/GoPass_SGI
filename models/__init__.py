@@ -47,6 +47,20 @@ class User(UserMixin, db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+class PassType(db.Model):
+    __tablename__ = 'pass_types'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    color = db.Column(db.String(20), default='#000000')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'color': self.color
+        }
+
 class Flight(db.Model):
     __tablename__ = 'flights'
 
@@ -85,10 +99,16 @@ class GoPass(db.Model):
     token = db.Column(db.String(64), unique=True, nullable=False) # The QR content (hashed/signed)
     flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
     
+    pass_number = db.Column(db.String(20), unique=True)
+
     # Passenger Details
+    holder_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     passenger_name = db.Column(db.String(100), nullable=False)
     passenger_passport = db.Column(db.String(50), nullable=False)
     
+    # Pass Type
+    pass_type_id = db.Column(db.Integer, db.ForeignKey('pass_types.id'))
+
     # Payment Details
     price = db.Column(db.Float, default=0.0)
     currency = db.Column(db.String(10), default='USD')
@@ -105,13 +125,20 @@ class GoPass(db.Model):
     
     issue_date = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Relationships
+    holder = db.relationship('User', foreign_keys=[holder_id])
+    pass_type = db.relationship('PassType')
+
     def to_dict(self):
         return {
             'id': self.id,
             'token': self.token,
+            'pass_number': self.pass_number,
             'flight': self.flight.to_dict() if self.flight else None,
+            'holder': self.holder.to_dict() if self.holder else None,
             'passenger_name': self.passenger_name,
             'passenger_passport': self.passenger_passport,
+            'pass_type': self.pass_type.to_dict() if self.pass_type else None,
             'status': self.status,
             'payment_status': self.payment_status,
             'issue_date': self.issue_date.isoformat() if self.issue_date else None,

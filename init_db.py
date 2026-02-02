@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 
 def init_database():
     from app import create_app
-    from models import db, User, Flight, GoPass
+    from models import db, User, Flight, GoPass, PassType
+    import uuid
     
     app = create_app()
     
@@ -67,6 +68,36 @@ def init_database():
             db.session.add(controller)
             print("Controller user created (username: controller, password: controller123)")
         
+        # Create Pass Types
+        if PassType.query.count() == 0:
+            print("Creating pass types...")
+            types = [
+                PassType(name='Standard', color='#3B82F6'), # Blue
+                PassType(name='VIP', color='#F59E0B'),      # Amber
+                PassType(name='Diplomatique', color='#EF4444'), # Red
+                PassType(name='Resident', color='#10B981')  # Green
+            ]
+            for t in types:
+                db.session.add(t)
+            print("Pass types created.")
+
+        # Create Sample Holder
+        holder = User.query.filter_by(username='traveler1').first()
+        if not holder:
+            print("Creating default holder user...")
+            holder = User(
+                username='traveler1',
+                email='traveler1@example.com',
+                first_name='Jean',
+                last_name='Dupont',
+                role='holder',
+                is_active=True
+            )
+            holder.set_password('traveler123')
+            db.session.add(holder)
+            db.session.commit()
+            print("Holder user created.")
+
         # Create Sample Flight
         if Flight.query.count() == 0:
             print("Creating sample flights...")
@@ -83,6 +114,30 @@ def init_database():
             )
             db.session.add(flight)
             print("Sample flight created: CAA-BU1421")
+
+        # Create Sample Passes
+        if GoPass.query.count() == 0:
+            print("Creating sample passes...")
+            flight = Flight.query.first()
+            holder = User.query.filter_by(role='holder').first()
+            standard_type = PassType.query.filter_by(name='Standard').first()
+
+            if flight and holder and standard_type:
+                for i in range(5):
+                    pass_obj = GoPass(
+                        token=f"TOKEN-{uuid.uuid4()}",
+                        pass_number=f"GP{datetime.now().year}{str(i).zfill(6)}",
+                        flight_id=flight.id,
+                        holder_id=holder.id,
+                        passenger_name=f"{holder.first_name} {holder.last_name}",
+                        passenger_passport=f"P{i}12345",
+                        pass_type_id=standard_type.id,
+                        status='valid',
+                        payment_status='paid',
+                        price=50.0
+                    )
+                    db.session.add(pass_obj)
+                print("Sample passes created.")
 
         db.session.commit()
         print("\nDatabase initialization completed successfully!")
