@@ -1,0 +1,80 @@
+{
+    "app": {
+        "name": "GO-PASS SGI-GP",
+        "title": "Système de Gestion Intégrée GO-PASS"
+    },
+    "nav": {
+        "dashboard": "Tableau de bord",
+        "passes": "Passes",
+        "users": "Utilisateurs",
+        "validation": "Validation",
+        "settings": "Paramètres",
+        "logout": "Déconnexion",
+        "profile": "Profil"
+    },
+    "auth": {
+        "login": "Connexion",
+        "logout": "Déconnexion",
+        "username": "Nom d'utilisateur",
+        "password": "Mot de passe",
+        "remember": "Se souvenir de moi",
+        "forgot": "Mot de passe oublié?"
+    },
+    "dashboard": {
+        "title": "Tableau de bord",
+        "total_passes": "Total des passes",
+        "active_passes": "Passes actifs",
+        "today_validations": "Validations aujourd'hui",
+        "total_users": "Total utilisateurs"
+    },
+    "passes": {
+        "title": "Gestion des Passes",
+        "create": "Créer un pass",
+        "number": "Numéro de pass",
+        "holder": "Titulaire",
+        "type": "Type",
+        "status": "Statut",
+        "issue_date": "Date d'émission",
+        "expiry_date": "Date d'expiration"
+    },
+    "users": {
+        "title": "Gestion des Utilisateurs",
+        "create": "Créer un utilisateur",
+        "username": "Nom d'utilisateur",
+        "email": "Email",
+        "name": "Nom",
+        "role": "Rôle",
+        "status": "Statut"
+    },
+    "validation": {
+        "title": "Validation de Pass",
+        "scan": "Scanner",
+        "manual": "Saisie manuelle",
+        "result": "Résultat"
+    },
+    "common": {
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "edit": "Modifier",
+        "view": "Voir",
+        "search": "Rechercher",
+        "filter": "Filtrer",
+        "actions": "Actions",
+        "yes": "Oui",
+        "no": "Non",
+        "confirm": "Confirmer"
+    },
+    "status": {
+        "active": "Actif",
+        "inactive": "Inactif",
+        "expired": "Expiré",
+        "suspended": "Suspendu",
+        "revoked": "Révoqué"
+    },
+    "roles": {
+        "admin": "Administrateur",
+        "agent": "Agent",
+        "holder": "Titulaire"
+    }
+}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.first_name }} {{ user.last_name }} - GO-PASS SGI-GP{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-user mr-3"></i>Details de l'Utilisateur
+        </h1>
+        <a href="{{ url_for('users.index') }}" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-2"></i>Retour
+        </a>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold mr-6">
+                        {{ user.first_name[0] }}{{ user.last_name[0] }}
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold">{{ user.first_name }} {{ user.last_name }}</h2>
+                        <p class="text-gray-500">@{{ user.username }}</p>
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-sm
+                            {% if user.role == 'admin' %}bg-purple-100 text-purple-800
+                            {% elif user.role == 'agent' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ user.role|title }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-gray-500 text-sm">Email</p>
+                        <p class="font-semibold">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Telephone</p>
+                        <p class="font-semibold">{{ user.phone or '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Cree le</p>
+                        <p class="font-semibold">{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Statut</p>
+                        {% if user.is_active %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Actif</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inactif</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex space-x-4">
+                    <a href="{{ url_for('users.edit', id=user.id) }}" 
+                        class="flex-1 text-center bg-secondary text-white py-2 rounded-lg hover:bg-blue-600 transition">
+                        <i class="fas fa-edit mr-2"></i>Modifier
+                    </a>
+                    {% if current_user.role == 'admin' and user.id != current_user.id %}
+                    <form method="POST" action="{{ url_for('users.toggle', id=user.id) }}" class="flex-1">
+                        <button type="submit" class="w-full py-2 rounded-lg transition
+                            {% if user.is_active %}bg-yellow-500 hover:bg-yellow-600{% else %}bg-green-500 hover:bg-green-600{% endif %} text-white">
+                            {% if user.is_active %}
+                            <i class="fas fa-ban mr-2"></i>Desactiver
+                            {% else %}
+                            <i class="fas fa-check mr-2"></i>Activer
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.role == 'holder' and passes %}
+            <div class="bg-white rounded-xl shadow-lg p-8 mt-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-id-card mr-2"></i>Passes de l'utilisateur
+                </h3>
+                <div class="space-y-4">
+                    {% for pass in passes %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-mono font-semibold">{{ pass.pass_number }}</p>
+                            <span class="px-2 py-1 rounded-full text-xs"
+                                style="background-color: {{ pass.pass_type.color }}20; color: {{ pass.pass_type.color }}">
+                                {{ pass.pass_type.name }}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-2 py-1 rounded-full text-xs
+                                {% if pass.status == 'active' %}bg-green-100 text-green-800
+                                {% elif pass.status == 'expired' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ pass.status|title }}
+                            </span>
+                            <p class="text-xs text-gray-500 mt-1">Exp: {{ pass.expiry_date.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <a href="{{ url_for('passes.view', id=pass.id) }}" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Actions rapides</h3>
+                {% if user.role == 'holder' %}
+                <a href="{{ url_for('passes.create') }}?holder={{ user.id }}" 
+                    class="block w-full text-center bg-accent text-white py-3 rounded-lg hover:bg-green-600 transition mb-3">
+                    <i class="fas fa-plus mr-2"></i>Creer un pass
+                </a>
+                {% endif %}
+                <a href="{{ url_for('users.edit', id=user.id) }}" 
+                    class="block w-full text-center bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-edit mr-2"></i>Modifier le profil
+                </a>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Statistiques</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Passes</span>
+                        <span class="font-bold text-lg">{{ passes|length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Passes actifs</span>
+                        <span class="font-bold text-lg text-green-600">
+                            {{ passes|selectattr('status', 'equalto', 'active')|list|length }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

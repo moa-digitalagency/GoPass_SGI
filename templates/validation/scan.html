@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Scanner QR Code - GO-PASS SGI-GP{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-camera mr-3"></i>Scanner un QR Code
+        </h1>
+        <a href="{{ url_for('validation.index') }}" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-2"></i>Retour
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <div class="text-center mb-6">
+            <p class="text-gray-600">Placez le QR code du pass devant la camera</p>
+        </div>
+        
+        <div id="scanner-container" class="relative bg-gray-900 rounded-xl overflow-hidden aspect-square max-w-md mx-auto">
+            <video id="scanner-video" class="w-full h-full object-cover"></video>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-48 h-48 border-4 border-white/50 rounded-xl"></div>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <button id="start-scanner" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-play mr-2"></i>Demarrer le Scanner
+            </button>
+            <button id="stop-scanner" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition hidden">
+                <i class="fas fa-stop mr-2"></i>Arreter
+            </button>
+        </div>
+        
+        <div class="mt-6">
+            <label class="block text-gray-700 text-sm font-semibold mb-2">Lieu (optionnel)</label>
+            <input type="text" id="scan-location"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Ex: Entree principale">
+        </div>
+    </div>
+    
+    <div id="scan-result" class="mt-8 bg-white rounded-xl shadow-lg p-8 hidden">
+        <div id="scan-result-content"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+<script>
+    const video = document.getElementById('scanner-video');
+    const startBtn = document.getElementById('start-scanner');
+    const stopBtn = document.getElementById('stop-scanner');
+    const locationInput = document.getElementById('scan-location');
+    const scanResult = document.getElementById('scan-result');
+    const scanResultContent = document.getElementById('scan-result-content');
+    
+    let codeReader = null;
+    
+    async function startScanner() {
+        try {
+            codeReader = new ZXing.BrowserQRCodeReader();
+            const devices = await codeReader.getVideoInputDevices();
+            
+            if (devices.length === 0) {
+                alert('Aucune camera detectee');
+                return;
+            }
+            
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            
+            codeReader.decodeFromVideoDevice(devices[0].deviceId, video, async (result, err) => {
+                if (result) {
+                    stopScanner();
+                    await validateScannedCode(result.text);
+                }
+            });
+        } catch (error) {
+            alert('Erreur d\'acces a la camera: ' + error.message);
+        }
+    }
+    
+    function stopScanner() {
+        if (codeReader) {
+            codeReader.reset();
+        }
+        startBtn.classList.remove('hidden');
+        stopBtn.classList.add('hidden');
+    }
+    
+    async function validateScannedCode(passNumber) {
+        try {
+            const response = await fetch('/validation/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pass_number: passNumber,
+                    location: locationInput.value
+                })
+            });
+            
+            const result = await response.json();
+            showScanResult(result);
+        } catch (error) {
+            showScanResult({ valid: false, status: 'error', message: 'Erreur de connexion' });
+        }
+    }
+    
+    function showScanResult(result) {
+        scanResult.classList.remove('hidden');
+        
+        if (result.valid) {
+            scanResultContent.innerHTML = `
+                <div class="bg-green-100 border-2 border-green-500 rounded-xl p-6 text-center">
+                    <i class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-green-800">ACCES AUTORISE</h3>
+                    ${result.pass ? `
+                        <p class="mt-4 text-lg">${result.pass.holder.first_name} ${result.pass.holder.last_name}</p>
+                        <p class="text-green-700">${result.pass.pass_type.name}</p>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            scanResultContent.innerHTML = `
+                <div class="bg-red-100 border-2 border-red-500 rounded-xl p-6 text-center">
+                    <i class="fas fa-times-circle text-6xl text-red-500 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-red-800">ACCES REFUSE</h3>
+                    <p class="mt-4 text-lg text-red-700">${result.message}</p>
+                </div>
+            `;
+        }
+        
+        setTimeout(() => {
+            scanResult.classList.add('hidden');
+            startScanner();
+        }, 3000);
+    }
+    
+    startBtn.addEventListener('click', startScanner);
+    stopBtn.addEventListener('click', stopScanner);
+</script>
+{% endblock %}

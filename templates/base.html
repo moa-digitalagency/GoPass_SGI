@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GO-PASS SGI-GP{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A8A',
+                        secondary: '#3B82F6',
+                        accent: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    {% if current_user.is_authenticated %}
+    <div class="flex">
+        <aside class="w-64 bg-primary min-h-screen fixed left-0 top-0 text-white">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-id-card-alt mr-2"></i>GO-PASS
+                </h1>
+                <p class="text-blue-200 text-sm">SGI-GP</p>
+            </div>
+            <nav class="mt-6">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if request.endpoint == 'dashboard.index' %}bg-blue-800{% endif %}">
+                    <i class="fas fa-tachometer-alt mr-3"></i>Tableau de bord
+                </a>
+                {% if current_user.role in ['admin', 'agent'] %}
+                <a href="{{ url_for('passes.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'passes' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-id-card mr-3"></i>Passes
+                </a>
+                <a href="{{ url_for('users.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'users' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-users mr-3"></i>Utilisateurs
+                </a>
+                <a href="{{ url_for('validation.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'validation' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-qrcode mr-3"></i>Validation
+                </a>
+                {% endif %}
+                {% if current_user.role == 'holder' %}
+                <a href="{{ url_for('passes.my_passes') }}" class="flex items-center px-6 py-3 hover:bg-blue-800">
+                    <i class="fas fa-id-card mr-3"></i>Mes Passes
+                </a>
+                {% endif %}
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('passes.types') }}" class="flex items-center px-6 py-3 hover:bg-blue-800">
+                    <i class="fas fa-tags mr-3"></i>Types de Pass
+                </a>
+                {% endif %}
+            </nav>
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-800">
+                <div class="flex items-center mb-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold">{{ current_user.first_name }}</p>
+                        <p class="text-xs text-blue-200">{{ current_user.role|title }}</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="{{ url_for('auth.profile') }}" class="flex-1 text-center py-2 bg-blue-800 rounded hover:bg-blue-700 text-sm">
+                        <i class="fas fa-cog mr-1"></i>Profil
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="flex-1 text-center py-2 bg-red-600 rounded hover:bg-red-500 text-sm">
+                        <i class="fas fa-sign-out-alt mr-1"></i>Quitter
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 ml-64 p-8">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="m-4 p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content_public %}{% endblock %}
+    </main>
+    {% endif %}
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

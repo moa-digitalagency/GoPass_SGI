@@ -1,0 +1,80 @@
+{
+    "app": {
+        "name": "GO-PASS SGI-GP",
+        "title": "GO-PASS Integrated Management System"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "passes": "Passes",
+        "users": "Users",
+        "validation": "Validation",
+        "settings": "Settings",
+        "logout": "Logout",
+        "profile": "Profile"
+    },
+    "auth": {
+        "login": "Login",
+        "logout": "Logout",
+        "username": "Username",
+        "password": "Password",
+        "remember": "Remember me",
+        "forgot": "Forgot password?"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "total_passes": "Total Passes",
+        "active_passes": "Active Passes",
+        "today_validations": "Today's Validations",
+        "total_users": "Total Users"
+    },
+    "passes": {
+        "title": "Pass Management",
+        "create": "Create Pass",
+        "number": "Pass Number",
+        "holder": "Holder",
+        "type": "Type",
+        "status": "Status",
+        "issue_date": "Issue Date",
+        "expiry_date": "Expiry Date"
+    },
+    "users": {
+        "title": "User Management",
+        "create": "Create User",
+        "username": "Username",
+        "email": "Email",
+        "name": "Name",
+        "role": "Role",
+        "status": "Status"
+    },
+    "validation": {
+        "title": "Pass Validation",
+        "scan": "Scan",
+        "manual": "Manual Entry",
+        "result": "Result"
+    },
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "view": "View",
+        "search": "Search",
+        "filter": "Filter",
+        "actions": "Actions",
+        "yes": "Yes",
+        "no": "No",
+        "confirm": "Confirm"
+    },
+    "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "expired": "Expired",
+        "suspended": "Suspended",
+        "revoked": "Revoked"
+    },
+    "roles": {
+        "admin": "Administrator",
+        "agent": "Agent",
+        "holder": "Holder"
+    }
+}

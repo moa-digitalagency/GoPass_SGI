@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Pass {{ pass_record.pass_number }} - GO-PASS SGI-GP{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-id-card mr-3"></i>Details du Pass
+        </h1>
+        <a href="{{ url_for('passes.index') }}" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-2"></i>Retour
+        </a>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p class="text-gray-500 text-sm">Numero de Pass</p>
+                        <h2 class="text-3xl font-mono font-bold text-primary">{{ pass_record.pass_number }}</h2>
+                    </div>
+                    <span class="px-4 py-2 rounded-full text-sm font-semibold
+                        {% if pass_record.status == 'active' %}bg-green-100 text-green-800
+                        {% elif pass_record.status == 'expired' %}bg-red-100 text-red-800
+                        {% elif pass_record.status == 'suspended' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ pass_record.status|title }}
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <p class="text-gray-500 text-sm">Titulaire</p>
+                        <p class="font-semibold">{{ pass_record.holder.first_name }} {{ pass_record.holder.last_name }}</p>
+                        <p class="text-sm text-gray-600">{{ pass_record.holder.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Type de Pass</p>
+                        <span class="inline-block px-3 py-1 rounded-full text-sm mt-1"
+                            style="background-color: {{ pass_record.pass_type.color }}20; color: {{ pass_record.pass_type.color }}">
+                            {{ pass_record.pass_type.name }}
+                        </span>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Date d'Emission</p>
+                        <p class="font-semibold">{{ pass_record.issue_date.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Date d'Expiration</p>
+                        <p class="font-semibold">{{ pass_record.expiry_date.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                </div>
+                
+                {% if pass_record.notes %}
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <p class="text-gray-500 text-sm mb-1">Notes</p>
+                    <p>{{ pass_record.notes }}</p>
+                </div>
+                {% endif %}
+                
+                {% if current_user.role in ['admin', 'agent'] %}
+                <div class="flex space-x-4">
+                    {% if pass_record.status == 'active' %}
+                    <form method="POST" action="{{ url_for('passes.suspend', id=pass_record.id) }}" class="flex-1">
+                        <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition">
+                            <i class="fas fa-pause mr-2"></i>Suspendre
+                        </button>
+                    </form>
+                    {% elif pass_record.status == 'suspended' %}
+                    <form method="POST" action="{{ url_for('passes.activate', id=pass_record.id) }}" class="flex-1">
+                        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">
+                            <i class="fas fa-play mr-2"></i>Activer
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if current_user.role == 'admin' and pass_record.status != 'revoked' %}
+                    <form method="POST" action="{{ url_for('passes.revoke', id=pass_record.id) }}" class="flex-1" 
+                        onsubmit="return confirm('Etes-vous sur de vouloir revoquer ce pass?')">
+                        <button type="submit" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
+                            <i class="fas fa-ban mr-2"></i>Revoquer
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-8 mt-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-history mr-2"></i>Historique des Validations
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-500 text-sm border-b">
+                                <th class="pb-3">Date/Heure</th>
+                                <th class="pb-3">Statut</th>
+                                <th class="pb-3">Valide par</th>
+                                <th class="pb-3">Lieu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for validation in validations %}
+                            <tr class="border-b">
+                                <td class="py-3 text-sm">{{ validation.validation_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td class="py-3">
+                                    {% if validation.status == 'granted' %}
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Accorde</span>
+                                    {% else %}
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Refuse</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-sm">{{ validation.validator.username if validation.validator else 'N/A' }}</td>
+                                <td class="py-3 text-sm">{{ validation.location or '-' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="py-4 text-center text-gray-500">Aucune validation enregistree</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Code QR</h3>
+                {% if pass_record.qr_code %}
+                <img src="{{ url_for('static', filename='uploads/qrcodes/' + pass_record.qr_code) }}" 
+                    alt="QR Code" class="mx-auto w-48 h-48 object-contain">
+                {% else %}
+                <div class="w-48 h-48 bg-gray-200 mx-auto flex items-center justify-center">
+                    <i class="fas fa-qrcode text-6xl text-gray-400"></i>
+                </div>
+                {% endif %}
+                <p class="text-sm text-gray-500 mt-4">Scannez pour valider</p>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Emis par</h3>
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white mr-4">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold">{{ pass_record.issuer.first_name }} {{ pass_record.issuer.last_name }}</p>
+                        <p class="text-sm text-gray-500">{{ pass_record.issuer.role|title }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

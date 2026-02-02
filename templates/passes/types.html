@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Types de Pass - GO-PASS SGI-GP{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">
+        <i class="fas fa-tags mr-3"></i>Types de Pass
+    </h1>
+    
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Creer un nouveau type</h2>
+        <form method="POST" action="{{ url_for('passes.create_type') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Nom</label>
+                <input type="text" name="name" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Validite (jours)</label>
+                <input type="number" name="validity_days" value="365" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Couleur</label>
+                <input type="color" name="color" value="#3B82F6"
+                    class="w-full h-10 border border-gray-300 rounded-lg cursor-pointer">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Description</label>
+                <input type="text" name="description"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div class="md:col-span-2">
+                <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Ajouter
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Couleur</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Nom</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Description</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Validite</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Statut</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for type in pass_types %}
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="w-6 h-6 rounded-full" style="background-color: {{ type.color }}"></div>
+                    </td>
+                    <td class="px-6 py-4 font-semibold">{{ type.name }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ type.description or '-' }}</td>
+                    <td class="px-6 py-4">{{ type.validity_days }} jours</td>
+                    <td class="px-6 py-4">
+                        {% if type.is_active %}
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Actif</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <form method="POST" action="{{ url_for('passes.toggle_type', id=type.id) }}" class="inline">
+                            <button type="submit" class="text-blue-600 hover:text-blue-800">
+                                {% if type.is_active %}
+                                <i class="fas fa-toggle-on"></i>
+                                {% else %}
+                                <i class="fas fa-toggle-off"></i>
+                                {% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

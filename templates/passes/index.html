@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Passes - GO-PASS SGI-GP{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">
+        <i class="fas fa-id-card mr-3"></i>Gestion des Passes
+    </h1>
+    <a href="{{ url_for('passes.create') }}" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+        <i class="fas fa-plus mr-2"></i>Nouveau Pass
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <form method="GET" action="{{ url_for('passes.index') }}" class="flex flex-wrap gap-4">
+        <div class="flex-1 min-w-64">
+            <input type="text" name="search" value="{{ search }}" placeholder="Rechercher par numero ou titulaire..."
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="w-48">
+            <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="">Tous les statuts</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Actif</option>
+                <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Expire</option>
+                <option value="suspended" {% if current_status == 'suspended' %}selected{% endif %}>Suspendu</option>
+                <option value="revoked" {% if current_status == 'revoked' %}selected{% endif %}>Revoque</option>
+            </select>
+        </div>
+        <button type="submit" class="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
+            <i class="fas fa-search mr-2"></i>Rechercher
+        </button>
+    </form>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Numero</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Titulaire</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Type</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Statut</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Expiration</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pass in passes.items %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="px-6 py-4 font-mono font-semibold">{{ pass.pass_number }}</td>
+                <td class="px-6 py-4">
+                    <div>
+                        <p class="font-semibold">{{ pass.holder.first_name }} {{ pass.holder.last_name }}</p>
+                        <p class="text-sm text-gray-500">{{ pass.holder.email }}</p>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded-full text-xs" 
+                        style="background-color: {{ pass.pass_type.color }}20; color: {{ pass.pass_type.color }}">
+                        {{ pass.pass_type.name }}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    {% if pass.status == 'active' %}
+                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Actif</span>
+                    {% elif pass.status == 'expired' %}
+                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Expire</span>
+                    {% elif pass.status == 'suspended' %}
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Suspendu</span>
+                    {% else %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Revoque</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 text-sm">{{ pass.expiry_date.strftime('%d/%m/%Y') }}</td>
+                <td class="px-6 py-4">
+                    <a href="{{ url_for('passes.view', id=pass.id) }}" class="text-blue-600 hover:text-blue-800 mr-3">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500">Aucun pass trouve</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if passes.pages > 1 %}
+    <div class="px-6 py-4 bg-gray-50 flex justify-center space-x-2">
+        {% for page_num in passes.iter_pages() %}
+            {% if page_num %}
+                <a href="{{ url_for('passes.index', page=page_num, status=current_status, search=search) }}" 
+                    class="px-4 py-2 rounded {% if page_num == passes.page %}bg-primary text-white{% else %}bg-white border hover:bg-gray-100{% endif %}">
+                    {{ page_num }}
+                </a>
+            {% else %}
+                <span class="px-4 py-2">...</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
