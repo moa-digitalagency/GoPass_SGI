@@ -1,95 +1,66 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
-from models import User, Pass, PassType, AccessLog
-from services import PassService
+from models import User, Flight, GoPass
+from services import FlightService, GoPassService
 from security import agent_required
+from datetime import datetime
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-@api_bp.route('/passes/search')
+@api_bp.route('/me')
 @login_required
-@agent_required
-def search_passes():
-    query = request.args.get('q', '')
-    if len(query) < 2:
-        return jsonify([])
-    
-    passes = Pass.query.filter(
-        Pass.pass_number.ilike(f'%{query}%')
-    ).limit(10).all()
-    
-    return jsonify([p.to_dict() for p in passes])
+def me():
+    return jsonify(current_user.to_dict())
 
-@api_bp.route('/users/search')
+@api_bp.route('/airports')
 @login_required
-@agent_required
-def search_users():
-    query = request.args.get('q', '')
-    role = request.args.get('role', '')
-    
-    if len(query) < 2:
-        return jsonify([])
-    
-    users_query = User.query.filter(
-        (User.first_name.ilike(f'%{query}%')) |
-        (User.last_name.ilike(f'%{query}%')) |
-        (User.email.ilike(f'%{query}%'))
-    )
-    
-    if role:
-        users_query = users_query.filter_by(role=role)
-    
-    users = users_query.limit(10).all()
-    
-    return jsonify([u.to_dict() for u in users])
+def get_airports():
+    # In a real app, we might have an Airport model.
+    # For now, we extract distinct airports from Flights or hardcode the RVA list.
+    # Spec mentions: FIH, FBM, GOM
+    airports = [
+        {'code': 'FIH', 'name': "N'Djili International"},
+        {'code': 'FBM', 'name': "Lubumbashi International"},
+        {'code': 'GOM', 'name': "Goma International"},
+        {'code': 'FKI', 'name': "Kisangani Bangoka"},
+    ]
+    return jsonify(airports)
 
-@api_bp.route('/holders')
+@api_bp.route('/flights')
 @login_required
-@agent_required
-def get_holders():
-    holders = User.query.filter_by(role='holder', is_active=True).all()
-    return jsonify([{
-        'id': h.id,
-        'name': f'{h.first_name} {h.last_name}',
-        'email': h.email
-    } for h in holders])
+def get_flights():
+    airport_code = request.args.get('airport_code')
+    date_str = request.args.get('date') # YYYY-MM-DD
 
-@api_bp.route('/pass-types')
-@login_required
-def get_pass_types():
-    types = PassType.query.filter_by(is_active=True).all()
-    return jsonify([t.to_dict() for t in types])
+    if not airport_code:
+        return jsonify({'error': 'Airport code required'}), 400
 
-@api_bp.route('/statistics')
-@login_required
-@agent_required
-def get_statistics():
-    stats = PassService.get_statistics()
-    return jsonify(stats)
+    date = None
+    if date_str:
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%d')
+        except:
+            pass
 
-@api_bp.route('/validate', methods=['POST'])
+    flights = FlightService.get_flights(airport_code=airport_code, date=date)
+    return jsonify([f.to_dict() for f in flights])
+
+@api_bp.route('/scan', methods=['POST'])
 @login_required
-@agent_required
-def validate():
+def scan_pass():
     data = request.get_json()
-    pass_number = data.get('pass_number', '').strip()
-    location = data.get('location', '')
+    token = data.get('token')
+    flight_id = data.get('flight_id')
+    location = data.get('location') # Airport code
     
-    result = PassService.validate_pass(
-        pass_number=pass_number,
-        validator_id=current_user.id,
-        location=location
+    if not token or not flight_id:
+        return jsonify({'error': 'Token and Flight ID required'}), 400
+
+    result = GoPassService.validate_gopass(
+        token=token,
+        flight_id=flight_id,
+        agent_id=current_user.id,
+        location=location or current_user.location
     )
     
     return jsonify(result)
-
-@api_bp.route('/recent-validations')
-@login_required
-@agent_required
-def recent_validations():
-    limit = request.args.get('limit', 10, type=int)
-    validations = AccessLog.query.order_by(
-        AccessLog.validation_time.desc()
-    ).limit(limit).all()
-    
-    return jsonify([v.to_dict() for v in validations])

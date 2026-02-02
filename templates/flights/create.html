@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Ajouter un Vol (Manuel)</h1>
+        <a href="{{ url_for('flights.index') }}" class="text-blue-600 hover:text-blue-800">
+            <i class="fas fa-arrow-left mr-1"></i> Retour
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <form method="POST">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="flight_number">
+                        Numéro de Vol
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="flight_number" name="flight_number" type="text" required placeholder="ex: CAA-BU1421">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="airline">
+                        Compagnie Aérienne
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="airline" name="airline" type="text" required placeholder="ex: CAA">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="dep_airport">
+                        Aéroport de Départ
+                    </label>
+                    <select class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="dep_airport" name="dep_airport" required>
+                        <option value="FIH">N'Djili (FIH)</option>
+                        <option value="FBM">Lubumbashi (FBM)</option>
+                        <option value="GOM">Goma (GOM)</option>
+                        <option value="FKI">Kisangani (FKI)</option>
+                        <!-- Add more -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="arr_airport">
+                        Aéroport d'Arrivée
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="arr_airport" name="arr_airport" type="text" required placeholder="ex: JNB">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="dep_time">
+                        Date/Heure Départ
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="dep_time" name="dep_time" type="datetime-local" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="arr_time">
+                        Date/Heure Arrivée (Est.)
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="arr_time" name="arr_time" type="datetime-local">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="capacity">
+                    Capacité (Passagers)
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       id="capacity" name="capacity" type="number" min="0" value="0">
+            </div>
+
+            <div class="flex items-center justify-end">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline" type="submit">
+                    Enregistrer le Vol
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
