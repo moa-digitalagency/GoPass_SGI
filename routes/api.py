@@ -4,6 +4,7 @@ from models import User, Flight, GoPass
 from services import FlightService, GoPassService
 from security import agent_required
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -64,3 +65,13 @@ def scan_pass():
     )
     
     return jsonify(result)
+
+@api_bp.route('/passes/search')
+@login_required
+def search_passes():
+    query = request.args.get('q', '')
+    passes = GoPass.query.options(joinedload(GoPass.flight)).filter(
+        GoPass.token.ilike(f'%{query}%')
+    ).limit(10).all()
+
+    return jsonify([p.to_dict() for p in passes])
