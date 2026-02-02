@@ -1,7 +1,16 @@
 from models import db, User
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class UserService:
+    _stats_cache = None
+    _stats_cache_timestamp = None
+    _CACHE_DURATION = timedelta(minutes=5)
+
+    @classmethod
+    def _invalidate_stats_cache(cls):
+        cls._stats_cache = None
+        cls._stats_cache_timestamp = None
+
     @staticmethod
     def create_user(username, email, password, first_name, last_name, phone=None, role='holder'):
         if User.query.filter_by(username=username).first():
@@ -23,6 +32,7 @@ class UserService:
         db.session.add(user)
         db.session.commit()
         
+        UserService._invalidate_stats_cache()
         return user
     
     @staticmethod
@@ -55,6 +65,7 @@ class UserService:
             user.set_password(kwargs['password'])
         
         db.session.commit()
+        UserService._invalidate_stats_cache()
         return user
     
     @staticmethod
@@ -65,6 +76,7 @@ class UserService:
         
         db.session.delete(user)
         db.session.commit()
+        UserService._invalidate_stats_cache()
         return True
     
     @staticmethod
@@ -83,16 +95,27 @@ class UserService:
     
     @staticmethod
     def get_statistics():
+        now = datetime.now()
+        if (UserService._stats_cache is not None and
+            UserService._stats_cache_timestamp is not None and
+            now - UserService._stats_cache_timestamp < UserService._CACHE_DURATION):
+            return UserService._stats_cache.copy()
+
         total_users = User.query.count()
         admins = User.query.filter_by(role='admin').count()
         agents = User.query.filter_by(role='agent').count()
         holders = User.query.filter_by(role='holder').count()
         active_users = User.query.filter_by(is_active=True).count()
         
-        return {
+        stats = {
             'total_users': total_users,
             'admins': admins,
             'agents': agents,
             'holders': holders,
             'active_users': active_users
         }
+
+        UserService._stats_cache = stats
+        UserService._stats_cache_timestamp = now
+
+        return stats.copy()
