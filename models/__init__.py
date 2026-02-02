@@ -47,6 +47,24 @@ class User(UserMixin, db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+class PassType(db.Model):
+    __tablename__ = 'pass_types'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    color = db.Column(db.String(20), default='#000000')
+    is_active = db.Column(db.Boolean, default=True)
+    price = db.Column(db.Float, default=0.0)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'color': self.color,
+            'is_active': self.is_active,
+            'price': self.price
+        }
+
 class Flight(db.Model):
     __tablename__ = 'flights'
 
@@ -84,6 +102,11 @@ class GoPass(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(64), unique=True, nullable=False) # The QR content (hashed/signed)
     flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
+    type_id = db.Column(db.Integer, db.ForeignKey('pass_types.id'))
+    holder_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    pass_type = db.relationship('PassType')
+    holder = db.relationship('User', foreign_keys=[holder_id])
     
     # Passenger Details
     passenger_name = db.Column(db.String(100), nullable=False)
