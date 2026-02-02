@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Gestion des Vols</h1>
+    <div class="space-x-2">
+        <a href="{{ url_for('flights.sync', airport='FIH') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-sync mr-2"></i>Sync API (FIH)
+        </a>
+        <a href="{{ url_for('flights.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-plus mr-2"></i>Ajouter Vol Manuel
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow mb-6 p-4">
+    <form class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-sm font-bold mb-1">Aéroport Départ</label>
+            <select name="airport_code" class="border rounded p-2">
+                <option value="">Tous</option>
+                <option value="FIH" {% if airport_code == 'FIH' %}selected{% endif %}>N'Djili (FIH)</option>
+                <option value="FBM" {% if airport_code == 'FBM' %}selected{% endif %}>Lubumbashi (FBM)</option>
+                <option value="GOM" {% if airport_code == 'GOM' %}selected{% endif %}>Goma (GOM)</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-bold mb-1">Date</label>
+            <input type="date" name="date" value="{{ date }}" class="border rounded p-2">
+        </div>
+        <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+            Filtrer
+        </button>
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vol</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Compagnie</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itinéraire</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for flight in flights.items %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap font-bold">{{ flight.flight_number }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ flight.airline }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {{ flight.departure_airport }} <i class="fas fa-arrow-right mx-1 text-gray-400"></i> {{ flight.arrival_airport }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {{ flight.departure_time|format_datetime }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                        {% if flight.status == 'scheduled' %}bg-blue-100 text-blue-800
+                        {% elif flight.status == 'active' %}bg-green-100 text-green-800
+                        {% elif flight.status == 'landed' %}bg-gray-100 text-gray-800
+                        {% elif flight.status == 'cancelled' %}bg-red-100 text-red-800
+                        {% endif %}">
+                        {{ flight.status }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {% if flight.source == 'api' %}
+                    <span class="text-blue-600"><i class="fas fa-cloud mr-1"></i>API</span>
+                    {% else %}
+                    <span class="text-orange-600"><i class="fas fa-user mr-1"></i>Manuel</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="{{ url_for('flights.view', id=flight.id) }}" class="text-blue-600 hover:text-blue-900">Voir</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-gray-500">Aucun vol trouvé</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if flights.pages > 1 %}
+    <div class="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if flights.has_prev %}
+            <a href="{{ url_for('flights.index', page=flights.prev_num, airport_code=airport_code, date=date) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Précédent
+            </a>
+            {% endif %}
+            {% if flights.has_next %}
+            <a href="{{ url_for('flights.index', page=flights.next_num, airport_code=airport_code, date=date) }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Suivant
+            </a>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Affichage de <span class="font-medium">{{ flights.items|length }}</span> sur <span class="font-medium">{{ flights.total }}</span> résultats
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% for page_num in flights.iter_pages() %}
+                        {% if page_num %}
+                            {% if flights.page == page_num %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                {{ page_num }}
+                            </span>
+                            {% else %}
+                            <a href="{{ url_for('flights.index', page=page_num, airport_code=airport_code, date=date) }}" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ page_num }}
+                            </a>
+                            {% endif %}
+                        {% else %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                        {% endif %}
+                    {% endfor %}
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

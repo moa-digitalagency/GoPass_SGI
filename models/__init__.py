@@ -17,13 +17,14 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     phone = db.Column(db.String(20))
-    role = db.Column(db.String(20), default='holder')  # admin, agent, holder
+    role = db.Column(db.String(20), default='holder')  # admin, agent, holder, controller
+    location = db.Column(db.String(50)) # Assigned airport code e.g. FIH
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    passes = db.relationship('Pass', backref='holder', lazy='dynamic', foreign_keys='Pass.holder_id')
-    issued_passes = db.relationship('Pass', backref='issuer', lazy='dynamic', foreign_keys='Pass.issued_by')
+    # Relationships
+    scanned_gopasses = db.relationship('GoPass', backref='scanner', lazy='dynamic', foreign_keys='GoPass.scanned_by')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -41,89 +42,83 @@ class User(UserMixin, db.Model):
             'last_name': self.last_name,
             'phone': self.phone,
             'role': self.role,
+            'location': self.location,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
-class PassType(db.Model):
-    __tablename__ = 'pass_types'
-    
+class Flight(db.Model):
+    __tablename__ = 'flights'
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    validity_days = db.Column(db.Integer, default=365)
-    color = db.Column(db.String(7), default='#3B82F6')
-    is_active = db.Column(db.Boolean, default=True)
+    flight_number = db.Column(db.String(20), nullable=False) # e.g. CAA-BU1421
+    airline = db.Column(db.String(100), nullable=False)
+    departure_airport = db.Column(db.String(10), nullable=False)
+    arrival_airport = db.Column(db.String(10), nullable=False)
+    departure_time = db.Column(db.DateTime, nullable=False)
+    arrival_time = db.Column(db.DateTime)
+    status = db.Column(db.String(20), default='scheduled') # scheduled, active, landed, cancelled
+    source = db.Column(db.String(20), default='manual') # api, manual
+    capacity = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    passes = db.relationship('Pass', backref='pass_type', lazy='dynamic')
-    
+
+    gopasses = db.relationship('GoPass', backref='flight', lazy='dynamic')
+
     def to_dict(self):
         return {
             'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'validity_days': self.validity_days,
-            'color': self.color,
-            'is_active': self.is_active
+            'flight_number': self.flight_number,
+            'airline': self.airline,
+            'departure_airport': self.departure_airport,
+            'arrival_airport': self.arrival_airport,
+            'departure_time': self.departure_time.isoformat() if self.departure_time else None,
+            'arrival_time': self.arrival_time.isoformat() if self.arrival_time else None,
+            'status': self.status,
+            'source': self.source,
+            'capacity': self.capacity
         }
 
-class Pass(db.Model):
-    __tablename__ = 'passes'
-    
+class GoPass(db.Model):
+    __tablename__ = 'gopasses'
+
     id = db.Column(db.Integer, primary_key=True)
-    pass_number = db.Column(db.String(20), unique=True, nullable=False)
-    qr_code = db.Column(db.String(255))
-    holder_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    type_id = db.Column(db.Integer, db.ForeignKey('pass_types.id'), nullable=False)
-    issued_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token = db.Column(db.String(64), unique=True, nullable=False) # The QR content (hashed/signed)
+    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
+    
+    # Passenger Details
+    passenger_name = db.Column(db.String(100), nullable=False)
+    passenger_passport = db.Column(db.String(50), nullable=False)
+    
+    # Payment Details
+    price = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(10), default='USD')
+    payment_status = db.Column(db.String(20), default='pending') # pending, paid
+    payment_ref = db.Column(db.String(100))
+    
+    # Usage Status
+    status = db.Column(db.String(20), default='valid') # valid, consumed, expired, cancelled
+
+    # Scan Details
+    scanned_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    scan_date = db.Column(db.DateTime)
+    scan_location = db.Column(db.String(50))
+    
     issue_date = db.Column(db.DateTime, default=datetime.utcnow)
-    expiry_date = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String(20), default='active')  # active, expired, suspended, revoked
-    notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    validations = db.relationship('AccessLog', backref='pass_record', lazy='dynamic')
     
     def to_dict(self):
         return {
             'id': self.id,
-            'pass_number': self.pass_number,
-            'qr_code': self.qr_code,
-            'holder': self.holder.to_dict() if self.holder else None,
-            'pass_type': self.pass_type.to_dict() if self.pass_type else None,
+            'token': self.token,
+            'flight': self.flight.to_dict() if self.flight else None,
+            'passenger_name': self.passenger_name,
+            'passenger_passport': self.passenger_passport,
+            'status': self.status,
+            'payment_status': self.payment_status,
             'issue_date': self.issue_date.isoformat() if self.issue_date else None,
-            'expiry_date': self.expiry_date.isoformat() if self.expiry_date else None,
-            'status': self.status,
-            'notes': self.notes
+            'scan_date': self.scan_date.isoformat() if self.scan_date else None
         }
 
-class AccessLog(db.Model):
-    __tablename__ = 'access_logs'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    pass_id = db.Column(db.Integer, db.ForeignKey('passes.id'), nullable=False)
-    validated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    validation_time = db.Column(db.DateTime, default=datetime.utcnow)
-    location = db.Column(db.String(100))
-    status = db.Column(db.String(20))  # granted, denied
-    reason = db.Column(db.String(255))
-    
-    validator = db.relationship('User', foreign_keys=[validated_by])
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'pass_id': self.pass_id,
-            'pass_number': self.pass_record.pass_number if self.pass_record else None,
-            'validated_by': self.validator.username if self.validator else None,
-            'validation_time': self.validation_time.isoformat() if self.validation_time else None,
-            'location': self.location,
-            'status': self.status,
-            'reason': self.reason
-        }
-
+# Keeping these for backward compatibility if needed, or we can drop them later.
 class AuditLog(db.Model):
     __tablename__ = 'audit_logs'
     

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 def init_database():
     from app import create_app
-    from models import db, User, PassType
+    from models import db, User, Flight, GoPass
     
     app = create_app()
     
@@ -19,6 +19,7 @@ def init_database():
         db.create_all()
         print("Tables created successfully!")
         
+        # Create Default Users
         admin = User.query.filter_by(username='admin').first()
         if not admin:
             print("Creating default admin user...")
@@ -41,55 +42,50 @@ def init_database():
                 username='agent',
                 email='agent@gopass.local',
                 first_name='Agent',
-                last_name='Test',
+                last_name='Percepteur',
                 role='agent',
+                location='FIH',
                 is_active=True
             )
             agent.set_password('agent123')
             db.session.add(agent)
             print("Agent user created (username: agent, password: agent123)")
+
+        controller = User.query.filter_by(username='controller').first()
+        if not controller:
+            print("Creating default controller user...")
+            controller = User(
+                username='controller',
+                email='controller@gopass.local',
+                first_name='Agent',
+                last_name='Contrôleur',
+                role='controller',
+                location='FIH',
+                is_active=True
+            )
+            controller.set_password('controller123')
+            db.session.add(controller)
+            print("Controller user created (username: controller, password: controller123)")
         
-        if PassType.query.count() == 0:
-            print("Creating default pass types...")
-            pass_types = [
-                PassType(
-                    name='Pass Standard',
-                    description='Pass d\'accès standard valide pour 1 an',
-                    validity_days=365,
-                    color='#3B82F6',
-                    is_active=True
-                ),
-                PassType(
-                    name='Pass VIP',
-                    description='Pass d\'accès VIP avec privilèges étendus',
-                    validity_days=365,
-                    color='#F59E0B',
-                    is_active=True
-                ),
-                PassType(
-                    name='Pass Temporaire',
-                    description='Pass d\'accès temporaire valide pour 30 jours',
-                    validity_days=30,
-                    color='#10B981',
-                    is_active=True
-                ),
-                PassType(
-                    name='Pass Visiteur',
-                    description='Pass d\'accès visiteur valide pour 1 jour',
-                    validity_days=1,
-                    color='#8B5CF6',
-                    is_active=True
-                )
-            ]
-            for pt in pass_types:
-                db.session.add(pt)
-            print(f"Created {len(pass_types)} pass types")
-        
+        # Create Sample Flight
+        if Flight.query.count() == 0:
+            print("Creating sample flights...")
+            flight = Flight(
+                flight_number='CAA-BU1421',
+                airline='Compagnie Africaine d\'Aviation',
+                departure_airport='FIH',
+                arrival_airport='FBM',
+                departure_time=datetime.now() + timedelta(days=1),
+                arrival_time=datetime.now() + timedelta(days=1, hours=2),
+                status='scheduled',
+                source='manual',
+                capacity=150
+            )
+            db.session.add(flight)
+            print("Sample flight created: CAA-BU1421")
+
         db.session.commit()
         print("\nDatabase initialization completed successfully!")
-        print("\nDefault credentials:")
-        print("  Admin: username=admin, password=admin123")
-        print("  Agent: username=agent, password=agent123")
 
 if __name__ == '__main__':
     init_database()

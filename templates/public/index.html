@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content_public %}
+<div class="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex flex-col justify-center items-center text-white px-4">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl md:text-6xl font-bold mb-4">E-GoPass RDC</h1>
+        <p class="text-xl md:text-2xl text-blue-200">Redevance de Développement des Infrastructures Aéroportuaires (IDEF)</p>
+        <p class="mt-2">Payez votre redevance aéroportuaire en toute simplicité et sécurité.</p>
+    </div>
+
+    <div class="bg-white text-gray-800 rounded-lg shadow-2xl p-8 max-w-4xl w-full">
+        <h2 class="text-2xl font-semibold mb-6 border-b pb-2 text-blue-800">Rechercher votre vol</h2>
+
+        <form action="{{ url_for('public.search') }}" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="date">
+                        Date de départ
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                           id="date" name="date" type="date" required
+                           min="{{ now|format_date }}">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="flight_number">
+                        Numéro de vol (Optionnel)
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                           id="flight_number" name="flight_number" type="text" placeholder="ex: AF123, BU1421">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:-translate-y-1" type="submit">
+                    <i class="fas fa-search mr-2"></i> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-5xl">
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <div class="text-4xl mb-4 text-yellow-400"><i class="fas fa-search"></i></div>
+            <h3 class="text-xl font-bold mb-2">1. Rechercher</h3>
+            <p class="text-blue-100">Trouvez votre vol en entrant la date et le numéro.</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <div class="text-4xl mb-4 text-green-400"><i class="fas fa-credit-card"></i></div>
+            <h3 class="text-xl font-bold mb-2">2. Payer</h3>
+            <p class="text-blue-100">Réglez par Mobile Money ou Carte Bancaire.</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6">
+            <div class="text-4xl mb-4 text-red-400"><i class="fas fa-qrcode"></i></div>
+            <h3 class="text-xl font-bold mb-2">3. Scanner</h3>
+            <p class="text-blue-100">Recevez votre QR Code et présentez-le à l'aéroport.</p>
+        </div>
+    </div>
+
+    <div class="mt-8 text-blue-300 text-sm">
+        <a href="{{ url_for('auth.login') }}" class="hover:text-white underline">Accès Agent / Contrôleur</a>
+    </div>
+</div>
+
+<script>
+    // Set min date to today
+    document.getElementById('date').min = new Date().toISOString().split("T")[0];
+</script>
+{% endblock %}

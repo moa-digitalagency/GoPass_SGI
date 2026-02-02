@@ -34,17 +34,22 @@ def create_app(config_name=None):
     app.jinja_env.filters['status_label'] = get_status_label
     app.jinja_env.filters['role_label'] = get_role_label
     
-    from routes import auth_bp, dashboard_bp, passes_bp, users_bp, validation_bp, api_bp
+    from routes.auth import auth_bp
+    from routes.dashboard import dashboard_bp
+    from routes.users import users_bp
+    from routes.api import api_bp
+    from routes.public import public_bp
+    from routes.flights import flights_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
-    app.register_blueprint(passes_bp)
     app.register_blueprint(users_bp)
-    app.register_blueprint(validation_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(public_bp) # Mount at root
+    app.register_blueprint(flights_bp)
     
-    @app.route('/')
-    def index():
+    @app.route('/login-check')
+    def login_check():
         if current_user.is_authenticated:
             return redirect(url_for('dashboard.index'))
         return redirect(url_for('auth.login'))
