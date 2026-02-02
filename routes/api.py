@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
-from models import User, Flight, GoPass
+from models import User, Flight, GoPass, AccessLog
 from services import FlightService, GoPassService
 from security import agent_required
 from datetime import datetime
@@ -75,3 +75,16 @@ def search_passes():
     ).limit(10).all()
 
     return jsonify([p.to_dict() for p in passes])
+
+@api_bp.route('/validations/recent')
+@login_required
+def recent_validations():
+    limit = request.args.get('limit', 10, type=int)
+    validations = AccessLog.query.options(
+        joinedload(AccessLog.pass_record).joinedload(GoPass.flight),
+        joinedload(AccessLog.validator)
+    ).order_by(
+        AccessLog.validation_time.desc()
+    ).limit(limit).all()
+
+    return jsonify([v.to_dict() for v in validations])
