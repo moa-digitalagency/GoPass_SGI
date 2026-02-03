@@ -17,49 +17,49 @@
 
 <!-- KPI Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">{{ t('dashboard.total_passes') }}</p>
-                <h3 class="text-3xl font-bold text-gray-800">{{ pass_stats.total_passes }}</h3>
+                <p class="text-gray-500 text-sm font-bold uppercase tracking-wide">{{ t('dashboard.total_passes') }}</p>
+                <h3 class="text-3xl font-black text-gray-900 mt-1">{{ pass_stats.total_passes }}</h3>
             </div>
-            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center shadow-sm">
                 <i class="fas fa-id-card text-2xl text-blue-600"></i>
             </div>
         </div>
     </div>
     
-    <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">{{ t('dashboard.active_passes') }}</p>
-                <h3 class="text-3xl font-bold text-green-600">{{ pass_stats.active_passes }}</h3>
+                <p class="text-gray-500 text-sm font-bold uppercase tracking-wide">{{ t('dashboard.active_passes') }}</p>
+                <h3 class="text-3xl font-black text-green-600 mt-1">{{ pass_stats.active_passes }}</h3>
             </div>
-            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center shadow-sm">
                 <i class="fas fa-check-circle text-2xl text-green-600"></i>
             </div>
         </div>
     </div>
     
-    <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">{{ t('dashboard.today_validations') }}</p>
-                <h3 class="text-3xl font-bold text-purple-600">{{ pass_stats.today_validations }}</h3>
+                <p class="text-gray-500 text-sm font-bold uppercase tracking-wide">{{ t('dashboard.today_validations') }}</p>
+                <h3 class="text-3xl font-black text-purple-600 mt-1">{{ pass_stats.today_validations }}</h3>
             </div>
-            <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center shadow-sm">
                 <i class="fas fa-qrcode text-2xl text-purple-600"></i>
             </div>
         </div>
     </div>
     
-    <div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="bg-white rounded-3xl shadow-lg p-6 border border-gray-100">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">{{ t('dashboard.total_users') }}</p>
-                <h3 class="text-3xl font-bold text-orange-600">{{ user_stats.total_users }}</h3>
+                <p class="text-gray-500 text-sm font-bold uppercase tracking-wide">{{ t('dashboard.total_users') }}</p>
+                <h3 class="text-3xl font-black text-orange-600 mt-1">{{ user_stats.total_users }}</h3>
             </div>
-            <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center shadow-sm">
                 <i class="fas fa-users text-2xl text-orange-600"></i>
             </div>
         </div>
@@ -69,18 +69,24 @@
 <!-- Intelligence Décisionnelle Charts -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
     <!-- Gap Analysis Chart -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-balance-scale mr-2"></i>{{ t('dashboard.audit_chart_title') }}
-        </h3>
+    <div class="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
+        <div class="flex items-center gap-3 mb-6">
+             <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                <i class="fas fa-balance-scale"></i>
+             </div>
+             <h3 class="text-lg font-bold text-gray-900">{{ t('dashboard.audit_chart_title') }}</h3>
+        </div>
         <canvas id="auditChart"></canvas>
     </div>
 
     <!-- Financial Pie Chart -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-chart-pie mr-2"></i>{{ t('dashboard.revenue_chart_title') }}
-        </h3>
+    <div class="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
+         <div class="flex items-center gap-3 mb-6">
+             <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                <i class="fas fa-chart-pie"></i>
+             </div>
+             <h3 class="text-lg font-bold text-gray-900">{{ t('dashboard.revenue_chart_title') }}</h3>
+        </div>
         <div class="h-64 flex justify-center">
             <canvas id="revenueChart"></canvas>
         </div>
@@ -89,9 +95,9 @@
 
 <!-- Recent Logs (Consolidated) -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-history mr-2"></i>{{ t('dashboard.recent_validations') }}
+    <div class="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <i class="fas fa-history text-gray-400"></i>{{ t('dashboard.recent_validations') }}
         </h3>
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -125,9 +131,9 @@
         </div>
     </div>
     
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-id-card mr-2"></i>{{ t('dashboard.recent_passes') }}
+    <div class="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <i class="fas fa-id-card text-gray-400"></i>{{ t('dashboard.recent_passes') }}
         </h3>
         <div class="space-y-4">
             {% for pass in recent_passes %}
