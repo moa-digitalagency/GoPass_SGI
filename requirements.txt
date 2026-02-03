@@ -21,3 +21,4 @@ werkzeug
 reportlab
 requests
 openpyxl==3.1.5
+stripe

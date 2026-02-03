@@ -1,11 +1,14 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_login import login_required, current_user
-from models import User, Flight, GoPass, AccessLog
+from models import User, Flight, GoPass, AccessLog, AppConfig, PaymentGateway, db
 from services import FlightService, GoPassService, FinanceService
 from security import agent_required, admin_required
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 import os
+from werkzeug.utils import secure_filename
+import stripe
+import json
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -167,3 +170,176 @@ def upload_manifest():
         return jsonify({'message': 'Manifest uploaded', 'passenger_count': count})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/settings/upload-logo', methods=['POST'])
+@login_required
+def upload_logo():
+    if current_user.role not in ['admin', 'tech']:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    if 'logo' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['logo']
+    key = request.form.get('key') # e.g., 'logo_rva_url' or 'logo_gopass_url'
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if not key:
+        return jsonify({'error': 'Key required'}), 400
+
+    if file:
+        filename = secure_filename(f"uploaded_{key}_{file.filename}")
+        save_path = os.path.join(current_app.static_folder, 'img', filename)
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        file.save(save_path)
+
+        # Update AppConfig
+        url_path = f"/static/img/{filename}" # Assuming static route maps there.
+
+        config_entry = AppConfig.query.get(key)
+        if not config_entry:
+            config_entry = AppConfig(key=key)
+            db.session.add(config_entry)
+
+        config_entry.value = url_path
+        config_entry.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({'message': 'Logo uploaded', 'url': url_path})
+
+@api_bp.route('/settings/public')
+def public_settings():
+    # fetch logos
+    rva = AppConfig.query.get('logo_rva_url')
+    gopass = AppConfig.query.get('logo_gopass_url')
+
+    # fetch stripe status
+    stripe_gw = PaymentGateway.query.filter_by(provider='STRIPE').first()
+    stripe_enabled = stripe_gw.is_active if stripe_gw else False
+
+    return jsonify({
+        'rva_logo': rva.value if rva else None,
+        'gopass_logo': gopass.value if gopass else None,
+        'stripe_enabled': stripe_enabled
+    })
+
+@api_bp.route('/payment/toggle/<provider>', methods=['POST'])
+@login_required
+def toggle_payment_provider(provider):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    gateway = PaymentGateway.query.filter_by(provider=provider).first()
+    if not gateway:
+        return jsonify({'error': 'Provider not found'}), 404
+
+    # Toggle
+    gateway.is_active = not gateway.is_active
+    db.session.commit()
+
+    return jsonify({'message': f'{provider} is now {"active" if gateway.is_active else "inactive"}', 'is_active': gateway.is_active})
+
+@api_bp.route('/payment/create-intent', methods=['POST'])
+def create_payment_intent():
+    # Check if Stripe is active
+    stripe_gw = PaymentGateway.query.filter_by(provider='STRIPE').first()
+    if not stripe_gw or not stripe_gw.is_active:
+        return jsonify({'error': 'Service désactivé'}), 403
+
+    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+    if not stripe.api_key:
+         return jsonify({'error': 'Stripe configuration error'}), 500
+
+    data = request.get_json()
+    try:
+        flight_id = data.get('flight_id')
+        passenger_name = data.get('passenger_name')
+        try:
+            quantity = int(data.get('quantity', 1))
+        except:
+            quantity = 1
+
+        # Calculate amount server-side
+        # Default price 50 USD if not found
+        price_conf = AppConfig.query.get('idef_price_int')
+        price = float(price_conf.value) if price_conf else 50.0
+
+        # Amount in cents
+        amount = int(price * quantity * 100)
+        currency = 'usd'
+
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency=currency,
+            metadata={
+                'flight_id': flight_id,
+                'passenger_name': passenger_name,
+                'quantity': quantity,
+                # storing passport in metadata if provided
+                'passport': data.get('passport', 'UNKNOWN')
+            }
+        )
+        return jsonify({
+            'clientSecret': intent['client_secret']
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@api_bp.route('/payment/stripe-webhook', methods=['POST'])
+def stripe_webhook():
+    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+    endpoint_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+
+    event = None
+
+    try:
+        if endpoint_secret and sig_header:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        else:
+            # If no signature verification is set up or header missing (dev), just parse
+            # Warning: In prod, always verify signature.
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+    except ValueError as e:
+        return 'Invalid payload', 400
+    except stripe.error.SignatureVerificationError as e:
+        return 'Invalid signature', 400
+
+    if event['type'] == 'payment_intent.succeeded':
+        intent = event['data']['object']
+        metadata = intent.get('metadata', {})
+
+        flight_id = metadata.get('flight_id')
+        passenger_name = metadata.get('passenger_name')
+        try:
+            quantity = int(metadata.get('quantity', 1))
+        except:
+            quantity = 1
+        passport = metadata.get('passport', 'UNKNOWN')
+
+        for i in range(quantity):
+            gopass = GoPassService.create_gopass(
+                flight_id=flight_id,
+                passenger_name=passenger_name,
+                passenger_passport=passport,
+                payment_method='STRIPE',
+                payment_ref=intent['id'],
+                sales_channel='web'
+            )
+
+            # Generate PDF
+            pdf_bytes = GoPassService.generate_pdf_bytes(gopass)
+
+            # Send Email (Stub)
+            print(f"STUB: Sending email to customer for Ticket {gopass.pass_number}")
+
+    return jsonify(success=True)
