@@ -57,6 +57,26 @@ def check_and_update_schema(db, app):
                         print(f"Successfully added column '{col}' to '{table}'.")
                     except Exception as e:
                         print(f"Failed to add column '{col}' to '{table}': {e}")
+    # Check for index on validation_time
+    if 'access_logs' in existing_tables:
+        indexes = inspector.get_indexes('access_logs')
+        has_index = False
+        for idx in indexes:
+            if 'validation_time' in idx['column_names']:
+                has_index = True
+                break
+
+        if not has_index:
+            print("Creating index on access_logs.validation_time...")
+            try:
+                with db.engine.connect() as conn:
+                    # Generic SQL, should work for SQLite and Postgres
+                    conn.execute(text("CREATE INDEX ix_access_logs_validation_time ON access_logs (validation_time)"))
+                    conn.commit()
+                print("Index created.")
+            except Exception as e:
+                print(f"Failed to create index: {e}")
+
     print("Schema check completed.")
 
 def init_database():

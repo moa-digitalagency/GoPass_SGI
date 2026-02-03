@@ -151,7 +151,7 @@ class AccessLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     pass_id = db.Column(db.Integer, db.ForeignKey('gopasses.id'))
     validator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    validation_time = db.Column(db.DateTime, default=datetime.utcnow)
+    validation_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     status = db.Column(db.String(20), default='valid')
 
     pass_record = db.relationship('GoPass')
