@@ -75,7 +75,10 @@
                     // Create Intent
                     const intentRes = await fetch('/api/payment/create-intent', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': "{{ csrf_token() }}"
+                        },
                         body: JSON.stringify({
                             flight_id: "{{ flight.id }}",
                             passenger_name: passengerName,
@@ -175,6 +178,7 @@
                 </div>
 
                 <form method="POST" class="space-y-6" id="checkout-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">{{ t('public_buy.passenger_info') }}</h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

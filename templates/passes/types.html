@@ -19,6 +19,7 @@
     <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Creer un nouveau type</h2>
         <form method="POST" action="{{ url_for('passes.create_type') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">Nom</label>
                 <input type="text" name="name" required
@@ -77,6 +78,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <form method="POST" action="{{ url_for('passes.toggle_type', id=type.id) }}" class="inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="text-blue-600 hover:text-blue-800">
                                 {% if type.is_active %}
                                 <i class="fas fa-toggle-on"></i>

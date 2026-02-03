@@ -17,6 +17,7 @@
 
 <div class="bg-white rounded-lg shadow-md overflow-hidden">
     <form method="POST" action="{{ url_for('settings.tariffs') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>

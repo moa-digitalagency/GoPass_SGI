@@ -72,12 +72,14 @@
                 <div class="flex space-x-4">
                     {% if pass_record.status == 'active' %}
                     <form method="POST" action="{{ url_for('passes.suspend', id=pass_record.id) }}" class="flex-1">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition">
                             <i class="fas fa-pause mr-2"></i>Suspendre
                         </button>
                     </form>
                     {% elif pass_record.status == 'suspended' %}
                     <form method="POST" action="{{ url_for('passes.activate', id=pass_record.id) }}" class="flex-1">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">
                             <i class="fas fa-play mr-2"></i>Activer
                         </button>
@@ -86,6 +88,7 @@
                     {% if current_user.role == 'admin' and pass_record.status != 'revoked' %}
                     <form method="POST" action="{{ url_for('passes.revoke', id=pass_record.id) }}" class="flex-1" 
                         onsubmit="return confirm('Etes-vous sur de vouloir revoquer ce pass?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
                             <i class="fas fa-ban mr-2"></i>Revoquer
                         </button>

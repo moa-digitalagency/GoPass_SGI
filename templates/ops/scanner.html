@@ -241,7 +241,10 @@
             try {
                 const response = await fetch('/api/scan', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': "{{ csrf_token() }}"
+                    },
                     body: JSON.stringify({
                         token: token,
                         flight_id: currentFlightId,
@@ -390,7 +393,10 @@
                 try {
                     await fetch('/api/scan', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': "{{ csrf_token() }}"
+                        },
                         body: JSON.stringify({
                             token: scan.token,
                             flight_id: scan.flight_id,
