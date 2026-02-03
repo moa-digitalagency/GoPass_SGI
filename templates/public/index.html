@@ -9,64 +9,133 @@
 {% extends "base.html" %}
 
 {% block content_public %}
-<div class="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex flex-col justify-center items-center text-white px-4">
-    <div class="text-center mb-10">
-        <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ t('global.app_name') }}</h1>
-        <p class="text-xl md:text-2xl text-blue-200">{{ t('public_buy.subtitle') }}</p>
-        <p class="mt-2">{{ t('public_buy.description') }}</p>
-    </div>
+<div class="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-800">
 
-    <div class="bg-white text-gray-800 rounded-lg shadow-2xl p-8 max-w-4xl w-full">
-        <h2 class="text-2xl font-semibold mb-6 border-b pb-2 text-blue-800">{{ t('public_buy.step_1') }}</h2>
-
-        <form action="{{ url_for('public.search') }}" method="POST" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="date">
-                        {{ t('public_buy.date') }}
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                           id="date" name="date" type="date" required
-                           min="{{ now|format_date }}">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center gap-3">
+                    <img class="h-10 w-auto" src="{{ url_for('static', filename='img/logo_gopass.png') }}" alt="GoPass Logo">
+                    <span class="font-bold text-xl text-blue-900 tracking-tight">{{ t('global.app_name') }}</span>
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="flight_number">
-                        {{ t('public_buy.flight_number') }}
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
-                           id="flight_number" name="flight_number" type="text" placeholder="{{ t('public_buy.flight_placeholder') }}">
+                    <a href="{{ url_for('auth.login') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <i class="fas fa-sign-in-alt mr-2"></i> {{ t('public_buy.agent_access') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="flex-grow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-blue-900 mb-6 tracking-tight">
+                    {{ t('global.app_name') }}
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-500 font-light">
+                    {{ t('public_buy.subtitle') }}
+                </p>
+                <p class="mt-4 text-gray-600">
+                    {{ t('public_buy.description') }}
+                </p>
+            </div>
+
+            <!-- Search Card -->
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
+                <div class="p-8 md:p-12">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-8 flex items-center">
+                        <span class="bg-blue-100 text-blue-700 rounded-full p-2 mr-3 text-sm">
+                            <i class="fas fa-plane-departure"></i>
+                        </span>
+                        {{ t('public_buy.step_1') }}
+                    </h2>
+
+                    <form action="{{ url_for('public.search') }}" method="POST" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" for="date">
+                                    {{ t('public_buy.date') }}
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-calendar text-gray-400"></i>
+                                    </div>
+                                    <input class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow shadow-sm"
+                                           id="date" name="date" type="date" required
+                                           min="{{ now|format_date }}">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2" for="flight_number">
+                                    {{ t('public_buy.flight_number') }}
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-ticket-alt text-gray-400"></i>
+                                    </div>
+                                    <input class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow shadow-sm"
+                                           id="flight_number" name="flight_number" type="text" placeholder="{{ t('public_buy.flight_placeholder') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-6">
+                            <button class="w-full md:w-auto flex justify-center items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5" type="submit">
+                                <i class="fas fa-search mr-2"></i> {{ t('public_buy.search_btn') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <div class="flex justify-end pt-4">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:-translate-y-1" type="submit">
-                    <i class="fas fa-search mr-2"></i> {{ t('public_buy.search_btn') }}
-                </button>
+            <!-- Features Steps -->
+            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <!-- Step 1 -->
+                <div class="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border border-gray-50">
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 text-blue-600 mb-6 text-2xl">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ t('public_buy.step_1_title') }}</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">{{ t('public_buy.step_1_desc') }}</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border border-gray-50">
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-50 text-green-600 mb-6 text-2xl">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ t('public_buy.step_2_title') }}</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">{{ t('public_buy.step_2_desc') }}</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border border-gray-50">
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-purple-50 text-purple-600 mb-6 text-2xl">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ t('public_buy.step_3_title') }}</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">{{ t('public_buy.step_3_desc') }}</p>
+                </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </main>
 
-    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-5xl">
-        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <div class="text-4xl mb-4 text-yellow-400"><i class="fas fa-search"></i></div>
-            <h3 class="text-xl font-bold mb-2">{{ t('public_buy.step_1_title') }}</h3>
-            <p class="text-blue-100">{{ t('public_buy.step_1_desc') }}</p>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center mb-4 md:mb-0">
+                 <img class="h-8 w-auto grayscale opacity-50 hover:opacity-100 transition-opacity" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
+            </div>
+            <p class="text-gray-400 text-sm">
+                &copy; {{ now.year }} {{ t('global.app_name') }}. All rights reserved.
+            </p>
         </div>
-        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <div class="text-4xl mb-4 text-green-400"><i class="fas fa-credit-card"></i></div>
-            <h3 class="text-xl font-bold mb-2">{{ t('public_buy.step_2_title') }}</h3>
-            <p class="text-blue-100">{{ t('public_buy.step_2_desc') }}</p>
-        </div>
-        <div class="bg-white/10 backdrop-blur-md rounded-lg p-6">
-            <div class="text-4xl mb-4 text-red-400"><i class="fas fa-qrcode"></i></div>
-            <h3 class="text-xl font-bold mb-2">{{ t('public_buy.step_3_title') }}</h3>
-            <p class="text-blue-100">{{ t('public_buy.step_3_desc') }}</p>
-        </div>
-    </div>
-
-    <div class="mt-8 text-blue-300 text-sm">
-        <a href="{{ url_for('auth.login') }}" class="hover:text-white underline">{{ t('public_buy.agent_access') }}</a>
-    </div>
+    </footer>
 </div>
 
 <script src="/static/js/public/index.js"></script>
