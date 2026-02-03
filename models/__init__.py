@@ -94,6 +94,47 @@ class Flight(db.Model):
             'capacity': self.capacity
         }
 
+class FlightManifest(db.Model):
+    __tablename__ = 'flight_manifests'
+
+    id = db.Column(db.Integer, primary_key=True)
+    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
+    passenger_count_declared = db.Column(db.Integer, default=0)
+    file_upload_path = db.Column(db.String(200))
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    flight = db.relationship('Flight', backref='manifests')
+
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
+    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount_collected = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(10), default='USD')
+    payment_method = db.Column(db.String(20)) # CASH, MOBILE_MONEY, CARD
+    provider_ref = db.Column(db.String(100)) # ID transaction M-Pesa/Airtel
+    status = db.Column(db.String(20), default='completed')
+    is_offline_sync = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    agent = db.relationship('User', foreign_keys=[agent_id])
+    # Relationship to tickets defined in GoPass via backref or explicitly here
+    # tickets = db.relationship('GoPass', backref='transaction')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'uuid': self.uuid,
+            'amount_collected': self.amount_collected,
+            'currency': self.currency,
+            'payment_method': self.payment_method,
+            'provider_ref': self.provider_ref,
+            'is_offline_sync': self.is_offline_sync,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
 class GoPass(db.Model):
     __tablename__ = 'gopasses'
 
@@ -117,6 +158,9 @@ class GoPass(db.Model):
     payment_status = db.Column(db.String(20), default='pending') # pending, paid
     payment_ref = db.Column(db.String(100))
     
+    # Transaction Link
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'))
+
     # Usage Status
     status = db.Column(db.String(20), default='valid') # valid, consumed, expired, cancelled
 
@@ -136,6 +180,7 @@ class GoPass(db.Model):
     holder = db.relationship('User', foreign_keys=[holder_id])
     seller = db.relationship('User', foreign_keys=[sold_by])
     pass_type = db.relationship('PassType')
+    transaction = db.relationship('Transaction', backref='tickets')
 
     def to_dict(self):
         return {
@@ -153,7 +198,8 @@ class GoPass(db.Model):
             'payment_method': self.payment_method,
             'sales_channel': self.sales_channel,
             'issue_date': self.issue_date.isoformat() if self.issue_date else None,
-            'scan_date': self.scan_date.isoformat() if self.scan_date else None
+            'scan_date': self.scan_date.isoformat() if self.scan_date else None,
+            'transaction_id': self.transaction_id
         }
 
 class CashDeposit(db.Model):
@@ -189,6 +235,7 @@ class AccessLog(db.Model):
     validator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     validation_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     status = db.Column(db.String(20), default='valid')
+    is_offline = db.Column(db.Boolean, default=False)
 
     pass_record = db.relationship('GoPass')
     validator = db.relationship('User')
@@ -199,8 +246,19 @@ class AccessLog(db.Model):
             'validation_time': self.validation_time.isoformat() if self.validation_time else None,
             'pass_record': self.pass_record.to_dict() if self.pass_record else None,
             'validator': self.validator.to_dict() if self.validator else None,
-            'status': self.status
+            'status': self.status,
+            'is_offline': self.is_offline
         }
+
+class OfflineSyncLog(db.Model):
+    __tablename__ = 'offline_sync_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    sync_time = db.Column(db.DateTime, default=datetime.utcnow)
+    record_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default='success')
+    details = db.Column(db.Text)
 
 # Keeping these for backward compatibility if needed, or we can drop them later.
 class AuditLog(db.Model):
