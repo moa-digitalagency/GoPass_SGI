@@ -39,7 +39,23 @@
                 <a href="{{ url_for('flights.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'flights' in request.endpoint %}bg-blue-800{% endif %}">
                     <i class="fas fa-plane mr-3"></i>Vols
                 </a>
-                <a href="{{ url_for('users.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'users' in request.endpoint %}bg-blue-800{% endif %}">
+
+                <!-- Finance Menu -->
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider">Transactions & Recettes</div>
+                <a href="{{ url_for('finance.transactions') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.transactions' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-file-invoice-dollar mr-3"></i>Journal Ventes
+                </a>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('finance.deposits') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.deposits' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-cash-register mr-3"></i>Caisse Agents
+                </a>
+                <a href="{{ url_for('finance.reconciliation') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.reconciliation' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-sync-alt mr-3"></i>Réconciliation
+                </a>
+                {% endif %}
+
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Administration</div>
+                <a href="{{ url_for('users.index') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'users' in request.endpoint %}bg-blue-800{% endif %}">
                     <i class="fas fa-users mr-3"></i>Utilisateurs
                 </a>
                 {% endif %}

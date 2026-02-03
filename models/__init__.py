@@ -125,8 +125,14 @@ class GoPass(db.Model):
     
     issue_date = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Payment & Sales Details
+    payment_method = db.Column(db.String(50)) # Cash, M-Pesa, Airtel, Orange, CB
+    sold_by = db.Column(db.Integer, db.ForeignKey('users.id')) # Agent who sold it
+    sales_channel = db.Column(db.String(50), default='counter') # counter, web
+
     # Relationships
     holder = db.relationship('User', foreign_keys=[holder_id])
+    seller = db.relationship('User', foreign_keys=[sold_by])
     pass_type = db.relationship('PassType')
 
     def to_dict(self):
@@ -136,14 +142,42 @@ class GoPass(db.Model):
             'pass_number': self.pass_number,
             'flight': self.flight.to_dict() if self.flight else None,
             'holder': self.holder.to_dict() if self.holder else None,
+            'seller': self.seller.to_dict() if self.seller else None,
             'passenger_name': self.passenger_name,
             'passenger_passport': self.passenger_passport,
             'pass_type': self.pass_type.to_dict() if self.pass_type else None,
             'status': self.status,
             'payment_status': self.payment_status,
+            'payment_method': self.payment_method,
+            'sales_channel': self.sales_channel,
             'issue_date': self.issue_date.isoformat() if self.issue_date else None,
             'scan_date': self.scan_date.isoformat() if self.scan_date else None
         }
+
+class CashDeposit(db.Model):
+    __tablename__ = 'cash_deposits'
+
+    id = db.Column(db.Integer, primary_key=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    deposit_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+
+    agent = db.relationship('User', foreign_keys=[agent_id])
+    supervisor = db.relationship('User', foreign_keys=[supervisor_id])
+
+class MobileMoneyLog(db.Model):
+    __tablename__ = 'mobile_money_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    transaction_ref = db.Column(db.String(100), unique=True, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.String(10), default='USD')
+    provider = db.Column(db.String(50)) # M-Pesa, Airtel, Orange
+    status = db.Column(db.String(20))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    reconciled = db.Column(db.Boolean, default=False)
 
 class AccessLog(db.Model):
     __tablename__ = 'access_logs'
