@@ -58,6 +58,17 @@ class GoPassService:
         """
         Logic for validation (Cas A, B, C, D)
         """
+        # Check if flight is closed
+        target_flight = Flight.query.get(flight_id)
+        if target_flight and target_flight.status == 'closed':
+             return {
+                'status': 'error',
+                'code': 'FLIGHT_CLOSED',
+                'message': 'VOL CLÔTURÉ',
+                'color': 'red',
+                'data': None
+            }
+
         gopass = GoPass.query.filter_by(token=token).first()
 
         # Cas D: Invalide (Document non reconnu)

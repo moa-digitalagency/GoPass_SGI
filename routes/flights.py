@@ -47,6 +47,7 @@ def create():
         dep_time_str = request.form.get('dep_time')
         arr_time_str = request.form.get('arr_time')
         capacity = request.form.get('capacity', 0, type=int)
+        aircraft_registration = request.form.get('aircraft_registration')
 
         try:
             dep_time = datetime.strptime(dep_time_str, '%Y-%m-%dT%H:%M')
@@ -59,7 +60,8 @@ def create():
                 arr_airport=arr_airport,
                 dep_time=dep_time,
                 arr_time=arr_time,
-                capacity=capacity
+                capacity=capacity,
+                aircraft_registration=aircraft_registration
             )
 
             flash(f'Vol {flight_number} créé avec succès.', 'success')
@@ -99,3 +101,41 @@ def sync():
 def view(id):
     flight = Flight.query.get_or_404(id)
     return render_template('flights/view.html', flight=flight)
+
+@flights_bp.route('/manifest/<int:id>', methods=['POST'])
+@login_required
+@agent_required
+def upload_manifest(id):
+    if 'manifest_file' not in request.files:
+        flash('Aucun fichier sélectionné', 'danger')
+        return redirect(url_for('flights.index'))
+
+    file = request.files['manifest_file']
+    if file.filename == '':
+        flash('Aucun fichier sélectionné', 'danger')
+        return redirect(url_for('flights.index'))
+
+    try:
+        count = FlightService.import_manifest(id, file)
+        flash(f'Manifeste importé avec succès. {count} passagers détectés.', 'success')
+    except Exception as e:
+        flash(f'Erreur lors de l\'import: {str(e)}', 'danger')
+
+    return redirect(url_for('flights.index'))
+
+@flights_bp.route('/status/<int:id>', methods=['POST'])
+@login_required
+@agent_required
+def update_status(id):
+    status = request.form.get('status')
+    if not status:
+        flash('Statut invalide', 'danger')
+        return redirect(url_for('flights.index'))
+
+    try:
+        FlightService.update_status(id, status)
+        flash(f'Statut du vol mis à jour: {status}', 'success')
+    except Exception as e:
+        flash(f'Erreur: {str(e)}', 'danger')
+
+    return redirect(url_for('flights.index'))

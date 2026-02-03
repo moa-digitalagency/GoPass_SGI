@@ -50,7 +50,12 @@
         <tbody class="bg-white divide-y divide-gray-200">
             {% for flight in flights.items %}
             <tr>
-                <td class="px-6 py-4 whitespace-nowrap font-bold">{{ flight.flight_number }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="font-bold">{{ flight.flight_number }}</div>
+                    {% if flight.aircraft_registration %}
+                    <div class="text-xs text-gray-500">{{ flight.aircraft_registration }}</div>
+                    {% endif %}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ flight.airline }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     {{ flight.departure_airport }} <i class="fas fa-arrow-right mx-1 text-gray-400"></i> {{ flight.arrival_airport }}
@@ -59,14 +64,21 @@
                     {{ flight.departure_time|format_datetime }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                        {% if flight.status == 'scheduled' %}bg-blue-100 text-blue-800
-                        {% elif flight.status == 'active' %}bg-green-100 text-green-800
-                        {% elif flight.status == 'landed' %}bg-gray-100 text-gray-800
-                        {% elif flight.status == 'cancelled' %}bg-red-100 text-red-800
-                        {% endif %}">
-                        {{ flight.status }}
-                    </span>
+                    <form action="{{ url_for('flights.update_status', id=flight.id) }}" method="POST">
+                        <select name="status" onchange="this.form.submit()" class="text-xs border rounded p-1 cursor-pointer font-semibold
+                            {% if flight.status == 'open_for_sale' %}bg-green-100 text-green-800
+                            {% elif flight.status == 'boarding' %}bg-orange-100 text-orange-800
+                            {% elif flight.status == 'closed' %}bg-red-100 text-red-800
+                            {% elif flight.status == 'scheduled' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            <option value="scheduled" {% if flight.status == 'scheduled' %}selected{% endif %}>Programmé</option>
+                            <option value="open_for_sale" {% if flight.status == 'open_for_sale' %}selected{% endif %}>Ouvert à la vente</option>
+                            <option value="boarding" {% if flight.status == 'boarding' %}selected{% endif %}>Embarquement</option>
+                            <option value="closed" {% if flight.status == 'closed' %}selected{% endif %}>Clôturé</option>
+                            <option value="landed" {% if flight.status == 'landed' %}selected{% endif %}>Atterri</option>
+                            <option value="cancelled" {% if flight.status == 'cancelled' %}selected{% endif %}>Annulé</option>
+                        </select>
+                    </form>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {% if flight.source == 'api' %}
@@ -75,7 +87,16 @@
                     <span class="text-orange-600"><i class="fas fa-user mr-1"></i>Manuel</span>
                     {% endif %}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-3 items-center">
+                    <form action="{{ url_for('flights.upload_manifest', id=flight.id) }}" method="POST" enctype="multipart/form-data" title="Uploader Manifeste">
+                        <label class="cursor-pointer text-gray-600 hover:text-blue-600 flex items-center">
+                            <i class="fas fa-file-excel fa-lg"></i>
+                            <input type="file" name="manifest_file" class="hidden" onchange="this.form.submit()" accept=".xlsx">
+                        </label>
+                    </form>
+                    {% if flight.manifest_pax_count > 0 %}
+                        <span class="text-xs bg-blue-100 text-blue-800 px-1 rounded" title="Passagers Manifeste: {{ flight.manifest_pax_count }}">{{ flight.manifest_pax_count }}</span>
+                    {% endif %}
                     <a href="{{ url_for('flights.view', id=flight.id) }}" class="text-blue-600 hover:text-blue-900">Voir</a>
                 </td>
             </tr>

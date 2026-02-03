@@ -20,7 +20,7 @@ def check_and_update_schema(db, app):
     # This is a manual mapping based on models/__init__.py
     expected_schema = {
         'users': ['uuid', 'role', 'location', 'is_active', 'phone'],
-        'flights': ['source', 'capacity', 'status', 'manifest_pax_count'],
+        'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration'],
         'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel'],
         'access_logs': ['status', 'validation_time'],
         'pass_types': ['color']
