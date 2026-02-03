@@ -21,7 +21,7 @@ def check_and_update_schema(db, app):
     expected_schema = {
         'users': ['uuid', 'role', 'location', 'is_active', 'phone'],
         'flights': ['source', 'capacity', 'status'],
-        'gopasses': ['token', 'pass_number', 'payment_status', 'scan_date', 'scan_location'],
+        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel'],
         'access_logs': ['status', 'validation_time'],
         'pass_types': ['color']
     }

@@ -40,6 +40,7 @@ def create_app(config_name=None):
     from routes.api import api_bp
     from routes.public import public_bp
     from routes.flights import flights_bp
+    from routes.finance import finance_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -47,6 +48,7 @@ def create_app(config_name=None):
     app.register_blueprint(api_bp)
     app.register_blueprint(public_bp) # Mount at root
     app.register_blueprint(flights_bp)
+    app.register_blueprint(finance_bp)
     
     @app.route('/login-check')
     def login_check():
