@@ -26,7 +26,15 @@ def login():
             flash('Connexion réussie!', 'success')
             
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard.index'))
+            if next_page:
+                return redirect(next_page)
+
+            if user.role == 'agent':
+                return redirect(url_for('ops.pos'))
+            elif user.role == 'controller':
+                return redirect(url_for('ops.scanner'))
+            else:
+                return redirect(url_for('dashboard.index'))
         else:
             flash('Nom d\'utilisateur ou mot de passe incorrect.', 'danger')
     

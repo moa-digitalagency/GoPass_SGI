@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scanner - GO-PASS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body { touch-action: manipulation; overflow: hidden; }
+        #feedback-screen { transition: opacity 0.2s ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white h-screen flex flex-col">
+
+    <!-- Screen 1: Flight Selection -->
+    <div id="setup-screen" class="absolute inset-0 bg-gray-900 z-50 p-6 flex flex-col justify-center">
+        <h1 class="text-2xl font-bold mb-6 text-center">Configuration Scanner</h1>
+
+        <div class="mb-6">
+            <label class="block text-gray-400 mb-2">Sélectionner le Vol ({{ today.strftime('%d/%m/%Y') }})</label>
+            <select id="flight_select" class="w-full p-4 bg-gray-800 border border-gray-700 rounded text-white text-lg">
+                <option value="" disabled selected>Choisir un vol...</option>
+                {% for flight in flights %}
+                <option value="{{ flight.id }}" data-info="{{ flight.flight_number }}">
+                    {{ flight.flight_number }} - {{ flight.airline }} ({{ flight.departure_time.strftime('%H:%M') }})
+                </option>
+                {% else %}
+                <option value="" disabled>Aucun vol aujourd'hui</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button id="start-btn" class="w-full bg-blue-600 py-4 rounded font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            COMMENCER LE CONTRÔLE
+        </button>
+
+        <div class="mt-8 text-center text-gray-500 text-sm">
+            <p>Agent: {{ current_user.username }}</p>
+            <a href="{{ url_for('auth.logout') }}" class="text-red-400 mt-4 inline-block">Déconnexion</a>
+        </div>
+    </div>
+
+    <!-- Screen 2: Scanning Interface -->
+    <div id="scan-screen" class="flex-1 flex flex-col hidden">
+        <!-- Header -->
+        <div class="bg-gray-800 p-3 flex justify-between items-center shadow">
+            <div>
+                <p class="text-xs text-gray-400">Vol en cours</p>
+                <p id="current-flight-display" class="font-bold text-lg text-blue-400">--</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div id="offline-indicator" class="hidden bg-yellow-600 px-2 py-1 rounded text-xs font-bold">
+                    OFFLINE (<span id="pending-count">0</span>)
+                </div>
+                <button id="camera-toggle" class="bg-gray-700 p-2 rounded-full w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button id="change-flight-btn" class="bg-red-900 p-2 rounded text-xs">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Camera Viewport / Status -->
+        <div class="flex-1 relative bg-black flex flex-col items-center justify-center overflow-hidden">
+            <div id="reader" class="w-full h-full object-cover"></div>
+
+            <!-- Laser Input Fallback (Hidden/Overlay) -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-64 h-64 border-2 border-white/30 rounded-lg relative">
+                    <div class="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-green-500"></div>
+                    <div class="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-green-500"></div>
+                    <div class="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-green-500"></div>
+                    <div class="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-green-500"></div>
+                </div>
+            </div>
+
+            <div id="scan-status" class="absolute bottom-10 bg-black/50 px-4 py-2 rounded text-sm text-gray-300">
+                Prêt à scanner (Caméra ou Laser)
+            </div>
+        </div>
+
+        <!-- Hidden input for laser scanner -->
+        <input type="text" id="laser-input" class="absolute opacity-0 top-0 left-0" autocomplete="off">
+    </div>
+
+    <!-- Screen 3: Feedback Overlay -->
+    <div id="feedback-screen" class="fixed inset-0 z-50 hidden flex flex-col items-center justify-center text-center p-6 cursor-pointer">
+        <div id="feedback-icon" class="text-9xl mb-6 animate-bounce"></div>
+        <h2 id="feedback-title" class="text-4xl font-black mb-2 uppercase tracking-wider"></h2>
+        <p id="feedback-message" class="text-xl mb-8 font-mono"></p>
+
+        <div id="feedback-details" class="bg-white/20 p-4 rounded-lg text-left w-full max-w-sm backdrop-blur-sm">
+            <!-- Details injected via JS -->
+        </div>
+
+        <p class="mt-12 text-sm opacity-50 animate-pulse">Toucher pour continuer</p>
+    </div>
+
+    <script>
+        let currentFlightId = null;
+        let html5QrcodeScanner = null;
+        let isScanning = false;
+        let pendingScans = JSON.parse(localStorage.getItem('pendingScans') || '[]');
+
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const scanScreen = document.getElementById('scan-screen');
+        const flightSelect = document.getElementById('flight_select');
+        const startBtn = document.getElementById('start-btn');
+        const currentFlightDisplay = document.getElementById('current-flight-display');
+        const laserInput = document.getElementById('laser-input');
+        const feedbackScreen = document.getElementById('feedback-screen');
+        const offlineIndicator = document.getElementById('offline-indicator');
+        const pendingCountFn = document.getElementById('pending-count');
+
+        // Setup Logic
+        flightSelect.addEventListener('change', () => {
+            if (flightSelect.value) {
+                startBtn.disabled = false;
+                startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            currentFlightId = flightSelect.value;
+            const flightText = flightSelect.options[flightSelect.selectedIndex].getAttribute('data-info');
+            currentFlightDisplay.textContent = flightText;
+
+            setupScreen.classList.add('hidden');
+            scanScreen.classList.remove('hidden');
+
+            // Focus laser input
+            laserInput.focus();
+
+            // Update offline UI
+            updateOfflineUI();
+        });
+
+        document.getElementById('change-flight-btn').addEventListener('click', () => {
+            if (html5QrcodeScanner) stopCamera();
+            scanScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            currentFlightId = null;
+        });
+
+        // Laser Scanner Logic (Keyboard)
+        document.addEventListener('click', () => {
+            if (!scanScreen.classList.contains('hidden') && feedbackScreen.classList.contains('hidden')) {
+                laserInput.focus();
+            }
+        });
+
+        // Prevent loss of focus
+        laserInput.addEventListener('blur', () => {
+             if (!scanScreen.classList.contains('hidden')) {
+                 setTimeout(() => laserInput.focus(), 100);
+             }
+        });
+
+        laserInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const token = laserInput.value.trim();
+                laserInput.value = '';
+                if (token) processScan(token);
+            }
+        });
+
+        // Camera Logic
+        document.getElementById('camera-toggle').addEventListener('click', () => {
+            if (isScanning) {
+                stopCamera();
+            } else {
+                startCamera();
+            }
+        });
+
+        function startCamera() {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
+            .then(() => {
+                isScanning = true;
+                document.getElementById('scan-status').textContent = "Caméra active";
+            })
+            .catch(err => {
+                console.error("Erreur caméra", err);
+                alert("Impossible d'accéder à la caméra");
+            });
+        }
+
+        function stopCamera() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner.clear();
+                    isScanning = false;
+                    document.getElementById('scan-status').textContent = "Prêt à scanner (Caméra ou Laser)";
+                });
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Stop scanning temporarily or debounce?
+            // Usually we assume we want to process it.
+            processScan(decodedText);
+
+            // Optional: Pause camera scanning to avoid double reads immediately?
+            // html5QrcodeScanner.pause();
+            // Resume after feedback dismissed.
+        }
+
+        // Processing Logic
+        async function processScan(token) {
+            if (feedbackScreen.classList.contains('block')) return; // Already showing result
+
+            // Check connectivity
+            if (!navigator.onLine) {
+                storeOfflineScan(token);
+                showFeedback('offline', { message: 'Scan enregistré hors-ligne', token: token });
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: token,
+                        flight_id: currentFlightId,
+                        location: "{{ current_user.location }}"
+                    })
+                });
+
+                const data = await response.json();
+
+                // Map API response to feedback types
+                // API: { status: 'success'|'error'|'warning', code: 'VALID'|'ALREADY_SCANNED'|'WRONG_FLIGHT'..., message: ..., color: ... }
+
+                showFeedback(data.code, data);
+
+            } catch (error) {
+                console.error(error);
+                // Fallback to offline store if network error
+                storeOfflineScan(token);
+                showFeedback('offline', { message: 'Erreur réseau - Enregistré', token: token });
+            }
+        }
+
+        // Feedback Logic
+        function showFeedback(code, data) {
+            const screen = feedbackScreen;
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const message = document.getElementById('feedback-message');
+            const details = document.getElementById('feedback-details');
+
+            screen.classList.remove('hidden', 'bg-green-600', 'bg-red-600', 'bg-orange-500', 'bg-gray-800');
+            screen.classList.add('flex'); // Enable flex
+
+            let colorClass = 'bg-gray-800';
+
+            // Reset content
+            details.innerHTML = '';
+
+            switch(code) {
+                case 'VALID':
+                    colorClass = 'bg-green-600';
+                    icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    title.textContent = "PASSAGE AUTORISÉ";
+                    message.textContent = data.data.passenger || "Bon Voyage";
+                    break;
+                case 'ALREADY_SCANNED':
+                    colorClass = 'bg-red-600';
+                    icon.innerHTML = '<i class="fas fa-hand-paper"></i>';
+                    title.textContent = "STOP - DÉJÀ UTILISÉ";
+                    message.textContent = "Ce billet a déjà été scanné.";
+
+                    if (data.data && data.data.original_scan) {
+                        details.innerHTML = `
+                            <p><strong>Premier scan:</strong> ${data.data.original_scan.scan_date}</p>
+                            <p><strong>Par:</strong> ${data.data.original_scan.scanned_by}</p>
+                            <p><strong>Lieu:</strong> ${data.data.original_scan.location}</p>
+                        `;
+                    }
+                    break;
+                case 'WRONG_FLIGHT':
+                    colorClass = 'bg-orange-500';
+                    icon.innerHTML = '<i class="fas fa-plane-slash"></i>';
+                    title.textContent = "MAUVAIS VOL";
+                    message.textContent = "Billet valide mais pour un autre vol.";
+                    if (data.data) {
+                        details.innerHTML = `
+                            <p><strong>Vol Billet:</strong> ${data.data.valid_for}</p>
+                            <p><strong>Date:</strong> ${data.data.date}</p>
+                        `;
+                    }
+                    break;
+                case 'INVALID':
+                case 'FLIGHT_CLOSED':
+                    colorClass = 'bg-red-600';
+                    icon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                    title.textContent = "INVALIDE";
+                    message.textContent = data.message || "Document non reconnu";
+                    break;
+                case 'offline':
+                    colorClass = 'bg-blue-600';
+                    icon.innerHTML = '<i class="fas fa-save"></i>';
+                    title.textContent = "ENREGISTRÉ";
+                    message.textContent = "Mode Hors-ligne. Synchronisation en attente.";
+                    break;
+                default:
+                    colorClass = 'bg-red-600';
+                    icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    title.textContent = "ERREUR";
+                    message.textContent = data.message || "Erreur système";
+            }
+
+            screen.classList.add(colorClass);
+
+            // Play sound? (Optional)
+
+            // Wait for user to dismiss
+            screen.onclick = () => {
+                screen.classList.add('hidden');
+                screen.classList.remove('flex');
+                laserInput.focus();
+                // Resume camera if needed? (Not really paused)
+            };
+        }
+
+        // Offline / Sync Logic
+        function storeOfflineScan(token) {
+            const scan = {
+                token: token,
+                flight_id: currentFlightId,
+                timestamp: new Date().toISOString()
+            };
+            pendingScans.push(scan);
+            localStorage.setItem('pendingScans', JSON.stringify(pendingScans));
+            updateOfflineUI();
+        }
+
+        function updateOfflineUI() {
+            pendingCountFn.textContent = pendingScans.length;
+            if (pendingScans.length > 0 || !navigator.onLine) {
+                offlineIndicator.classList.remove('hidden');
+            } else {
+                offlineIndicator.classList.add('hidden');
+            }
+        }
+
+        async function syncScans() {
+            if (pendingScans.length === 0 || !navigator.onLine) return;
+
+            const scansToSync = [...pendingScans];
+            const remainingScans = [];
+
+            for (const scan of scansToSync) {
+                try {
+                    // We send them to the server.
+                    // Note: If they turn out to be INVALID, we just log them?
+                    // The user is not watching anymore.
+                    // Ideally we should have a bulk sync endpoint.
+                    // For now, loop one by one.
+                    await fetch('/api/scan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            token: scan.token,
+                            flight_id: scan.flight_id,
+                            location: "{{ current_user.location }}" // Use current user loc
+                        })
+                    });
+                } catch (e) {
+                    console.error("Sync failed for one item", e);
+                    remainingScans.push(scan);
+                }
+            }
+
+            pendingScans = remainingScans;
+            localStorage.setItem('pendingScans', JSON.stringify(pendingScans));
+            updateOfflineUI();
+        }
+
+        window.addEventListener('online', () => {
+             updateOfflineUI();
+             syncScans();
+        });
+
+        window.addEventListener('offline', updateOfflineUI);
+
+        // Initial sync check
+        if (navigator.onLine) {
+            syncScans();
+        }
+
+    </script>
+</body>
+</html>

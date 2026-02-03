@@ -44,6 +44,7 @@ def create_app(config_name=None):
     from routes.reports import reports_bp
     from routes.infrastructure import infrastructure_bp
     from routes.settings import settings_bp
+    from routes.ops import ops_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -55,6 +56,7 @@ def create_app(config_name=None):
     app.register_blueprint(reports_bp)
     app.register_blueprint(infrastructure_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(ops_bp)
     
     @app.route('/login-check')
     def login_check():
