@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Paramètres Généraux - GO-PASS{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h2 class="text-2xl font-bold text-gray-800">Paramètres Généraux</h2>
+</div>
+
+<!-- Branding Section -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Branding & Logos</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- RVA Logo -->
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition" id="drop-zone-rva">
+            <h4 class="font-bold text-gray-600 mb-4">Logo RVA</h4>
+            <div class="mb-4 flex justify-center h-32 items-center bg-gray-100 rounded">
+                <img id="preview-rva" src="" alt="RVA Logo" class="max-h-full max-w-full object-contain hidden">
+                <i id="icon-rva" class="fas fa-image text-4xl text-gray-300"></i>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Glissez-déposez une image ici ou cliquez pour sélectionner</p>
+            <input type="file" id="file-rva" class="hidden" accept="image/*">
+            <button class="bg-blue-100 text-blue-800 px-4 py-2 rounded text-sm font-semibold hover:bg-blue-200" onclick="document.getElementById('file-rva').click()">
+                Sélectionner
+            </button>
+        </div>
+
+        <!-- GoPass Logo -->
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition" id="drop-zone-gopass">
+            <h4 class="font-bold text-gray-600 mb-4">Logo GoPass</h4>
+            <div class="mb-4 flex justify-center h-32 items-center bg-gray-100 rounded">
+                <img id="preview-gopass" src="" alt="GoPass Logo" class="max-h-full max-w-full object-contain hidden">
+                <i id="icon-gopass" class="fas fa-image text-4xl text-gray-300"></i>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Glissez-déposez une image ici ou cliquez pour sélectionner</p>
+            <input type="file" id="file-gopass" class="hidden" accept="image/*">
+            <button class="bg-blue-100 text-blue-800 px-4 py-2 rounded text-sm font-semibold hover:bg-blue-200" onclick="document.getElementById('file-gopass').click()">
+                Sélectionner
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Finance Section -->
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Finance & Paiements</h3>
+    <div class="space-y-6">
+
+        <!-- Stripe Toggle -->
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center">
+                <div class="bg-white p-2 rounded shadow mr-4 text-blue-600 text-xl w-12 h-12 flex items-center justify-center">
+                    <i class="fab fa-stripe"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-800">Stripe (Carte Bancaire)</h4>
+                    <p class="text-sm text-gray-500">Activer les paiements par carte bancaire internationale.</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-stripe" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <!-- Mobile Money Toggle -->
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg opacity-75">
+            <div class="flex items-center">
+                <div class="bg-white p-2 rounded shadow mr-4 text-green-600 text-xl w-12 h-12 flex items-center justify-center">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-800">Mobile Money (Agrégateur)</h4>
+                    <p class="text-sm text-gray-500">M-Pesa, Airtel Money, Orange Money. (Bientôt disponible)</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-momo" class="sr-only peer" disabled>
+                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5"></div>
+            </label>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Fetch current settings
+        try {
+            const res = await fetch('/api/settings/public');
+            const data = await res.json();
+
+            // Branding Init
+            if (data.rva_logo) updatePreview('rva', data.rva_logo);
+            if (data.gopass_logo) updatePreview('gopass', data.gopass_logo);
+
+            // Finance Init
+            document.getElementById('toggle-stripe').checked = data.stripe_enabled;
+        } catch (e) {
+            console.error("Failed to load settings", e);
+        }
+
+        // --- Drag & Drop Logic ---
+        setupDropZone('rva', 'logo_rva_url');
+        setupDropZone('gopass', 'logo_gopass_url');
+
+        // --- Toggle Logic ---
+        document.getElementById('toggle-stripe').addEventListener('change', async (e) => {
+            const isChecked = e.target.checked;
+            try {
+                const res = await fetch('/api/payment/toggle/STRIPE', { method: 'POST' });
+                const result = await res.json();
+                // alert(result.message);
+                // Don't alert, just toast or silent update
+            } catch (err) {
+                console.error(err);
+                e.target.checked = !isChecked; // Revert
+                alert("Erreur lors de la mise à jour");
+            }
+        });
+    });
+
+    function setupDropZone(idSuffix, configKey) {
+        const dropZone = document.getElementById(`drop-zone-${idSuffix}`);
+        const fileInput = document.getElementById(`file-${idSuffix}`);
+
+        // Click to upload
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) uploadFile(e.target.files[0], configKey, idSuffix);
+        });
+
+        // Drag events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('bg-blue-50', 'border-blue-400'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('bg-blue-50', 'border-blue-400'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) uploadFile(files[0], configKey, idSuffix);
+        });
+    }
+
+    async function uploadFile(file, key, idSuffix) {
+        const formData = new FormData();
+        formData.append('logo', file);
+        formData.append('key', key);
+
+        // Show loading state
+        document.getElementById(`preview-${idSuffix}`).classList.add('opacity-50');
+
+        try {
+            const res = await fetch('/api/settings/upload-logo', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                updatePreview(idSuffix, data.url);
+            } else {
+                alert("Erreur: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erreur réseau");
+        } finally {
+            document.getElementById(`preview-${idSuffix}`).classList.remove('opacity-50');
+        }
+    }
+
+    function updatePreview(idSuffix, url) {
+        const img = document.getElementById(`preview-${idSuffix}`);
+        const icon = document.getElementById(`icon-${idSuffix}`);
+
+        img.src = url;
+        img.classList.remove('hidden');
+        icon.classList.add('hidden');
+    }
+</script>
+{% endblock %}

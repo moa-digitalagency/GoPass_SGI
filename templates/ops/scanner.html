@@ -16,6 +16,9 @@
 
     <!-- Screen 1: Flight Selection -->
     <div id="setup-screen" class="absolute inset-0 bg-gray-900 z-50 p-6 flex flex-col justify-center">
+        <div class="flex justify-center mb-4">
+            <img id="scanner-setup-logo" src="" class="h-16 hidden object-contain bg-white rounded p-2">
+        </div>
         <h1 class="text-2xl font-bold mb-6 text-center">Configuration Scanner</h1>
 
         <div class="mb-6">
@@ -46,9 +49,12 @@
     <div id="scan-screen" class="flex-1 flex flex-col hidden">
         <!-- Header -->
         <div class="bg-gray-800 p-3 flex justify-between items-center shadow">
-            <div>
-                <p class="text-xs text-gray-400">Vol en cours</p>
-                <p id="current-flight-display" class="font-bold text-lg text-blue-400">--</p>
+            <div class="flex items-center">
+                <img id="scanner-header-logo" src="" class="h-10 w-auto bg-white rounded p-1 mr-3 hidden">
+                <div>
+                    <p class="text-xs text-gray-400">Vol en cours</p>
+                    <p id="current-flight-display" class="font-bold text-lg text-blue-400">--</p>
+                </div>
             </div>
             <div class="flex items-center space-x-3">
                 <div id="offline-indicator" class="hidden flex items-center bg-yellow-600 px-2 py-1 rounded text-xs font-bold space-x-2">
@@ -417,6 +423,25 @@
         if (navigator.onLine) {
             syncScans();
         }
+
+        // Fetch Branding
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/settings/public')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.rva_logo) {
+                        const setupLogo = document.getElementById('scanner-setup-logo');
+                        const headerLogo = document.getElementById('scanner-header-logo');
+
+                        setupLogo.src = data.rva_logo;
+                        setupLogo.classList.remove('hidden');
+
+                        headerLogo.src = data.rva_logo;
+                        headerLogo.classList.remove('hidden');
+                    }
+                })
+                .catch(console.error);
+        });
 
     </script>
 </body>

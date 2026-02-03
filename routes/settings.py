@@ -11,6 +11,10 @@ def before_request():
         flash('Accès non autorisé.', 'danger')
         return redirect(url_for('dashboard.index'))
 
+@settings_bp.route('/general')
+def general():
+    return render_template('settings/general.html')
+
 @settings_bp.route('/tariffs', methods=['GET', 'POST'])
 def tariffs():
     if request.method == 'POST':

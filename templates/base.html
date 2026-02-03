@@ -25,11 +25,16 @@
     {% if current_user.is_authenticated %}
     <div class="flex">
         <aside class="w-64 bg-primary min-h-screen fixed left-0 top-0 text-white">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold">
+            <div class="p-6 text-center">
+                <!-- Dynamic Logos -->
+                <img id="sidebar-logo-rva" src="" class="h-16 mx-auto mb-2 hidden object-contain bg-white rounded p-1">
+
+                <h1 class="text-2xl font-bold flex items-center justify-center" id="sidebar-default-title">
                     <i class="fas fa-id-card-alt mr-2"></i>GO-PASS
                 </h1>
-                <p class="text-blue-200 text-sm">SGI-GP</p>
+
+                <img id="sidebar-logo-gopass" src="" class="h-10 mx-auto mt-2 hidden object-contain">
+                <p class="text-blue-200 text-sm mt-1">SGI-GP</p>
             </div>
             <nav class="mt-6">
                 <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if request.endpoint == 'dashboard.index' %}bg-blue-800{% endif %}">
@@ -141,6 +146,48 @@
     </main>
     {% endif %}
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Global Branding Fetcher
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/settings/public')
+                .then(r => r.json())
+                .then(data => {
+                    // Update Sidebar (Base)
+                    if (data.rva_logo) {
+                        const rva = document.getElementById('sidebar-logo-rva');
+                        if (rva) {
+                            rva.src = data.rva_logo;
+                            rva.classList.remove('hidden');
+                        }
+                    }
+                    if (data.gopass_logo) {
+                        const gp = document.getElementById('sidebar-logo-gopass');
+                        if (gp) {
+                            gp.src = data.gopass_logo;
+                            gp.classList.remove('hidden');
+                        }
+                    }
+
+                    // Update Login Page (if present)
+                    if (data.rva_logo) {
+                        const loginRva = document.getElementById('login-logo-rva');
+                        if (loginRva) {
+                            loginRva.src = data.rva_logo;
+                            loginRva.classList.remove('hidden');
+                            document.getElementById('login-default-icon')?.classList.add('hidden');
+                        }
+                    }
+
+                    // Update POS/Scanner Headers (if present and extending base/using this script)
+                    // Note: POS and Scanner usually don't extend base, so this script might not run there.
+                    // We need to add this script logic to them separately or import it.
+
+                    // Dispatch event for other components
+                    window.dispatchEvent(new CustomEvent('settingsLoaded', { detail: data }));
+                })
+                .catch(console.error);
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
