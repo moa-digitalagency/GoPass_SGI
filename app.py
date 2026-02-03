@@ -42,6 +42,7 @@ def create_app(config_name=None):
     from routes.flights import flights_bp
     from routes.finance import finance_bp
     from routes.reports import reports_bp
+    from routes.infrastructure import infrastructure_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -51,6 +52,7 @@ def create_app(config_name=None):
     app.register_blueprint(flights_bp)
     app.register_blueprint(finance_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(infrastructure_bp)
     
     @app.route('/login-check')
     def login_check():

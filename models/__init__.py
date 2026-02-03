@@ -216,3 +216,64 @@ class AuditLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
     user = db.relationship('User', foreign_keys=[user_id])
+
+class Device(db.Model):
+    __tablename__ = 'devices'
+
+    id = db.Column(db.Integer, primary_key=True)
+    unique_id = db.Column(db.String(100), unique=True, nullable=False)
+    mac_address = db.Column(db.String(20), unique=True, nullable=False)
+    device_type = db.Column(db.String(50)) # PDA, Terminal
+    last_ping = db.Column(db.DateTime)
+    app_version = db.Column(db.String(20))
+    battery_level = db.Column(db.Integer)
+    is_sync = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'unique_id': self.unique_id,
+            'mac_address': self.mac_address,
+            'device_type': self.device_type,
+            'last_ping': self.last_ping.isoformat() if self.last_ping else None,
+            'app_version': self.app_version,
+            'battery_level': self.battery_level,
+            'is_sync': self.is_sync
+        }
+
+class Printer(db.Model):
+    __tablename__ = 'printers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    location = db.Column(db.String(100))
+    status = db.Column(db.String(20), default='connected') # connected, paper_error, offline
+    assigned_to = db.Column(db.Integer, db.ForeignKey('users.id')) # Optional: assigned to a user/workstation
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'location': self.location,
+            'status': self.status
+        }
+
+class SecurityKey(db.Model):
+    __tablename__ = 'security_keys'
+
+    id = db.Column(db.Integer, primary_key=True)
+    key_value = db.Column(db.Text, nullable=False) # Encrypted or hashed? Prompt says "manage cryptographic signature keys"
+    key_type = db.Column(db.String(20), default='flight_bound')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'key_type': self.key_type,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None
+        }

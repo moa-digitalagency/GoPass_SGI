@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Infrastructure - Imprimantes Guichet{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-print mr-2 text-primary"></i>Imprimantes Guichet
+        </h1>
+        <button class="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <i class="fas fa-plus mr-2"></i>Ajouter une imprimante
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for printer in printers %}
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if printer.status == 'connected' %}border-green-500{% elif printer.status == 'paper_error' %}border-red-500{% else %}border-gray-500{% endif %}">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">{{ printer.name }}</h2>
+                    <p class="text-gray-600 text-sm"><i class="fas fa-map-marker-alt mr-1"></i> {{ printer.location or 'Non localisé' }}</p>
+                </div>
+                <div class="text-2xl">
+                    {% if printer.status == 'connected' %}
+                        <i class="fas fa-check-circle text-green-500" title="Connectée"></i>
+                    {% elif printer.status == 'paper_error' %}
+                        <i class="fas fa-exclamation-triangle text-red-500" title="Erreur Papier"></i>
+                    {% else %}
+                        <i class="fas fa-minus-circle text-gray-500" title="Hors ligne"></i>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-sm font-semibold text-gray-700">Statut:</p>
+                <p class="
+                    {% if printer.status == 'connected' %}text-green-600
+                    {% elif printer.status == 'paper_error' %}text-red-600
+                    {% else %}text-gray-600{% endif %}
+                ">
+                    {% if printer.status == 'connected' %}Prête à imprimer
+                    {% elif printer.status == 'paper_error' %}Erreur Papier / Bourrage
+                    {% else %}Déconnectée{% endif %}
+                </p>
+            </div>
+            {% if printer.assigned_to %}
+            <div class="mt-2">
+                 <p class="text-sm text-gray-500">Assignée à: User #{{ printer.assigned_to }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="col-span-3 text-center py-10 text-gray-500">
+            Aucune imprimante configurée.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
