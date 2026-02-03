@@ -216,6 +216,7 @@ def public_settings():
     # fetch logos
     rva = AppConfig.query.get('logo_rva_url')
     gopass = AppConfig.query.get('logo_gopass_url')
+    gopass_ticket = AppConfig.query.get('logo_gopass_ticket_url')
 
     # fetch stripe status
     stripe_gw = PaymentGateway.query.filter_by(provider='STRIPE').first()
@@ -224,6 +225,7 @@ def public_settings():
     return jsonify({
         'rva_logo': rva.value if rva else None,
         'gopass_logo': gopass.value if gopass else None,
+        'gopass_ticket_logo': gopass_ticket.value if gopass_ticket else None,
         'stripe_enabled': stripe_enabled
     })
 

@@ -330,7 +330,11 @@ class GoPassService:
             if not logo_rva or not os.path.exists(logo_rva):
                 logo_rva = os.path.join(current_app.static_folder, 'img/logo_rva.png')
 
-            gopass_conf = AppConfig.query.get('logo_gopass_url')
+            gopass_conf = AppConfig.query.get('logo_gopass_ticket_url')
+            if not gopass_conf or not gopass_conf.value:
+                # Fallback to general platform logo if ticket specific one is not set
+                gopass_conf = AppConfig.query.get('logo_gopass_url')
+
             logo_gopass = None
             if gopass_conf and gopass_conf.value and gopass_conf.value.startswith('/static/'):
                  logo_gopass = os.path.join(current_app.static_folder, gopass_conf.value.replace('/static/', '', 1))
