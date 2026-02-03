@@ -130,7 +130,7 @@ def download_pdf(id):
         y -= 5 * mm
         draw_centered(gopass.passenger_name, y, "Helvetica-Bold", 12)
         y -= 5 * mm
-        draw_centered(f"DOC: {gopass.passenger_passport}", y, "Helvetica", 10)
+        draw_centered(f"{gopass.passenger_document_type}: {gopass.passenger_passport}", y, "Helvetica", 10)
 
         # QR Code
         qr_size = 40 * mm
@@ -158,7 +158,7 @@ def download_pdf(id):
         p.drawString(2*cm, height - 5*cm, f"VOL: {gopass.flight.flight_number}")
         p.drawString(2*cm, height - 6*cm, f"DATE: {gopass.flight.departure_time.strftime('%d/%m/%Y %H:%M')}")
         p.drawString(2*cm, height - 7*cm, f"PASSAGER: {gopass.passenger_name}")
-        p.drawString(2*cm, height - 8*cm, f"PASSEPORT: {gopass.passenger_passport}")
+        p.drawString(2*cm, height - 8*cm, f"{gopass.passenger_document_type.upper()}: {gopass.passenger_passport}")
 
         # Draw QR
         p.drawImage(qr_path, 12*cm, height - 9*cm, width=6*cm, height=6*cm)
