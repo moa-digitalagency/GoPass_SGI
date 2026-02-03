@@ -19,3 +19,4 @@ python-dotenv
 qrcode
 werkzeug
 reportlab
+requests

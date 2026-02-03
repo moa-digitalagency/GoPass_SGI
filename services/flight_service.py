@@ -1,6 +1,8 @@
 from models import db, Flight
 from datetime import datetime, timedelta
-import random
+import requests
+import os
+from flask import current_app
 
 class FlightService:
     @staticmethod
@@ -45,47 +47,105 @@ class FlightService:
         return flight
 
     @staticmethod
-    def sync_flights_from_api(airport_code='FIH'):
+    def sync_flights_from_api(airport_code='FIH', date=None):
         """
-        Mock implementation of AviationStack API sync.
-        In a real scenario, this would call requests.get('http://api.aviationstack.com/v1/flights')
+        Sync flights from AviationStack API.
         """
-        # Mock data generation
-        mock_airlines = ['CAA', 'Congo Airways', 'Ethiopian Airlines', 'Air France', 'Brussels Airlines']
-        mock_destinations = ['FBM', 'GOM', 'ADD', 'CDG', 'BRU', 'JNB']
+        api_key = current_app.config.get('AVIATIONSTACK_API_KEY')
+        if not api_key:
+            raise Exception("AVIATIONSTACK_API_KEY not configured in application config")
+
+        url = "http://api.aviationstack.com/v1/flights"
+        params = {
+            'access_key': api_key,
+            'dep_iata': airport_code,
+            'limit': 100
+        }
+
+        if date:
+            params['flight_date'] = date.strftime('%Y-%m-%d')
+
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"API Request Failed: {str(e)}")
+
+        if 'data' not in data:
+            if 'error' in data:
+                raise Exception(f"API Error: {data['error'].get('info', 'Unknown error')}")
+            raise Exception("Invalid API Response: 'data' field missing")
 
         added_count = 0
+        updated_count = 0
 
-        # Generate 5 mock flights for today/tomorrow
-        now = datetime.now()
-        for i in range(5):
-            dest = random.choice(mock_destinations)
-            airline = random.choice(mock_airlines)
-            flight_num = f"{airline[:2].upper()}{random.randint(100, 999)}"
+        for item in data['data']:
+            if not item.get('flight') or not item.get('departure') or not item.get('arrival'):
+                continue
 
-            dep_time = now + timedelta(hours=random.randint(1, 24))
-            arr_time = dep_time + timedelta(hours=random.randint(1, 8))
+            flight_number = item['flight'].get('iata') or item['flight'].get('number')
+            if not flight_number:
+                continue
 
-            # Check if exists
-            exists = Flight.query.filter_by(
-                flight_number=flight_num,
-                departure_time=dep_time
+            try:
+                dep_time_str = item['departure'].get('scheduled')
+                arr_time_str = item['arrival'].get('scheduled')
+
+                if not dep_time_str:
+                    continue
+
+                dep_time = datetime.fromisoformat(dep_time_str)
+                arr_time = None
+                if arr_time_str:
+                    arr_time = datetime.fromisoformat(arr_time_str)
+
+                if dep_time.tzinfo is not None:
+                    dep_time = dep_time.astimezone(None).replace(tzinfo=None)
+
+                dep_time = dep_time.replace(tzinfo=None)
+                if arr_time:
+                    arr_time = arr_time.replace(tzinfo=None)
+
+            except ValueError:
+                continue
+
+            airline = item['airline'].get('name', 'Unknown Airline')
+            dep_airport = item['departure'].get('iata', airport_code)
+            arr_airport = item['arrival'].get('iata', 'UNK')
+            status = item.get('flight_status', 'scheduled')
+
+            # Check if exists by flight number and DATE (ignoring time)
+            start_of_day = dep_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_of_day = start_of_day + timedelta(days=1)
+
+            flight = Flight.query.filter(
+                Flight.flight_number == flight_number,
+                Flight.departure_time >= start_of_day,
+                Flight.departure_time < end_of_day
             ).first()
 
-            if not exists:
+            if flight:
+                # Update status and times
+                flight.status = status
+                flight.departure_time = dep_time
+                if arr_time:
+                    flight.arrival_time = arr_time
+                updated_count += 1
+            else:
                 flight = Flight(
-                    flight_number=flight_num,
+                    flight_number=flight_number,
                     airline=airline,
-                    departure_airport=airport_code,
-                    arrival_airport=dest,
+                    departure_airport=dep_airport,
+                    arrival_airport=arr_airport,
                     departure_time=dep_time,
                     arrival_time=arr_time,
-                    status='scheduled',
+                    status=status,
                     source='api',
-                    capacity=180
+                    capacity=150
                 )
                 db.session.add(flight)
                 added_count += 1
 
         db.session.commit()
-        return added_count
+        return added_count + updated_count
