@@ -9,19 +9,30 @@
 {% extends "base.html" %}
 
 {% block content_public %}
-<div class="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-800">
+<div class="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-800 relative overflow-hidden">
+
+    <!-- Decorative Background Blobs -->
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+    <div class="absolute top-0 right-20 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="flex justify-between h-20 items-center">
                 <div class="flex-shrink-0 flex items-center gap-3">
                     <img class="h-10 w-auto" src="{{ url_for('static', filename='img/logo_gopass.png') }}" alt="GoPass Logo">
-                    <span class="font-bold text-xl text-blue-900 tracking-tight">{{ t('global.app_name') }}</span>
+                    <span class="font-extrabold text-2xl text-gray-900 tracking-tight">{{ t('global.app_name') }}</span>
                 </div>
-                <div>
-                    <a href="{{ url_for('auth.login') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                        <i class="fas fa-sign-in-alt mr-2"></i> {{ t('public_buy.agent_access') }}
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">{{ t('menu.tariffs') }}</a>
+                    <a href="#" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">Aide</a>
+                    <a href="{{ url_for('auth.login') }}" class="text-sm font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider">
+                        LOGIN / SIGNUP
+                    </a>
+                </div>
+                <div class="md:hidden">
+                    <a href="{{ url_for('auth.login') }}" class="text-blue-600 font-bold">
+                        <i class="fas fa-sign-in-alt"></i>
                     </a>
                 </div>
             </div>
@@ -29,114 +40,205 @@
     </nav>
 
     <!-- Hero Section -->
-    <main class="flex-grow">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+    <main class="flex-grow flex flex-col justify-center relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
 
-            <div class="text-center max-w-3xl mx-auto mb-12">
-                <h1 class="text-4xl md:text-6xl font-extrabold text-blue-900 mb-6 tracking-tight">
-                    {{ t('global.app_name') }}
-                </h1>
-                <p class="text-xl md:text-2xl text-gray-500 font-light">
-                    {{ t('public_buy.subtitle') }}
-                </p>
-                <p class="mt-4 text-gray-600">
-                    {{ t('public_buy.description') }}
-                </p>
-            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- Left Column: Text -->
+                <div class="text-left space-y-6">
+                    <h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight">
+                        PRÊT À <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">DÉCOLLER ?</span>
+                    </h1>
+                    <p class="text-lg md:text-xl text-gray-500 font-medium max-w-lg leading-relaxed">
+                        {{ t('public_buy.subtitle') }}
+                        <br>
+                        Payez votre redevance aéroportuaire (IDEF) simplement.
+                    </p>
+                    <div class="pt-4">
+                        <a href="#search-widget" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-1">
+                            Commencer
+                        </a>
+                    </div>
+                </div>
 
-            <!-- Search Card -->
-            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-1 bg-gradient-to-r from-blue-500 to-blue-700"></div>
-                <div class="p-8 md:p-12">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-8 flex items-center">
-                        <span class="bg-blue-100 text-blue-700 rounded-full p-2 mr-3 text-sm">
-                            <i class="fas fa-plane-departure"></i>
-                        </span>
-                        {{ t('public_buy.step_1') }}
-                    </h2>
-
-                    <form action="{{ url_for('public.search') }}" method="POST" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2" for="date">
-                                    {{ t('public_buy.date') }}
-                                </label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-calendar text-gray-400"></i>
+                <!-- Right Column: Visual (Ticket Card) -->
+                <div class="hidden lg:flex justify-center relative">
+                    <!-- Ticket Container -->
+                    <div class="relative w-96 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 relative">
+                            <!-- Header -->
+                            <div class="bg-blue-600 p-6 flex justify-between items-center text-white">
+                                <span class="font-bold tracking-widest uppercase">Boarding Pass</span>
+                                <i class="fas fa-plane transform rotate-45 text-2xl"></i>
+                            </div>
+                            <!-- Body -->
+                            <div class="p-8 space-y-6">
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase font-bold">Passager</div>
+                                        <div class="text-lg font-bold text-gray-800">John Doe</div>
                                     </div>
-                                    <input class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow shadow-sm"
-                                           id="date" name="date" type="date" required
-                                           min="{{ now|format_date }}">
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-400 uppercase font-bold">Date</div>
+                                        <div class="text-lg font-bold text-gray-800">{{ now|format_date }}</div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <div class="text-3xl font-black text-gray-900">KIN</div>
+                                    <div class="flex-1 mx-4 border-b-2 border-dashed border-gray-300 relative top-[-10px]">
+                                        <i class="fas fa-plane absolute top-[-10px] left-1/2 transform -translate-x-1/2 text-gray-400 text-sm"></i>
+                                    </div>
+                                    <div class="text-3xl font-black text-gray-900">LUB</div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase font-bold">Vol</div>
+                                        <div class="font-mono font-bold">CAA123</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase font-bold">Siège</div>
+                                        <div class="font-mono font-bold">12A</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase font-bold">Classe</div>
+                                        <div class="font-mono font-bold">Eco</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2" for="flight_number">
-                                    {{ t('public_buy.flight_number') }}
-                                </label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-ticket-alt text-gray-400"></i>
-                                    </div>
-                                    <input class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow shadow-sm"
-                                           id="flight_number" name="flight_number" type="text" placeholder="{{ t('public_buy.flight_placeholder') }}">
-                                </div>
+                            <!-- Barcode Strip -->
+                            <div class="bg-gray-50 p-4 border-t border-dashed border-gray-300 flex justify-center">
+                                <div class="h-12 w-full bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')] bg-repeat-x opacity-20"></div> <!-- Placeholder texture -->
+                                <div class="font-mono tracking-[0.5em] text-center text-gray-400 text-sm w-full truncate">||| |||| | ||| || ||||</div>
                             </div>
+
+                            <!-- Circle cutouts -->
+                            <div class="absolute top-[68px] -left-3 w-6 h-6 bg-gray-50 rounded-full"></div>
+                            <div class="absolute top-[68px] -right-3 w-6 h-6 bg-gray-50 rounded-full"></div>
                         </div>
 
-                        <div class="flex justify-end pt-6">
-                            <button class="w-full md:w-auto flex justify-center items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5" type="submit">
-                                <i class="fas fa-search mr-2"></i> {{ t('public_buy.search_btn') }}
+                        <!-- Decorative ring behind -->
+                         <div class="absolute -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-4 border-purple-200 rounded-full opacity-50 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Search Widget -->
+            <div id="search-widget" class="mt-16 lg:mt-24 relative z-20">
+                <div class="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-2 max-w-4xl mx-auto border border-gray-100">
+
+                    <!-- Tabs -->
+                    <div class="flex space-x-6 px-6 py-3 border-b border-gray-100 mb-2 overflow-x-auto">
+                        <button class="flex items-center text-blue-600 font-bold border-b-2 border-blue-600 pb-2 whitespace-nowrap">
+                            <i class="fas fa-plane-departure mr-2"></i> Recherche Vol
+                        </button>
+                        <button class="flex items-center text-gray-400 hover:text-gray-600 font-medium pb-2 whitespace-nowrap transition-colors">
+                            <i class="fas fa-ticket-alt mr-2"></i> Mes Billets
+                        </button>
+                        <button class="flex items-center text-gray-400 hover:text-gray-600 font-medium pb-2 whitespace-nowrap transition-colors">
+                            <i class="fas fa-info-circle mr-2"></i> Status
+                        </button>
+                    </div>
+
+                    <!-- Form -->
+                    <form action="{{ url_for('public.search') }}" method="POST" class="p-4">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <!-- Date Input -->
+                            <div class="flex-1 bg-gray-50 rounded-xl px-4 py-3 flex items-center border border-transparent focus-within:border-blue-300 focus-within:bg-white transition-all">
+                                <div class="text-gray-400 mr-3">
+                                    <i class="far fa-calendar-alt text-xl"></i>
+                                </div>
+                                <div class="w-full">
+                                    <label for="date" class="block text-xs font-bold text-gray-400 uppercase tracking-wide">{{ t('public_buy.date') }}</label>
+                                    <input type="date" id="date" name="date" required min="{{ now|format_date }}"
+                                           class="bg-transparent w-full text-gray-900 font-semibold focus:outline-none placeholder-gray-400">
+                                </div>
+                            </div>
+
+                            <!-- Flight Number Input -->
+                            <div class="flex-1 bg-gray-50 rounded-xl px-4 py-3 flex items-center border border-transparent focus-within:border-blue-300 focus-within:bg-white transition-all">
+                                <div class="text-gray-400 mr-3">
+                                    <i class="fas fa-plane text-xl"></i>
+                                </div>
+                                <div class="w-full">
+                                    <label for="flight_number" class="block text-xs font-bold text-gray-400 uppercase tracking-wide">{{ t('public_buy.flight_number') }}</label>
+                                    <input type="text" id="flight_number" name="flight_number" placeholder="ex: CAA123"
+                                           class="bg-transparent w-full text-gray-900 font-semibold focus:outline-none placeholder-gray-400">
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-4 font-bold shadow-lg hover:shadow-blue-500/50 transition-all duration-300 flex items-center justify-center md:w-auto w-full">
+                                <i class="fas fa-search text-xl"></i>
                             </button>
                         </div>
                     </form>
                 </div>
+
+                <!-- Helper text -->
+                <p class="text-center text-gray-400 text-sm mt-4">
+                    <i class="fas fa-shield-alt mr-1"></i> Paiement sécurisé et validé par l'RVA
+                </p>
             </div>
 
-            <!-- Features Steps -->
-            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <!-- Step 1 -->
-                <div class="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border border-gray-50">
-                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 text-blue-600 mb-6 text-2xl">
-                        <i class="fas fa-search"></i>
+            <!-- Features Grid (Simplified) -->
+            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="group p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-search text-xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ t('public_buy.step_1_title') }}</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed">{{ t('public_buy.step_1_desc') }}</p>
+                    <h3 class="font-bold text-lg text-gray-900 mb-2">{{ t('public_buy.step_1_title') }}</h3>
+                    <p class="text-gray-500 text-sm">{{ t('public_buy.step_1_desc') }}</p>
                 </div>
 
-                <!-- Step 2 -->
-                <div class="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border border-gray-50">
-                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-50 text-green-600 mb-6 text-2xl">
-                        <i class="fas fa-credit-card"></i>
+                <!-- Feature 2 -->
+                <div class="group p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-credit-card text-xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ t('public_buy.step_2_title') }}</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed">{{ t('public_buy.step_2_desc') }}</p>
+                    <h3 class="font-bold text-lg text-gray-900 mb-2">{{ t('public_buy.step_2_title') }}</h3>
+                    <p class="text-gray-500 text-sm">{{ t('public_buy.step_2_desc') }}</p>
                 </div>
 
-                <!-- Step 3 -->
-                <div class="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition-shadow duration-300 border border-gray-50">
-                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-purple-50 text-purple-600 mb-6 text-2xl">
-                        <i class="fas fa-qrcode"></i>
+                <!-- Feature 3 -->
+                <div class="group p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-qrcode text-xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ t('public_buy.step_3_title') }}</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed">{{ t('public_buy.step_3_desc') }}</p>
+                    <h3 class="font-bold text-lg text-gray-900 mb-2">{{ t('public_buy.step_3_title') }}</h3>
+                    <p class="text-gray-500 text-sm">{{ t('public_buy.step_3_desc') }}</p>
                 </div>
             </div>
+
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-            <div class="flex items-center mb-4 md:mb-0">
-                 <img class="h-8 w-auto grayscale opacity-50 hover:opacity-100 transition-opacity" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
-            </div>
-            <p class="text-gray-400 text-sm">
-                &copy; {{ now.year }} {{ t('global.app_name') }}. All rights reserved.
-            </p>
+    <footer class="bg-white border-t border-gray-100 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+             <img class="h-8 w-auto mx-auto mb-4 grayscale opacity-30" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
+             <p class="text-gray-400 text-sm">&copy; {{ now.year }} GoPass. All rights reserved.</p>
         </div>
     </footer>
+
 </div>
+
+<!-- Custom Keyframes for Blob Animation -->
+<style>
+    @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+</style>
 
 <script src="/static/js/public/index.js"></script>
 {% endblock %}
