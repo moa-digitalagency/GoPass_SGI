@@ -43,6 +43,12 @@
                     <i class="fas fa-plane mr-3"></i>Vols
                 </a>
 
+                <!-- Security & Fraud Menu -->
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Sécurité & Fraude</div>
+                <a href="{{ url_for('reports.anomalies') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'reports.anomalies' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-exclamation-triangle mr-3"></i>Logs d'Anomalies
+                </a>
+
                 <!-- Finance Menu -->
                 <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider">Transactions & Recettes</div>
                 <a href="{{ url_for('finance.transactions') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.transactions' in request.endpoint %}bg-blue-800{% endif %}">

@@ -7,6 +7,7 @@
     <i class="fas fa-tachometer-alt mr-3"></i>Tableau de bord
 </h1>
 
+<!-- KPI Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between">
@@ -57,6 +58,28 @@
     </div>
 </div>
 
+<!-- Intelligence Décisionnelle Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Gap Analysis Chart -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-balance-scale mr-2"></i>Audit Anti-Coulage (Gap Analysis)
+        </h3>
+        <canvas id="auditChart"></canvas>
+    </div>
+
+    <!-- Financial Pie Chart -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-chart-pie mr-2"></i>Recettes: Cash vs Mobile Money
+        </h3>
+        <div class="h-64 flex justify-center">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Logs (Consolidated) -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-white rounded-xl shadow-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
@@ -76,10 +99,10 @@
                     <tr class="border-b hover:bg-gray-50">
                         <td class="py-3 font-mono">{{ validation.pass_record.pass_number if validation.pass_record else 'N/A' }}</td>
                         <td class="py-3">
-                            {% if validation.status == 'granted' %}
-                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Accorde</span>
+                            {% if validation.status == 'valid' or validation.status == 'granted' %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Valide</span>
                             {% else %}
-                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Refuse</span>
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">{{ validation.status }}</span>
                             {% endif %}
                         </td>
                         <td class="py-3 text-sm text-gray-500">{{ validation.validation_time.strftime('%H:%M') }}</td>
@@ -119,19 +142,97 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<div class="mt-8 bg-white rounded-xl shadow-lg p-6">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">
-        <i class="fas fa-chart-pie mr-2"></i>Repartition par Type de Pass
-    </h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {% for type_stat in pass_type_stats %}
-        <div class="p-4 rounded-lg text-center" style="background-color: {{ type_stat.color }}15">
-            <h4 class="font-semibold" style="color: {{ type_stat.color }}">{{ type_stat.name }}</h4>
-            <p class="text-3xl font-bold mt-2" style="color: {{ type_stat.color }}">{{ type_stat.count }}</p>
-            <p class="text-sm text-gray-500">passes actifs</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Audit Gap Analysis Chart ---
+        const auditCtx = document.getElementById('auditChart').getContext('2d');
+        const auditData = {{ audit_data | tojson }};
+
+        const labels = auditData.map(d => d.flight_number);
+        const declaredData = auditData.map(d => d.declared);
+        const scannedData = auditData.map(d => d.scanned);
+
+        // Determine background colors dynamically: Red if scanned > declared, else Green
+        const scannedColors = auditData.map(d => d.alert ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)');
+        const scannedBorders = auditData.map(d => d.alert ? 'rgb(239, 68, 68)' : 'rgb(16, 185, 129)');
+
+        new Chart(auditCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Déclaré par Compagnie',
+                        data: declaredData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Scannés Réels',
+                        data: scannedData,
+                        backgroundColor: scannedColors,
+                        borderColor: scannedBorders,
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                if (context.datasetIndex === 1 && auditData[context.dataIndex].alert) {
+                                    return "⚠️ ALERTE: Surcharge détectée!";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- Financial Pie Chart ---
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const financialData = {{ financial_data | tojson }};
+
+        new Chart(revenueCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(financialData),
+                datasets: [{
+                    data: Object.values(financialData),
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)', // Cash (Red - risky)
+                        'rgba(16, 185, 129, 0.8)' // Mobile Money (Green - safe)
+                    ],
+                    borderColor: [
+                        'rgb(239, 68, 68)',
+                        'rgb(16, 185, 129)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

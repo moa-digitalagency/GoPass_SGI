@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, jsonify
 from flask_login import login_required
 from models import db, Flight, GoPass, AccessLog
 from sqlalchemy import func, case
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
@@ -89,8 +90,8 @@ def index():
     # Statuses: ALREADY_SCANNED, WRONG_FLIGHT, INVALID, etc.
     # Note: AccessLog status field might store these codes.
     anomalies = AccessLog.query.options(
-        db.joinedload(AccessLog.pass_record),
-        db.joinedload(AccessLog.validator)
+        joinedload(AccessLog.pass_record),
+        joinedload(AccessLog.validator)
     ).filter(
         AccessLog.status.in_(['ALREADY_SCANNED', 'WRONG_FLIGHT', 'INVALID', 'error', 'warning']) # Catch all non-valid
     ).order_by(
@@ -104,3 +105,19 @@ def index():
         heatmap_data=heatmap_data,
         anomalies=anomalies
     )
+
+@reports_bp.route('/anomalies')
+@login_required
+def anomalies():
+    # Fetch all anomalies (rejected scans)
+    # Limit to 100 most recent for now
+    anomalies_list = AccessLog.query.options(
+        joinedload(AccessLog.pass_record),
+        joinedload(AccessLog.validator)
+    ).filter(
+        ~AccessLog.status.in_(['valid', 'granted'])
+    ).order_by(
+        AccessLog.validation_time.desc()
+    ).limit(100).all()
+
+    return render_template('reports/anomalies.html', anomalies=anomalies_list)
