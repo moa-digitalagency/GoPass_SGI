@@ -5,7 +5,7 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.lib.units import cm
+from reportlab.lib.units import cm, mm
 import qrcode
 import tempfile
 import os
@@ -44,6 +44,7 @@ def checkout(flight_id):
     if request.method == 'POST':
         passenger_name = request.form.get('passenger_name')
         passport = request.form.get('passport')
+        document_type = request.form.get('document_type', 'Passeport')
 
         # Simulate payment
         # ... payment logic ...
@@ -51,7 +52,8 @@ def checkout(flight_id):
         gopass = GoPassService.create_gopass(
             flight_id=flight.id,
             passenger_name=passenger_name,
-            passenger_passport=passport
+            passenger_passport=passport,
+            passenger_document_type=document_type
         )
 
         return redirect(url_for('public.confirmation', id=gopass.id))
@@ -82,11 +84,6 @@ def download_pdf(id):
     if not gopass:
         return "Pass non trouvé", 404
 
-    # Generate PDF
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
     # Generate QR Code
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(gopass.token)
@@ -98,26 +95,77 @@ def download_pdf(id):
         img.save(tmp.name)
         qr_path = tmp.name
 
-    # Draw PDF
-    # Logo header (Text for now)
-    p.setFont("Helvetica-Bold", 24)
-    p.drawString(2*cm, height - 2*cm, "RÉPUBLIQUE DÉMOCRATIQUE DU CONGO")
-    p.setFont("Helvetica", 16)
-    p.drawString(2*cm, height - 3*cm, "RVA - Redevance IDEF (GoPass)")
+    # Generate PDF
+    buffer = io.BytesIO()
 
-    # Flight Info
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(2*cm, height - 5*cm, f"VOL: {gopass.flight.flight_number}")
-    p.drawString(2*cm, height - 6*cm, f"DATE: {gopass.flight.departure_time.strftime('%d/%m/%Y %H:%M')}")
-    p.drawString(2*cm, height - 7*cm, f"PASSAGER: {gopass.passenger_name}")
-    p.drawString(2*cm, height - 8*cm, f"PASSEPORT: {gopass.passenger_passport}")
+    fmt = request.args.get('format')
+    if fmt == 'thermal':
+        # 80mm width layout
+        width = 80 * mm
+        height = 160 * mm # Fixed height for receipt
+        p = canvas.Canvas(buffer, pagesize=(width, height))
 
-    # Draw QR
-    p.drawImage(qr_path, 12*cm, height - 9*cm, width=6*cm, height=6*cm)
+        # Helper for centering
+        def draw_centered(text, y, font="Helvetica", size=10):
+            p.setFont(font, size)
+            text_width = p.stringWidth(text, font, size)
+            p.drawString((width - text_width) / 2, y, text)
 
-    p.setFont("Helvetica", 10)
-    p.drawString(2*cm, height - 10*cm, f"Ref Paiement: {gopass.payment_ref}")
-    p.drawString(2*cm, height - 11*cm, f"Ce document doit être présenté lors du contrôle.")
+        y = height - 10 * mm
+        draw_centered("RÉPUBLIQUE DÉMOCRATIQUE DU CONGO", y, "Helvetica-Bold", 10)
+        y -= 5 * mm
+        draw_centered("RVA - IDEF (GoPass)", y, "Helvetica-Bold", 12)
+
+        y -= 10 * mm
+        p.setLineWidth(1)
+        p.line(5*mm, y, width - 5*mm, y)
+        y -= 5 * mm
+
+        draw_centered(f"VOL: {gopass.flight.flight_number}", y, "Helvetica-Bold", 12)
+        y -= 5 * mm
+        draw_centered(f"{gopass.flight.departure_time.strftime('%d/%m/%Y %H:%M')}", y, "Helvetica", 10)
+
+        y -= 10 * mm
+        draw_centered("PASSAGER", y, "Helvetica", 8)
+        y -= 5 * mm
+        draw_centered(gopass.passenger_name, y, "Helvetica-Bold", 12)
+        y -= 5 * mm
+        draw_centered(f"{gopass.passenger_document_type}: {gopass.passenger_passport}", y, "Helvetica", 10)
+
+        # QR Code
+        qr_size = 40 * mm
+        y -= (qr_size + 5 * mm)
+        p.drawImage(qr_path, (width - qr_size) / 2, y, width=qr_size, height=qr_size)
+
+        y -= 5 * mm
+        draw_centered(f"Ref: {gopass.payment_ref}", y, "Helvetica", 8)
+        y -= 4 * mm
+        draw_centered("Reçu Client - Copie", y, "Helvetica-Oblique", 8)
+
+    else:
+        # A4 Layout (Default)
+        p = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        # Logo header (Text for now)
+        p.setFont("Helvetica-Bold", 24)
+        p.drawString(2*cm, height - 2*cm, "RÉPUBLIQUE DÉMOCRATIQUE DU CONGO")
+        p.setFont("Helvetica", 16)
+        p.drawString(2*cm, height - 3*cm, "RVA - Redevance IDEF (GoPass)")
+
+        # Flight Info
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(2*cm, height - 5*cm, f"VOL: {gopass.flight.flight_number}")
+        p.drawString(2*cm, height - 6*cm, f"DATE: {gopass.flight.departure_time.strftime('%d/%m/%Y %H:%M')}")
+        p.drawString(2*cm, height - 7*cm, f"PASSAGER: {gopass.passenger_name}")
+        p.drawString(2*cm, height - 8*cm, f"{gopass.passenger_document_type.upper()}: {gopass.passenger_passport}")
+
+        # Draw QR
+        p.drawImage(qr_path, 12*cm, height - 9*cm, width=6*cm, height=6*cm)
+
+        p.setFont("Helvetica", 10)
+        p.drawString(2*cm, height - 10*cm, f"Ref Paiement: {gopass.payment_ref}")
+        p.drawString(2*cm, height - 11*cm, f"Ce document doit être présenté lors du contrôle.")
 
     p.showPage()
     p.save()

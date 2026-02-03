@@ -7,7 +7,7 @@ from services.qr_service import QRService
 
 class GoPassService:
     @staticmethod
-    def create_gopass(flight_id, passenger_name, passenger_passport, price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter'):
+    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter'):
         flight = Flight.query.get(flight_id)
         if not flight:
             raise ValueError("Vol invalide")
@@ -30,6 +30,7 @@ class GoPassService:
             flight_id=flight_id,
             passenger_name=passenger_name,
             passenger_passport=passenger_passport,
+            passenger_document_type=passenger_document_type,
             price=price,
             currency=currency,
             payment_status='paid', # Assuming payment success for now
@@ -174,7 +175,8 @@ class GoPassService:
                 'color': 'green',
                 'data': {
                     'passenger': gopass.passenger_name,
-                    'passport': gopass.passenger_passport
+                    'passport': gopass.passenger_passport,
+                    'document_type': gopass.passenger_document_type
                 }
             }
 

@@ -43,8 +43,21 @@
                                    id="passenger_name" name="passenger_name" type="text" required placeholder="ex: JEAN DUPONT">
                         </div>
                         <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="document_type">
+                                Type de Pièce
+                            </label>
+                            <select class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                                   id="document_type" name="document_type" required>
+                                <option value="Passeport" selected>Passeport</option>
+                                <option value="Carte d'Identité">Carte d'Identité</option>
+                                <option value="Permis de Conduire">Permis de Conduire</option>
+                                <option value="Carte d'Électeur">Carte d'Électeur</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="passport">
-                                Numéro de Passeport / ID
+                                Numéro de Pièce
                             </label>
                             <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                    id="passport" name="passport" type="text" required placeholder="ex: A1234567">

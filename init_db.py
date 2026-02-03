@@ -21,7 +21,7 @@ def check_and_update_schema(db, app):
     expected_schema = {
         'users': ['uuid', 'role', 'location', 'is_active', 'phone'],
         'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration'],
-        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel'],
+        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel', 'passenger_document_type'],
         'access_logs': ['status', 'validation_time'],
         'pass_types': ['color']
     }
@@ -172,6 +172,7 @@ def init_database():
                             holder_id=holder.id,
                             passenger_name=f"{holder.first_name} {holder.last_name}",
                             passenger_passport=f"P{i}12345",
+                            passenger_document_type='Passeport',
                             pass_type_id=standard_type.id,
                             status='valid',
                             payment_status='paid',
