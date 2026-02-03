@@ -56,6 +56,18 @@
                     <i class="fas fa-sync-alt mr-3"></i>Réconciliation
                 </a>
 
+                <!-- Configuration Menu -->
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Configuration Globale</div>
+                <a href="{{ url_for('settings.tariffs') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.tariffs' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-tags mr-3"></i>Tarifs (IDEF)
+                </a>
+                <a href="{{ url_for('settings.airports') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.airports' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-map-marker-alt mr-3"></i>Aéroports
+                </a>
+                <a href="{{ url_for('settings.airlines') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.airlines' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-plane-departure mr-3"></i>Compagnies
+                </a>
+
                 <!-- Infrastructure Menu -->
                 <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Infrastructure</div>
                 <a href="{{ url_for('infrastructure.devices') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.devices' in request.endpoint %}bg-blue-800{% endif %}">

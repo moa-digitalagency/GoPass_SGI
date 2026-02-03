@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Tarifs (IDEF) - GO-PASS{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h2 class="text-2xl font-bold text-gray-800">Gestion des Tarifs (IDEF)</h2>
+</div>
+
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <form method="POST" action="{{ url_for('settings.tariffs') }}">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type de Vol</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie Passager</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix (USD)</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for tariff in tariffs %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if tariff.flight_type == 'international' %}bg-purple-100 text-purple-800{% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ tariff.flight_type|title }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ tariff.passenger_category }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="number" step="0.01" name="price_{{ tariff.id }}" value="{{ tariff.price }}" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" required>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="px-6 py-4 bg-gray-50 text-right">
+            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Enregistrer les modifications
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

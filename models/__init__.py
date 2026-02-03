@@ -277,3 +277,59 @@ class SecurityKey(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'expires_at': self.expires_at.isoformat() if self.expires_at else None
         }
+
+class Airport(db.Model):
+    __tablename__ = 'airports'
+
+    id = db.Column(db.Integer, primary_key=True)
+    iata_code = db.Column(db.String(3), unique=True, nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(20), default='national') # national, international
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'iata_code': self.iata_code,
+            'city': self.city,
+            'type': self.type
+        }
+
+class Airline(db.Model):
+    __tablename__ = 'airlines'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    logo_path = db.Column(db.String(200)) # Path to uploaded logo
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'logo_path': self.logo_path,
+            'is_active': self.is_active
+        }
+
+class Tariff(db.Model):
+    __tablename__ = 'tariffs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    flight_type = db.Column(db.String(20), nullable=False) # national, international
+    passenger_category = db.Column(db.String(20), nullable=False) # Adulte, Enfant, Bébé
+    price = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(10), default='USD')
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Composite unique constraint to ensure one price per combination
+    __table_args__ = (db.UniqueConstraint('flight_type', 'passenger_category', name='_flight_passenger_uc'),)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'flight_type': self.flight_type,
+            'passenger_category': self.passenger_category,
+            'price': self.price,
+            'currency': self.currency
+        }

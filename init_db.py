@@ -81,7 +81,7 @@ def check_and_update_schema(db, app):
 
 def init_database():
     from app import create_app
-    from models import db, User, Flight, GoPass, PassType, Device, Printer, SecurityKey
+    from models import db, User, Flight, GoPass, PassType, Device, Printer, SecurityKey, Airport, Airline, Tariff
     import uuid
     import secrets
     
@@ -207,6 +207,46 @@ def init_database():
             ]
             db.session.add_all(keys)
             print("Sample security keys created.")
+
+        # Seed Airports
+        print("Checking airports...")
+        if Airport.query.count() == 0:
+            airports = [
+                Airport(iata_code='FIH', city='Kinshasa', type='international'),
+                Airport(iata_code='FBM', city='Lubumbashi', type='international'),
+                Airport(iata_code='GOM', city='Goma', type='international'),
+                Airport(iata_code='LUB', city='Lubumbashi (Luano)', type='national'),
+                Airport(iata_code='FKI', city='Kisangani', type='national')
+            ]
+            db.session.add_all(airports)
+            print("Sample airports created.")
+
+        # Seed Airlines
+        print("Checking airlines...")
+        if Airline.query.count() == 0:
+            airlines = [
+                Airline(name='Compagnie Africaine d\'Aviation', is_active=True),
+                Airline(name='Congo Airways', is_active=True),
+                Airline(name='Air France', is_active=True),
+                Airline(name='Brussels Airlines', is_active=True),
+                Airline(name='Ethiopian Airlines', is_active=True)
+            ]
+            db.session.add_all(airlines)
+            print("Sample airlines created.")
+
+        # Seed Tariffs
+        print("Checking tariffs...")
+        if Tariff.query.count() == 0:
+            tariffs = [
+                Tariff(flight_type='national', passenger_category='Adulte', price=50.0),
+                Tariff(flight_type='national', passenger_category='Enfant', price=25.0),
+                Tariff(flight_type='national', passenger_category='Bébé', price=5.0),
+                Tariff(flight_type='international', passenger_category='Adulte', price=55.0),
+                Tariff(flight_type='international', passenger_category='Enfant', price=30.0),
+                Tariff(flight_type='international', passenger_category='Bébé', price=10.0),
+            ]
+            db.session.add_all(tariffs)
+            print("Sample tariffs created.")
 
         db.session.commit()
         print("\nDatabase initialization completed successfully!")
