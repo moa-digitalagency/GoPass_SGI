@@ -9,12 +9,17 @@ class LandingPageTestCase(unittest.TestCase):
     def test_landing_page_loads(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
+        content = response.data.decode('utf-8')
+
         # Check for the app name
-        self.assertIn(b"SGI-GP RDC", response.data)
-        # Check for the hero title "PRÊT À" (UTF-8 bytes: PR\xc3\x8aT \xc3\x80)
-        # PRÊT À
-        # Ê = \xc3\x8a
-        # À = \xc3\x80
-        self.assertIn(b"PR\xc3\x8aT \xc3\x80", response.data)
+        self.assertIn("SGI-GP RDC", content)
+
+        # Check for the hero title parts (Note: HTML uses CSS uppercase, but source is Mixed Case)
+        self.assertIn("Portail Officiel du", content)
+        self.assertIn("E-GoPass", content)
+
         # Check for IDEF text
-        self.assertIn(b"IDEF", response.data)
+        self.assertIn("IDEF", content)
+        # Check for specific new elements
+        self.assertIn("Tarifs GoPass", content)
+        self.assertIn("Accès Agent", content)

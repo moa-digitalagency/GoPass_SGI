@@ -16,61 +16,94 @@
     <div class="absolute top-0 left-1/2 transform -translate-x-1/2 mt-20 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
 
     <!-- Navbar -->
-    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
-                <div class="flex-shrink-0 flex items-center gap-3">
-                    <img class="h-10 w-auto" src="{{ url_for('static', filename='img/logo_gopass.png') }}" alt="GoPass Logo">
-                    <span class="font-extrabold text-2xl text-gray-900 tracking-tight">{{ t('global.app_name') }}</span>
+                <!-- Logo & Title -->
+                <div class="flex-shrink-0 flex items-center gap-4">
+                    <img class="h-12 w-auto" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-2xl text-blue-900 tracking-tight leading-none">SGI-GP RDC</span>
+                            <span class="text-xl">🇨🇩</span>
+                        </div>
+                        <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest leading-none">Portail Officiel IDEF</span>
+                    </div>
                 </div>
-                <div class="hidden md:flex space-x-8 items-center">
-                    <a href="#" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">{{ t('menu.tariffs') }}</a>
-                    <a href="#" class="text-gray-500 hover:text-blue-600 font-medium transition-colors">Aide</a>
-                    <a href="{{ url_for('auth.login') }}" class="text-sm font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider">
-                        LOGIN / SIGNUP
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="#tarifs" class="text-sm font-semibold text-gray-600 hover:text-blue-700 transition-colors">
+                        Tarifs GoPass
+                    </a>
+                    <a href="/aide" class="text-sm font-semibold text-gray-600 hover:text-blue-700 transition-colors">
+                        Aide & FAQ
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="px-5 py-2.5 text-sm font-bold text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all duration-300">
+                        Accès Agent / Contrôleur
                     </a>
                 </div>
+
+                <!-- Mobile Menu Icon -->
                 <div class="md:hidden">
-                    <a href="{{ url_for('auth.login') }}" class="text-blue-600 font-bold">
-                        <i class="fas fa-sign-in-alt"></i>
+                    <a href="{{ url_for('auth.login') }}" class="text-gray-700">
+                        <i class="fas fa-bars text-2xl"></i>
                     </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section (Centered) -->
-    <main class="flex-grow flex flex-col justify-center relative z-10">
+    <!-- Hero Section -->
+    <main class="flex-grow flex flex-col relative z-10">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20 text-center">
 
             <!-- Headline & Subtitle -->
             <div class="space-y-6 mb-12">
-                <h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight">
-                    PRÊT À <br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">DÉCOLLER ?</span>
+                <h1 class="text-4xl md:text-6xl font-black text-blue-900 leading-tight tracking-tight uppercase">
+                    Portail Officiel du <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">E-GoPass RDC</span>
                 </h1>
-                <p class="text-lg md:text-xl text-gray-500 font-medium max-w-2xl mx-auto leading-relaxed">
-                    {{ t('public_buy.subtitle') }}
-                    <br>
-                    Payez votre redevance aéroportuaire (IDEF) simplement, rapidement et en toute sécurité.
+                <p class="text-lg md:text-xl text-gray-600 font-medium max-w-3xl mx-auto leading-relaxed">
+                    Acquittez-vous de la Redevance de Développement des Infrastructures Aéroportuaires (IDEF) en toute simplicité et conformité.
                 </p>
             </div>
 
             <!-- Floating Search Widget (Centered) -->
-            <div id="search-widget" class="relative z-20 max-w-3xl mx-auto">
-                <div class="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-2 border border-gray-100">
+            <div id="search-widget" class="relative z-20 max-w-4xl mx-auto">
+                <div class="bg-white rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden">
 
-                    <!-- Tabs -->
-                    <div class="flex justify-center space-x-6 px-6 py-3 border-b border-gray-100 mb-2 overflow-x-auto">
-                        <button class="flex items-center text-blue-600 font-bold border-b-2 border-blue-600 pb-2 whitespace-nowrap">
-                            <i class="fas fa-paper-plane mr-2"></i> Payer IDEF
-                        </button>
-                        <button class="flex items-center text-gray-400 hover:text-gray-600 font-medium pb-2 whitespace-nowrap transition-colors">
-                            <i class="fas fa-ticket-alt mr-2"></i> Mes GoPass
-                        </button>
-                        <button class="flex items-center text-gray-400 hover:text-gray-600 font-medium pb-2 whitespace-nowrap transition-colors">
-                            <i class="fas fa-info-circle mr-2"></i> Status Vol
-                        </button>
+                    <!-- Stepper (Progress Bar) -->
+                    <div class="bg-gray-50/50 border-b border-gray-100 px-8 py-6">
+                        <div class="flex items-center justify-between max-w-2xl mx-auto relative">
+                             <!-- Line Background -->
+                            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 z-0"></div>
+
+                            <!-- Step 1: Vol (Active) -->
+                            <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                                <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-200 ring-4 ring-white">
+                                    1
+                                </div>
+                                <span class="absolute -bottom-8 text-xs font-bold text-blue-600 uppercase tracking-wider whitespace-nowrap">Vol</span>
+                            </div>
+
+                            <!-- Step 2: Identité -->
+                            <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white">
+                                    2
+                                </div>
+                                <span class="absolute -bottom-8 text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Identité</span>
+                            </div>
+
+                            <!-- Step 3: Paiement -->
+                            <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                                <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white">
+                                    3
+                                </div>
+                                <span class="absolute -bottom-8 text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Paiement</span>
+                            </div>
+                        </div>
+                        <div class="h-6"></div> <!-- Spacer for labels -->
                     </div>
 
                     <!-- Form -->
@@ -115,44 +148,255 @@
                 </p>
             </div>
 
-            <!-- Features Grid (Simplified) -->
-            <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                <!-- Feature 1 -->
-                <div class="group p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 bg-white/50 backdrop-blur-sm">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-search text-xl"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-gray-900 mb-2">{{ t('public_buy.step_1_title') }}</h3>
-                    <p class="text-gray-500 text-sm">{{ t('public_buy.step_1_desc') }}</p>
+        </div>
+        <!-- End Hero Container -->
+
+        <!-- Section A: Qu'est-ce que le GoPass ? -->
+        <section class="py-24 bg-white w-full relative z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <span class="text-blue-600 font-bold uppercase tracking-wider text-sm">Comprendre</span>
+                    <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-6">Qu'est-ce que le GoPass ?</h2>
+                    <p class="text-lg text-gray-600 leading-relaxed">
+                        L'IDEF (Infrastructure Development Fund), communément appelé "GoPass",
+                        est une redevance obligatoire perçue par la RVA. Elle finance la maintenance,
+                        la réhabilitation et la modernisation des infrastructures aéroportuaires de la RDC.
+                    </p>
                 </div>
 
-                <!-- Feature 2 -->
-                <div class="group p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 bg-white/50 backdrop-blur-sm">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-credit-card text-xl"></i>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Card 1 -->
+                    <div class="bg-blue-50 rounded-3xl p-8 border border-blue-100 hover:shadow-xl transition-shadow duration-300">
+                        <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-blue-200 shadow-lg">
+                            <i class="fas fa-plane-departure text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Vols Nationaux</h3>
+                        <p class="text-gray-600 font-medium">Requis pour tout passager voyageant à l'intérieur du territoire de la République Démocratique du Congo.</p>
                     </div>
-                    <h3 class="font-bold text-lg text-gray-900 mb-2">{{ t('public_buy.step_2_title') }}</h3>
-                    <p class="text-gray-500 text-sm">{{ t('public_buy.step_2_desc') }}</p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="group p-6 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 bg-white/50 backdrop-blur-sm">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-qrcode text-xl"></i>
+                     <!-- Card 2 -->
+                    <div class="bg-indigo-50 rounded-3xl p-8 border border-indigo-100 hover:shadow-xl transition-shadow duration-300">
+                        <div class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-indigo-200 shadow-lg">
+                            <i class="fas fa-globe-africa text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Vols Internationaux</h3>
+                        <p class="text-gray-600 font-medium">Indispensable pour tout passager quittant la RDC vers une destination étrangère.</p>
                     </div>
-                    <h3 class="font-bold text-lg text-gray-900 mb-2">{{ t('public_buy.step_3_title') }}</h3>
-                    <p class="text-gray-500 text-sm">{{ t('public_buy.step_3_desc') }}</p>
+                     <!-- Card 3 -->
+                    <div class="bg-gray-50 rounded-3xl p-8 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                        <div class="w-14 h-14 bg-gray-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-gray-200 shadow-lg">
+                            <i class="fas fa-boxes text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Fret & Cargo</h3>
+                        <p class="text-gray-600 font-medium">Une redevance spécifique s'applique également aux marchandises transportées par voie aérienne.</p>
+                    </div>
                 </div>
             </div>
+        </section>
 
-        </div>
+        <!-- Section B: Contribution -->
+        <section class="py-24 bg-gray-50 w-full relative z-10 border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row items-center gap-16">
+                    <div class="md:w-1/2">
+                        <span class="text-blue-600 font-bold uppercase tracking-wider text-sm">Impact</span>
+                        <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-6">À quoi sert votre contribution ?</h2>
+                        <p class="text-lg text-gray-600 mb-8">
+                            Chaque paiement contribue directement à l'amélioration de votre expérience de voyage et à la sécurité de l'espace aérien congolais.
+                        </p>
+
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">Sécurité des pistes</h4>
+                                    <p class="text-sm text-gray-500">Maintenance et balisage des pistes d'atterrissage.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">Modernisation des aérogares</h4>
+                                    <p class="text-sm text-gray-500">Construction et rénovation des terminaux passagers.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                    <i class="fas fa-satellite-dish"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900">Équipements de navigation</h4>
+                                    <p class="text-sm text-gray-500">Acquisition de technologies de pointe pour le contrôle aérien.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 relative">
+                        <!-- Illustration placeholder using a colored block or pattern if image not available -->
+                        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <div class="text-center py-12">
+                                <i class="fas fa-plane-arrival text-6xl mb-6 opacity-80"></i>
+                                <h3 class="text-2xl font-bold mb-2">Un ciel plus sûr</h3>
+                                <p class="opacity-80">Grâce à l'IDEF, la RVA modernise 54 aéroports à travers le pays.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section C: Tarifs (#tarifs) -->
+        <section id="tarifs" class="py-24 bg-white w-full relative z-10 border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <span class="text-blue-600 font-bold uppercase tracking-wider text-sm">Transparence</span>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-12">Grille Officielle des Tarifs</h2>
+
+                <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-wider">Type de Vol</th>
+                                <th class="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Tarif (USD)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr class="hover:bg-blue-50/50 transition-colors">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                            <i class="fas fa-plane"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block font-bold text-gray-900">Vol National</span>
+                                            <span class="text-sm text-gray-500">Vols domestiques RDC</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <span class="text-2xl font-black text-blue-900">$15.00</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-purple-50/50 transition-colors">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                            <i class="fas fa-globe"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block font-bold text-gray-900">Vol International</span>
+                                            <span class="text-sm text-gray-500">Vols hors RDC</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <span class="text-2xl font-black text-blue-900">$55.00</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="bg-gray-50 px-8 py-4 text-left text-sm text-gray-500 border-t border-gray-100">
+                        <i class="fas fa-info-circle mr-2"></i> Les tarifs incluent la TVA et sont payables en USD ou équivalent CDF.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section D: La RVA -->
+        <section class="py-24 bg-gray-900 text-white w-full relative z-10 overflow-hidden">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10" style="background-image: url('{{ url_for('static', filename='img/logo_rva.png') }}'); background-repeat: no-repeat; background-position: center; background-size: contain; filter: grayscale(100%);"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
+                <img class="h-20 w-auto mx-auto mb-8 bg-white p-2 rounded-xl" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
+                <h2 class="text-3xl md:text-4xl font-black mb-6">La Régie des Voies Aériennes</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
+                    La RVA est une entreprise publique à caractère technique et commercial, dotée de la personnalité juridique.
+                    Elle a pour mission de construire, d'aménager, d'entretenir et d'exploiter les aéroports et leurs dépendances,
+                    ainsi que d'assurer la sécurité de la navigation aérienne en RDC.
+                </p>
+                <a href="#" class="inline-flex items-center bg-white text-gray-900 font-bold py-4 px-8 rounded-xl hover:bg-gray-100 transition-colors">
+                    Visiter le site officiel de la RVA <i class="fas fa-external-link-alt ml-2"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- Section E: Réalisations -->
+        <section class="py-16 bg-blue-600 text-white w-full relative z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-blue-500/50">
+                    <div class="p-4">
+                        <div class="text-5xl font-black mb-2">54+</div>
+                        <div class="text-blue-100 font-medium uppercase tracking-wide">Aéroports Desservis</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="text-5xl font-black mb-2">1.2M+</div>
+                        <div class="text-blue-100 font-medium uppercase tracking-wide">Passagers / An</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="text-5xl font-black mb-2">100%</div>
+                        <div class="text-blue-100 font-medium uppercase tracking-wide">Sécurité & Conformité</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-100 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-             <img class="h-8 w-auto mx-auto mb-4 grayscale opacity-30" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
-             <p class="text-gray-400 text-sm">&copy; {{ now.year }} GoPass. All rights reserved.</p>
+    <footer class="bg-white border-t border-gray-200 pt-16 pb-8 z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <!-- Partners Section -->
+            <div class="mb-12 text-center">
+                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8">Partenaires & Institutions</p>
+                <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70">
+                     <!-- RVA -->
+                    <img class="h-14 w-auto grayscale hover:grayscale-0 transition-all duration-300" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA">
+
+                    <!-- Ministry Placeholder -->
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-10 h-10 border-2 border-gray-300 rounded-full flex items-center justify-center text-gray-400 group-hover:border-blue-600 group-hover:text-blue-600 transition-colors">
+                            <i class="fas fa-landmark"></i>
+                         </div>
+                         <span class="text-xs font-bold text-gray-500 text-left leading-tight group-hover:text-gray-900 transition-colors">Ministère des<br>Transports</span>
+                    </div>
+
+                    <!-- Bank Placeholder 1 -->
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-10 h-10 border-2 border-gray-300 rounded-full flex items-center justify-center text-gray-400 group-hover:border-orange-600 group-hover:text-orange-600 transition-colors">
+                            <i class="fas fa-university"></i>
+                         </div>
+                         <span class="text-xs font-bold text-gray-500 group-hover:text-gray-900 transition-colors">Rawbank</span>
+                    </div>
+
+                    <!-- Bank Placeholder 2 -->
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-10 h-10 border-2 border-gray-300 rounded-full flex items-center justify-center text-gray-400 group-hover:border-red-600 group-hover:text-red-600 transition-colors">
+                            <i class="fas fa-money-bill-wave"></i>
+                         </div>
+                         <span class="text-xs font-bold text-gray-500 group-hover:text-gray-900 transition-colors">EquityBCDC</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 my-8"></div>
+
+            <!-- Bottom Footer -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-gray-900">SGI-GP RDC</span>
+                    <span class="text-gray-400 text-sm">&copy; {{ now.year }} Tous droits réservés.</span>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-6">
+                    <a href="#" class="text-sm text-gray-500 hover:text-blue-600 transition-colors">Conditions Générales (CGU)</a>
+                    <a href="#" class="text-sm text-gray-500 hover:text-blue-600 transition-colors">Politique de Confidentialité</a>
+                    <a href="#" class="text-sm text-gray-500 hover:text-blue-600 transition-colors">Mentions Légales</a>
+                </div>
+            </div>
         </div>
     </footer>
 
