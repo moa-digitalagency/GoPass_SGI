@@ -4,9 +4,9 @@
 <div class="min-h-screen bg-gray-100 p-8">
     <div class="max-w-4xl mx-auto">
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Résultats de la recherche</h1>
+            <h1 class="text-3xl font-bold text-gray-800">{{ t('public_buy.search_results') }}</h1>
             <a href="{{ url_for('public.index') }}" class="text-blue-600 hover:text-blue-800">
-                <i class="fas fa-arrow-left mr-1"></i> Nouvelle recherche
+                <i class="fas fa-arrow-left mr-1"></i> {{ t('public_buy.new_search') }}
             </a>
         </div>
 
@@ -25,12 +25,12 @@
                             </div>
                             <div class="mt-2 flex items-center text-gray-600 space-x-4">
                                 <div>
-                                    <p class="text-xs text-gray-500">Départ</p>
+                                    <p class="text-xs text-gray-500">{{ t('public_buy.departure') }}</p>
                                     <p class="font-semibold">{{ flight.departure_airport }} {{ flight.departure_time|format_datetime }}</p>
                                 </div>
                                 <i class="fas fa-arrow-right text-gray-400"></i>
                                 <div>
-                                    <p class="text-xs text-gray-500">Arrivée</p>
+                                    <p class="text-xs text-gray-500">{{ t('public_buy.arrival') }}</p>
                                     <p class="font-semibold">{{ flight.arrival_airport }} {{ flight.arrival_time|format_datetime }}</p>
                                 </div>
                             </div>
@@ -40,7 +40,7 @@
                     <div>
                         <a href="{{ url_for('public.checkout', flight_id=flight.id) }}"
                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow inline-flex items-center">
-                            <span>Acheter GoPass</span>
+                            <span>{{ t('public_buy.buy_btn') }}</span>
                             <i class="fas fa-chevron-right ml-2"></i>
                         </a>
                     </div>
@@ -52,10 +52,10 @@
                 <div class="text-gray-400 text-6xl mb-4">
                     <i class="fas fa-plane-slash"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Aucun vol trouvé</h2>
-                <p class="text-gray-600 mb-6">Nous n'avons trouvé aucun vol correspondant à votre recherche.</p>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ t('public_buy.no_flight_found') }}</h2>
+                <p class="text-gray-600 mb-6">{{ t('public_buy.no_flight_desc') }}</p>
                 <a href="{{ url_for('public.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow">
-                    Réessayer
+                    {{ t('public_buy.retry') }}
                 </a>
             </div>
         {% endif %}

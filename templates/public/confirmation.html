@@ -8,11 +8,11 @@
                 <i class="fas fa-check"></i>
             </div>
 
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Paiement Confirmé !</h1>
-            <p class="text-gray-600 mb-8">Votre GoPass a été généré avec succès.</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ t('public_buy.payment_confirmed') }}</h1>
+            <p class="text-gray-600 mb-8">{{ t('public_buy.gopass_generated') }}</p>
 
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8 inline-block w-full max-w-md">
-                <h3 class="text-lg font-bold mb-4 text-blue-900">E-GoPass #{{ gopass.id }}</h3>
+                <h3 class="text-lg font-bold mb-4 text-blue-900">{{ t('global.app_name') }} #{{ gopass.id }}</h3>
 
                 {% if qr_base64 %}
                 <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" class="mx-auto mb-4 border-4 border-white shadow-sm rounded-lg">
@@ -26,10 +26,10 @@
 
             <div class="flex flex-col md:flex-row gap-4 justify-center">
                 <a href="{{ url_for('public.download_pdf', id=gopass.id) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition flex items-center justify-center">
-                    <i class="fas fa-file-pdf mr-2"></i> Télécharger le PDF
+                    <i class="fas fa-file-pdf mr-2"></i> {{ t('public_buy.download_pdf') }}
                 </a>
                 <a href="{{ url_for('public.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-full shadow transition">
-                    Terminer
+                    {{ t('public_buy.finish') }}
                 </a>
             </div>
         </div>

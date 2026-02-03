@@ -12,7 +12,8 @@ from config import config
 from models import db
 from security import login_manager
 from utils import format_date, format_datetime, time_ago, get_status_color, get_status_label, get_role_label
-
+from utils.i18n import get_text, load_translations
+from flask import session
 
 def create_app(config_name=None):
     if config_name is None:
@@ -34,6 +35,17 @@ def create_app(config_name=None):
     app.jinja_env.filters['status_label'] = get_status_label
     app.jinja_env.filters['role_label'] = get_role_label
     
+    # Initialize translations
+    with app.app_context():
+        load_translations()
+
+    @app.context_processor
+    def inject_i18n():
+        return dict(
+            t=get_text,
+            current_lang=session.get('lang', 'fr')
+        )
+
     from routes.auth import auth_bp
     from routes.dashboard import dashboard_bp
     from routes.users import users_bp

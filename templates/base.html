@@ -36,67 +36,71 @@
             </div>
             <nav class="mt-6">
                 <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if request.endpoint == 'dashboard.index' %}bg-blue-800{% endif %}">
-                    <i class="fas fa-tachometer-alt mr-3"></i>Tableau de bord
+                    <i class="fas fa-tachometer-alt mr-3"></i>{{ t('menu.dashboard') }}
                 </a>
                 {% if current_user.role in ['admin', 'agent'] %}
                 <a href="{{ url_for('reports.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'reports' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-chart-line mr-3"></i>Rapports
+                    <i class="fas fa-chart-line mr-3"></i>{{ t('menu.reports') }}
                 </a>
                 <a href="{{ url_for('flights.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'flights' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-plane mr-3"></i>Vols
+                    <i class="fas fa-plane mr-3"></i>{{ t('menu.flights') }}
                 </a>
 
                 <!-- Security & Fraud Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Sécurité & Fraude</div>
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.security') }}</div>
                 <a href="{{ url_for('reports.anomalies') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'reports.anomalies' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-exclamation-triangle mr-3"></i>Logs d'Anomalies
+                    <i class="fas fa-exclamation-triangle mr-3"></i>{{ t('menu.anomalies') }}
                 </a>
 
                 <!-- Finance Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider">Transactions & Recettes</div>
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider">{{ t('menu.finance') }}</div>
                 <a href="{{ url_for('finance.transactions') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.transactions' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-file-invoice-dollar mr-3"></i>Journal Ventes
+                    <i class="fas fa-file-invoice-dollar mr-3"></i>{{ t('menu.sales_journal') }}
                 </a>
                 {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('finance.deposits') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.deposits' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-cash-register mr-3"></i>Caisse Agents
+                    <i class="fas fa-cash-register mr-3"></i>{{ t('menu.agent_cash') }}
                 </a>
                 <a href="{{ url_for('finance.reconciliation') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.reconciliation' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-sync-alt mr-3"></i>Réconciliation
+                    <i class="fas fa-sync-alt mr-3"></i>{{ t('menu.reconciliation') }}
                 </a>
 
                 <!-- Configuration Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Configuration Globale</div>
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.config') }}</div>
                 <a href="{{ url_for('settings.tariffs') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.tariffs' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-tags mr-3"></i>Tarifs (IDEF)
+                    <i class="fas fa-tags mr-3"></i>{{ t('menu.tariffs') }}
                 </a>
                 <a href="{{ url_for('settings.airports') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.airports' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-map-marker-alt mr-3"></i>Aéroports
+                    <i class="fas fa-map-marker-alt mr-3"></i>{{ t('menu.airports') }}
                 </a>
                 <a href="{{ url_for('settings.airlines') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.airlines' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-plane-departure mr-3"></i>Compagnies
+                    <i class="fas fa-plane-departure mr-3"></i>{{ t('menu.airlines') }}
                 </a>
 
                 <!-- Infrastructure Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Infrastructure</div>
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.infrastructure') }}</div>
                 <a href="{{ url_for('infrastructure.devices') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.devices' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-mobile-alt mr-3"></i>Terminaux & PDA
+                    <i class="fas fa-mobile-alt mr-3"></i>{{ t('menu.devices') }}
                 </a>
                 <a href="{{ url_for('infrastructure.printers') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.printers' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-print mr-3"></i>Imprimantes
+                    <i class="fas fa-print mr-3"></i>{{ t('menu.printers') }}
                 </a>
                 <a href="{{ url_for('infrastructure.security_keys') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.security_keys' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-key mr-3"></i>Clés de Sécurité
+                    <i class="fas fa-key mr-3"></i>{{ t('menu.keys') }}
                 </a>
                 {% endif %}
 
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Administration</div>
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.admin') }}</div>
                 <a href="{{ url_for('users.index') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'users' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-users mr-3"></i>Utilisateurs
+                    <i class="fas fa-users mr-3"></i>{{ t('menu.users') }}
                 </a>
                 {% endif %}
             </nav>
             <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-800">
+                <div class="flex items-center justify-center mb-3 space-x-2">
+                     <a href="{{ url_for('public.set_language', lang='fr') }}" class="text-xl hover:scale-110 transition-transform" title="Français">🇨🇩</a>
+                     <a href="{{ url_for('public.set_language', lang='en') }}" class="text-xl hover:scale-110 transition-transform" title="English">🇬🇧</a>
+                </div>
                 <div class="flex items-center mb-3">
                     <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
                         <i class="fas fa-user"></i>
@@ -108,10 +112,10 @@
                 </div>
                 <div class="flex space-x-2">
                     <a href="{{ url_for('auth.profile') }}" class="flex-1 text-center py-2 bg-blue-800 rounded hover:bg-blue-700 text-sm">
-                        <i class="fas fa-cog mr-1"></i>Profil
+                        <i class="fas fa-cog mr-1"></i>{{ t('menu.profile') }}
                     </a>
                     <a href="{{ url_for('auth.logout') }}" class="flex-1 text-center py-2 bg-red-600 rounded hover:bg-red-500 text-sm">
-                        <i class="fas fa-sign-out-alt mr-1"></i>Quitter
+                        <i class="fas fa-sign-out-alt mr-1"></i>{{ t('global.logout') }}
                     </a>
                 </div>
             </div>
