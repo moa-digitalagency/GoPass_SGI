@@ -20,7 +20,7 @@ def check_and_update_schema(db, app):
     # This is a manual mapping based on models/__init__.py
     expected_schema = {
         'users': ['uuid', 'role', 'location', 'is_active', 'phone'],
-        'flights': ['source', 'capacity', 'status'],
+        'flights': ['source', 'capacity', 'status', 'manifest_pax_count'],
         'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel'],
         'access_logs': ['status', 'validation_time'],
         'pass_types': ['color']
@@ -43,7 +43,7 @@ def check_and_update_schema(db, app):
                     col_type = 'VARCHAR(255)'
                     if col in ['is_active']:
                         col_type = 'BOOLEAN DEFAULT TRUE'
-                    elif col in ['capacity']:
+                    elif col in ['capacity', 'manifest_pax_count']:
                         col_type = 'INTEGER DEFAULT 0'
                     elif col in ['scan_date', 'validation_time']:
                         col_type = 'TIMESTAMP'

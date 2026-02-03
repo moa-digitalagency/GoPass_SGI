@@ -74,6 +74,7 @@ class Flight(db.Model):
     status = db.Column(db.String(20), default='scheduled') # scheduled, active, landed, cancelled
     source = db.Column(db.String(20), default='manual') # api, manual
     capacity = db.Column(db.Integer, default=0)
+    manifest_pax_count = db.Column(db.Integer, default=0) # Declared by airline
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     gopasses = db.relationship('GoPass', backref='flight', lazy='dynamic')

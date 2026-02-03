@@ -1,4 +1,4 @@
-from models import db, GoPass, Flight, User
+from models import db, GoPass, Flight, User, AccessLog
 from datetime import datetime
 import json
 import hashlib
@@ -62,6 +62,24 @@ class GoPassService:
 
         # Cas D: Invalide (Document non reconnu)
         if not gopass:
+            # Log attempt even if invalid doc (if possible to track, but pass_id is null)
+            # We might want to track who tried to scan it.
+            # But AccessLog expects pass_id. If we want to log invalid docs, AccessLog might need to be nullable or use a dummy.
+            # For now, let's assume we can't log "INVALID" easily in AccessLog if pass_id is FK.
+            # Or we can create a record without pass_id if the model allows.
+            # AccessLog.pass_id is nullable (default SQLAlchemy behavior unless nullable=False).
+            # models/__init__.py: pass_id = db.Column(db.Integer, db.ForeignKey('gopasses.id'))
+            # It is nullable by default.
+
+            log = AccessLog(
+                pass_id=None,
+                validator_id=agent_id,
+                validation_time=datetime.utcnow(),
+                status='INVALID'
+            )
+            db.session.add(log)
+            db.session.commit()
+
             return {
                 'status': 'error',
                 'code': 'INVALID',
@@ -72,8 +90,17 @@ class GoPassService:
 
         # Cas B: Déjà utilisé
         if gopass.status == 'consumed':
+            log = AccessLog(
+                pass_id=gopass.id,
+                validator_id=agent_id,
+                validation_time=datetime.utcnow(),
+                status='ALREADY_SCANNED'
+            )
+            db.session.add(log)
+            db.session.commit()
+
             original_scan = {
-                'scan_date': gopass.scan_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'scan_date': gopass.scan_date.strftime('%Y-%m-%d %H:%M:%S') if gopass.scan_date else 'N/A',
                 'scanned_by': gopass.scanner.username if gopass.scanner else 'Inconnu',
                 'location': gopass.scan_location
             }
@@ -91,6 +118,15 @@ class GoPassService:
 
         # Cas C: Mauvais Vol
         if str(gopass.flight_id) != str(flight_id):
+            log = AccessLog(
+                pass_id=gopass.id,
+                validator_id=agent_id,
+                validation_time=datetime.utcnow(),
+                status='WRONG_FLIGHT'
+            )
+            db.session.add(log)
+            db.session.commit()
+
             return {
                 'status': 'warning',
                 'code': 'WRONG_FLIGHT',
@@ -109,6 +145,15 @@ class GoPassService:
             gopass.scanned_by = agent_id
             gopass.scan_date = datetime.utcnow()
             gopass.scan_location = location
+
+            log = AccessLog(
+                pass_id=gopass.id,
+                validator_id=agent_id,
+                validation_time=gopass.scan_date,
+                status='VALID'
+            )
+            db.session.add(log)
+
             db.session.commit()
 
             return {
