@@ -23,7 +23,9 @@ def check_and_update_schema(db, app):
         'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration'],
         'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel', 'passenger_document_type'],
         'access_logs': ['status', 'validation_time'],
-        'pass_types': ['color']
+        'pass_types': ['color'],
+        'app_configs': ['value', 'description', 'updated_at'],
+        'payment_gateways': ['is_active', 'config_json']
     }
 
     # Only create tables if they don't exist
@@ -45,10 +47,14 @@ def check_and_update_schema(db, app):
                         col_type = 'BOOLEAN DEFAULT TRUE'
                     elif col in ['capacity', 'manifest_pax_count']:
                         col_type = 'INTEGER DEFAULT 0'
-                    elif col in ['scan_date', 'validation_time']:
+                    elif col in ['scan_date', 'validation_time', 'updated_at']:
                         col_type = 'TIMESTAMP'
                     elif col in ['price']:
                         col_type = 'FLOAT'
+                    elif col in ['config_json']:
+                        col_type = 'JSON'
+                    elif col in ['value']:
+                        col_type = 'TEXT'
 
                     try:
                         with db.engine.connect() as conn:
@@ -81,7 +87,7 @@ def check_and_update_schema(db, app):
 
 def init_database():
     from app import create_app
-    from models import db, User, Flight, GoPass, PassType, Device, Printer, SecurityKey, Airport, Airline, Tariff
+    from models import db, User, Flight, GoPass, PassType, Device, Printer, SecurityKey, Airport, Airline, Tariff, AppConfig, PaymentGateway
     import uuid
     import secrets
     
@@ -248,6 +254,36 @@ def init_database():
             ]
             db.session.add_all(tariffs)
             print("Sample tariffs created.")
+
+        # Seed App Config
+        print("Checking app config...")
+        configs = [
+            {"key": "logo_rva_url", "value": "/static/images/default_rva.png", "description": "URL of the RVA logo"},
+            {"key": "logo_gopass_url", "value": "/static/images/default_gopass.png", "description": "URL of the GoPass logo"},
+            {"key": "site_name", "value": "SGI-GP RDC", "description": "Name of the application"},
+            {"key": "idef_price_int", "value": "50", "description": "International IDEF Price"}
+        ]
+
+        for conf in configs:
+            existing = AppConfig.query.get(conf['key'])
+            if not existing:
+                new_conf = AppConfig(key=conf['key'], value=conf['value'], description=conf['description'])
+                db.session.add(new_conf)
+                print(f"Added AppConfig: {conf['key']}")
+
+        # Seed Payment Gateways
+        print("Checking payment gateways...")
+        gateways = [
+            {"provider": "STRIPE", "is_active": True, "config_json": {}},
+            {"provider": "MOBILE_MONEY_AGGREGATOR", "is_active": False, "config_json": {}}
+        ]
+
+        for gw in gateways:
+            existing = PaymentGateway.query.filter_by(provider=gw['provider']).first()
+            if not existing:
+                new_gw = PaymentGateway(provider=gw['provider'], is_active=gw['is_active'], config_json=gw['config_json'])
+                db.session.add(new_gw)
+                print(f"Added PaymentGateway: {gw['provider']}")
 
         db.session.commit()
         print("\nDatabase initialization completed successfully!")

@@ -393,3 +393,35 @@ class Tariff(db.Model):
             'price': self.price,
             'currency': self.currency
         }
+
+class AppConfig(db.Model):
+    __tablename__ = 'app_configs'
+
+    key = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.Text)
+    description = db.Column(db.String(255))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'key': self.key,
+            'value': self.value,
+            'description': self.description,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class PaymentGateway(db.Model):
+    __tablename__ = 'payment_gateways'
+
+    id = db.Column(db.Integer, primary_key=True)
+    provider = db.Column(db.String(50), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=False)
+    config_json = db.Column(db.JSON)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'provider': self.provider,
+            'is_active': self.is_active,
+            'config_json': self.config_json
+        }
