@@ -24,14 +24,14 @@ def index():
         joinedload(GoPass.pass_type)
     ).order_by(GoPass.issue_date.desc()).limit(5).all()
 
-    # Optimized daily validations query
-    week_ago = datetime.utcnow().date() - timedelta(days=7)
+    # Fetch daily validations for the last 7 days using a single aggregation query
+    start_date = datetime.utcnow().date() - timedelta(days=7)
 
     results = db.session.query(
         func.date(AccessLog.validation_time),
         func.count(AccessLog.id)
     ).filter(
-        AccessLog.validation_time >= week_ago
+        AccessLog.validation_time >= start_date
     ).group_by(
         func.date(AccessLog.validation_time)
     ).all()
@@ -40,7 +40,7 @@ def index():
 
     daily_validations = []
     for i in range(7):
-        day = week_ago + timedelta(days=i+1)
+        day = start_date + timedelta(days=i+1)
         day_str = day.strftime('%Y-%m-%d')
         daily_validations.append(counts_map.get(day_str, 0))
 
