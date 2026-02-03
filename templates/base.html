@@ -141,6 +141,10 @@
                         <i class="fas fa-external-link-alt group-hover:scale-110 transition-transform"></i>
                         <span>Retour au Portail</span>
                     </a>
+                    <a href="{{ url_for('auth.logout') }}" class="group flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 text-red-700 font-bold text-sm hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-red-200" title="{{ t('global.logout') }}">
+                        <i class="fas fa-sign-out-alt group-hover:scale-110 transition-transform"></i>
+                        <span class="hidden md:inline">{{ t('global.logout') }}</span>
+                    </a>
                 </div>
             </header>
 
