@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for prepare_frontend_test.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 from app import create_app
 from models import db, Flight
 from datetime import datetime, timedelta

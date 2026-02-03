@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for settings_service.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 from models import db, Airport, Airline, Tariff
 from sqlalchemy.exc import IntegrityError
 import os

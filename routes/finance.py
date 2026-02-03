@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for finance.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 from flask import Blueprint, render_template, request, make_response, flash, redirect, url_for
 from flask_login import login_required, current_user
 from services.finance_service import FinanceService

@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for qr_service.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 import qrcode
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer

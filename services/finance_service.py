@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for finance_service.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 from models import db, GoPass, CashDeposit, MobileMoneyLog, User, PassType
 from sqlalchemy import func, and_
 from datetime import datetime, timedelta

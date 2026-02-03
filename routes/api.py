@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for api.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import login_required, current_user
 from models import User, Flight, GoPass, AccessLog, AppConfig, PaymentGateway, db
@@ -301,16 +309,16 @@ def stripe_webhook():
     event = None
 
     try:
-        if endpoint_secret and sig_header:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, endpoint_secret
-            )
-        else:
-            # If no signature verification is set up or header missing (dev), just parse
-            # Warning: In prod, always verify signature.
-            event = stripe.Event.construct_from(
-                json.loads(payload), stripe.api_key
-            )
+        if not endpoint_secret:
+            current_app.logger.error("STRIPE_WEBHOOK_SECRET is not set")
+            return 'Configuration error', 500
+
+        if not sig_header:
+            return 'Missing signature', 400
+
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
     except ValueError as e:
         return 'Invalid payload', 400
     except stripe.error.SignatureVerificationError as e:
