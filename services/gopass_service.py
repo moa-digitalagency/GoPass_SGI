@@ -77,6 +77,15 @@ class GoPassService:
         """
         Logic for validation (Cas A, B, C, D)
         """
+        if not token or len(token) > 4096:
+            return {
+                'status': 'error',
+                'code': 'INVALID_TOKEN',
+                'message': 'TOKEN INVALIDE',
+                'color': 'red',
+                'data': None
+            }
+
         # Try to parse token as JSON if it matches the new format
         lookup_token = token
         try:

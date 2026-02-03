@@ -71,6 +71,7 @@
 
                     <!-- Form -->
                     <form action="{{ url_for('public.search') }}" method="POST" class="p-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="flex flex-col md:flex-row gap-4">
                             <!-- Date Input -->
                             <div class="flex-1 bg-gray-50 rounded-xl px-4 py-3 flex items-center border border-transparent focus-within:border-blue-300 focus-within:bg-white transition-all text-left">

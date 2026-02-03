@@ -15,6 +15,7 @@ Main Application Entry Point
 import os
 from flask import Flask, redirect, url_for
 from flask_login import current_user
+from flask_wtf.csrf import CSRFProtect
 
 from config import config
 from models import db
@@ -35,6 +36,7 @@ def create_app(config_name=None):
     
     db.init_app(app)
     login_manager.init_app(app)
+    csrf = CSRFProtect(app)
     
     app.jinja_env.filters['format_date'] = format_date
     app.jinja_env.filters['format_datetime'] = format_datetime
@@ -95,7 +97,9 @@ def create_app(config_name=None):
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        response.headers['Content-Security-Policy'] = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';"
+        response.headers['Content-Security-Policy'] = "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';"
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = "geolocation=(self), microphone=()"
         return response
     
     return app

@@ -73,6 +73,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <form action="{{ url_for('flights.update_status', id=flight.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <select name="status" onchange="this.form.submit()" class="text-xs border rounded p-1 cursor-pointer font-semibold
                             {% if flight.status == 'open_for_sale' %}bg-green-100 text-green-800
                             {% elif flight.status == 'boarding' %}bg-orange-100 text-orange-800
@@ -97,6 +98,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-3 items-center">
                     <form action="{{ url_for('flights.upload_manifest', id=flight.id) }}" method="POST" enctype="multipart/form-data" title="Uploader Manifeste">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <label class="cursor-pointer text-gray-600 hover:text-blue-600 flex items-center">
                             <i class="fas fa-file-excel fa-lg"></i>
                             <input type="file" name="manifest_file" class="hidden" onchange="this.form.submit()" accept=".xlsx">
