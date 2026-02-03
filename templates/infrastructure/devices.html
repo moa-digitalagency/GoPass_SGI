@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Infrastructure - Terminaux & PDA{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-mobile-alt mr-2 text-primary"></i>Terminaux & PDA
+        </h1>
+        <button class="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <i class="fas fa-plus mr-2"></i>Ajouter un appareil
+        </button>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        État
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        ID Unique / MAC
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Type
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Dernier Ping
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Version App
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Batterie
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Statut Sync
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        {% if device.last_ping %}
+                            {% set time_diff = (now - device.last_ping).total_seconds() %}
+                            {% if time_diff < 3600 %}
+                                <span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">
+                                    <span aria-hidden="true" class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span>
+                                    <span class="relative"><i class="fas fa-circle text-green-500"></i> En ligne</span>
+                                </span>
+                            {% else %}
+                                <span class="relative inline-block px-3 py-1 font-semibold text-gray-900 leading-tight">
+                                    <span aria-hidden="true" class="absolute inset-0 bg-gray-200 opacity-50 rounded-full"></span>
+                                    <span class="relative"><i class="fas fa-circle text-gray-500"></i> Offline</span>
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="relative inline-block px-3 py-1 font-semibold text-gray-900 leading-tight">
+                                <span aria-hidden="true" class="absolute inset-0 bg-gray-200 opacity-50 rounded-full"></span>
+                                <span class="relative"><i class="fas fa-circle text-gray-500"></i> Jamais</span>
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <div class="flex items-center">
+                            <div class="ml-3">
+                                <p class="text-gray-900 whitespace-no-wrap font-bold">
+                                    {{ device.unique_id }}
+                                </p>
+                                <p class="text-gray-600 whitespace-no-wrap text-xs">
+                                    {{ device.mac_address }}
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">{{ device.device_type }}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">
+                            {{ device.last_ping|format_datetime if device.last_ping else 'N/A' }}
+                        </p>
+                        <p class="text-gray-500 text-xs">
+                            {{ device.last_ping|time_ago if device.last_ping else '' }}
+                        </p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">{{ device.app_version or '-' }}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        {% if device.battery_level is not none %}
+                            <div class="flex items-center">
+                                <i class="fas fa-battery-{{ 'full' if device.battery_level > 80 else 'three-quarters' if device.battery_level > 60 else 'half' if device.battery_level > 40 else 'quarter' if device.battery_level > 20 else 'empty' }} mr-2 {{ 'text-green-500' if device.battery_level > 20 else 'text-red-500' }}"></i>
+                                <span>{{ device.battery_level }}%</span>
+                            </div>
+                        {% else %}
+                            <span class="text-gray-500">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        {% if device.is_sync %}
+                            <span class="text-green-600"><i class="fas fa-check-circle"></i> À jour</span>
+                        {% else %}
+                            <span class="text-red-600"><i class="fas fa-exclamation-circle"></i> Non sync.</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                        Aucun appareil enregistré.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

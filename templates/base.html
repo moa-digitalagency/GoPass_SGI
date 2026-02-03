@@ -55,6 +55,18 @@
                 <a href="{{ url_for('finance.reconciliation') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.reconciliation' in request.endpoint %}bg-blue-800{% endif %}">
                     <i class="fas fa-sync-alt mr-3"></i>Réconciliation
                 </a>
+
+                <!-- Infrastructure Menu -->
+                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Infrastructure</div>
+                <a href="{{ url_for('infrastructure.devices') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.devices' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-mobile-alt mr-3"></i>Terminaux & PDA
+                </a>
+                <a href="{{ url_for('infrastructure.printers') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.printers' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-print mr-3"></i>Imprimantes
+                </a>
+                <a href="{{ url_for('infrastructure.security_keys') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.security_keys' in request.endpoint %}bg-blue-800{% endif %}">
+                    <i class="fas fa-key mr-3"></i>Clés de Sécurité
+                </a>
                 {% endif %}
 
                 <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">Administration</div>

@@ -81,8 +81,9 @@ def check_and_update_schema(db, app):
 
 def init_database():
     from app import create_app
-    from models import db, User, Flight, GoPass, PassType
+    from models import db, User, Flight, GoPass, PassType, Device, Printer, SecurityKey
     import uuid
+    import secrets
     
     app = create_app()
     
@@ -178,6 +179,34 @@ def init_database():
                         )
                         db.session.add(pass_obj)
                 print("Sample passes created.")
+
+        # Seed Infrastructure Data
+        print("Checking infrastructure data...")
+        if Device.query.count() == 0:
+            devices = [
+                Device(unique_id='PDA-001', mac_address='00:1A:2B:3C:4D:5E', device_type='PDA', app_version='1.0.2', battery_level=85, last_ping=datetime.utcnow()),
+                Device(unique_id='PDA-002', mac_address='00:1A:2B:3C:4D:5F', device_type='PDA', app_version='1.0.1', battery_level=12, last_ping=datetime.utcnow() - timedelta(hours=2)), # Offline
+                Device(unique_id='TERM-001', mac_address='11:22:33:44:55:66', device_type='Terminal', app_version='2.1.0', battery_level=100, last_ping=datetime.utcnow(), is_sync=False)
+            ]
+            db.session.add_all(devices)
+            print("Sample devices created.")
+
+        if Printer.query.count() == 0:
+            printers = [
+                Printer(name='Printer-Counter-1', location='Check-in Counter 1', status='connected'),
+                Printer(name='Printer-Counter-2', location='Check-in Counter 2', status='paper_error'),
+                Printer(name='Printer-Gate-A', location='Boarding Gate A', status='offline')
+            ]
+            db.session.add_all(printers)
+            print("Sample printers created.")
+
+        if SecurityKey.query.count() == 0:
+            keys = [
+                SecurityKey(key_value=secrets.token_hex(32), key_type='flight_bound', expires_at=datetime.utcnow() + timedelta(days=90)),
+                SecurityKey(key_value=secrets.token_hex(32), key_type='flight_bound', is_active=False, expires_at=datetime.utcnow() - timedelta(days=10))
+            ]
+            db.session.add_all(keys)
+            print("Sample security keys created.")
 
         db.session.commit()
         print("\nDatabase initialization completed successfully!")
