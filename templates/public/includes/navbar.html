@@ -1,0 +1,38 @@
+    <!-- Navbar -->
+    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo & Title -->
+                <div class="flex-shrink-0 flex items-center gap-4">
+                    <img class="h-12 w-auto" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA Logo">
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-2xl text-blue-900 tracking-tight leading-none">SGI-GP RDC</span>
+                            <span class="text-xl">🇨🇩</span>
+                        </div>
+                        <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest leading-none">Portail Officiel IDEF</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="{{ url_for('public.index') }}#tarifs" class="text-sm font-semibold text-gray-600 hover:text-blue-700 transition-colors">
+                        Tarifs GoPass
+                    </a>
+                    <a href="/aide" class="text-sm font-semibold text-gray-600 hover:text-blue-700 transition-colors">
+                        Aide & FAQ
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="px-5 py-2.5 text-sm font-bold text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all duration-300">
+                        Accès Agent / Contrôleur
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Icon -->
+                <div class="md:hidden">
+                    <a href="{{ url_for('auth.login') }}" class="text-gray-700">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
