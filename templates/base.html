@@ -17,116 +17,152 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="/static/js/base.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen font-sans">
     {% if current_user.is_authenticated %}
     <div class="flex">
-        <aside class="w-64 bg-primary min-h-screen fixed left-0 top-0 text-white">
-            <div class="p-6 text-center">
-                <!-- Dynamic Logos -->
-                <h1 class="text-2xl font-bold flex items-center justify-center" id="sidebar-default-title">
-                    <i class="fas fa-id-card-alt mr-2"></i>GO-PASS
-                </h1>
-
-                <img id="sidebar-logo-gopass" src="" class="h-16 mx-auto mb-2 hidden object-contain bg-white rounded p-1">
-                <p class="text-blue-200 text-sm mt-1">SGI-GP</p>
+        <!-- Sidebar -->
+        <aside class="w-64 bg-blue-900 min-h-screen fixed left-0 top-0 text-white shadow-2xl z-50 flex flex-col">
+            <!-- Sidebar Header -->
+            <div class="h-20 flex items-center justify-center border-b border-blue-800/50 bg-blue-950/30 shrink-0">
+                <div class="flex items-center gap-3">
+                    <img src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA" class="h-8 w-auto bg-white rounded p-1">
+                    <div class="flex flex-col">
+                        <span class="font-black text-lg tracking-tight leading-none">SGI-GP</span>
+                        <span class="text-[0.6rem] uppercase text-blue-300 font-bold tracking-widest">Admin Panel</span>
+                    </div>
+                </div>
             </div>
-            <nav class="mt-6">
-                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if request.endpoint == 'dashboard.index' %}bg-blue-800{% endif %}">
-                    <i class="fas fa-tachometer-alt mr-3"></i>{{ t('menu.dashboard') }}
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto py-4">
+                <a href="{{ url_for('dashboard.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 transition-colors {% if request.endpoint == 'dashboard.index' %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-tachometer-alt mr-3 w-5 text-center"></i>{{ t('menu.dashboard') }}
                 </a>
                 {% if current_user.role in ['admin', 'agent'] %}
-                <a href="{{ url_for('reports.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'reports' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-chart-line mr-3"></i>{{ t('menu.reports') }}
+                <a href="{{ url_for('reports.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 transition-colors {% if 'reports' in request.endpoint and 'anomalies' not in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-chart-line mr-3 w-5 text-center"></i>{{ t('menu.reports') }}
                 </a>
-                <a href="{{ url_for('flights.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 {% if 'flights' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-plane mr-3"></i>{{ t('menu.flights') }}
+                <a href="{{ url_for('flights.index') }}" class="flex items-center px-6 py-3 hover:bg-blue-800 transition-colors {% if 'flights' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-plane mr-3 w-5 text-center"></i>{{ t('menu.flights') }}
                 </a>
 
                 <!-- Security & Fraud Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.security') }}</div>
-                <a href="{{ url_for('reports.anomalies') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'reports.anomalies' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-exclamation-triangle mr-3"></i>{{ t('menu.anomalies') }}
+                <div class="px-6 py-3 text-blue-300 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.security') }}</div>
+                <a href="{{ url_for('reports.anomalies') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'reports.anomalies' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i>{{ t('menu.anomalies') }}
                 </a>
 
                 <!-- Finance Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider">{{ t('menu.finance') }}</div>
-                <a href="{{ url_for('finance.transactions') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.transactions' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-file-invoice-dollar mr-3"></i>{{ t('menu.sales_journal') }}
+                <div class="px-6 py-3 text-blue-300 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.finance') }}</div>
+                <a href="{{ url_for('finance.transactions') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'finance.transactions' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-file-invoice-dollar mr-3 w-5 text-center"></i>{{ t('menu.sales_journal') }}
                 </a>
                 {% if current_user.role == 'admin' %}
-                <a href="{{ url_for('finance.deposits') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.deposits' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-cash-register mr-3"></i>{{ t('menu.agent_cash') }}
+                <a href="{{ url_for('finance.deposits') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'finance.deposits' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-cash-register mr-3 w-5 text-center"></i>{{ t('menu.agent_cash') }}
                 </a>
-                <a href="{{ url_for('finance.reconciliation') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'finance.reconciliation' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-sync-alt mr-3"></i>{{ t('menu.reconciliation') }}
+                <a href="{{ url_for('finance.reconciliation') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'finance.reconciliation' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-sync-alt mr-3 w-5 text-center"></i>{{ t('menu.reconciliation') }}
                 </a>
 
                 <!-- Configuration Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.config') }}</div>
-                <a href="{{ url_for('settings.tariffs') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.tariffs' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-tags mr-3"></i>{{ t('menu.tariffs') }}
+                <div class="px-6 py-3 text-blue-300 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.config') }}</div>
+                <a href="{{ url_for('settings.tariffs') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'settings.tariffs' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-tags mr-3 w-5 text-center"></i>{{ t('menu.tariffs') }}
                 </a>
-                <a href="{{ url_for('settings.airports') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.airports' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-map-marker-alt mr-3"></i>{{ t('menu.airports') }}
+                <a href="{{ url_for('settings.airports') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'settings.airports' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-map-marker-alt mr-3 w-5 text-center"></i>{{ t('menu.airports') }}
                 </a>
-                <a href="{{ url_for('settings.airlines') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'settings.airlines' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-plane-departure mr-3"></i>{{ t('menu.airlines') }}
+                <a href="{{ url_for('settings.airlines') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'settings.airlines' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-plane-departure mr-3 w-5 text-center"></i>{{ t('menu.airlines') }}
                 </a>
 
                 <!-- Infrastructure Menu -->
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.infrastructure') }}</div>
-                <a href="{{ url_for('infrastructure.devices') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.devices' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-mobile-alt mr-3"></i>{{ t('menu.devices') }}
+                <div class="px-6 py-3 text-blue-300 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.infrastructure') }}</div>
+                <a href="{{ url_for('infrastructure.devices') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'infrastructure.devices' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-mobile-alt mr-3 w-5 text-center"></i>{{ t('menu.devices') }}
                 </a>
-                <a href="{{ url_for('infrastructure.printers') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.printers' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-print mr-3"></i>{{ t('menu.printers') }}
+                <a href="{{ url_for('infrastructure.printers') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'infrastructure.printers' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-print mr-3 w-5 text-center"></i>{{ t('menu.printers') }}
                 </a>
-                <a href="{{ url_for('infrastructure.security_keys') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'infrastructure.security_keys' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-key mr-3"></i>{{ t('menu.keys') }}
+                <a href="{{ url_for('infrastructure.security_keys') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'infrastructure.security_keys' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-key mr-3 w-5 text-center"></i>{{ t('menu.keys') }}
                 </a>
                 {% endif %}
 
-                <div class="px-6 py-3 text-blue-200 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.admin') }}</div>
-                <a href="{{ url_for('users.index') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 {% if 'users' in request.endpoint %}bg-blue-800{% endif %}">
-                    <i class="fas fa-users mr-3"></i>{{ t('menu.users') }}
+                <div class="px-6 py-3 text-blue-300 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.admin') }}</div>
+                <a href="{{ url_for('users.index') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'users' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-users mr-3 w-5 text-center"></i>{{ t('menu.users') }}
                 </a>
                 {% endif %}
             </nav>
-            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-blue-800">
+
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-blue-800/50 bg-blue-950/30 shrink-0">
                 <div class="flex items-center justify-center mb-3 space-x-2">
-                     <a href="{{ url_for('public.set_language', lang='fr') }}" class="text-xl hover:scale-110 transition-transform" title="Français">🇨🇩</a>
-                     <a href="{{ url_for('public.set_language', lang='en') }}" class="text-xl hover:scale-110 transition-transform" title="English">🇬🇧</a>
+                     <a href="{{ url_for('public.set_language', lang='fr') }}" class="text-xl hover:scale-110 transition-transform opacity-80 hover:opacity-100" title="Français">🇨🇩</a>
+                     <a href="{{ url_for('public.set_language', lang='en') }}" class="text-xl hover:scale-110 transition-transform opacity-80 hover:opacity-100" title="English">🇬🇧</a>
                 </div>
-                <div class="flex items-center mb-3">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                        <i class="fas fa-user"></i>
+                <div class="flex items-center mb-3 px-2">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3 shrink-0 shadow-lg">
+                        <i class="fas fa-user text-white"></i>
                     </div>
-                    <div>
-                        <p class="font-semibold">{{ current_user.first_name }}</p>
-                        <p class="text-xs text-blue-200">{{ current_user.role|title }}</p>
+                    <div class="overflow-hidden">
+                        <p class="font-semibold text-sm truncate">{{ current_user.first_name }}</p>
+                        <p class="text-xs text-blue-300 truncate">{{ current_user.role|title }}</p>
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <a href="{{ url_for('auth.profile') }}" class="flex-1 text-center py-2 bg-blue-800 rounded hover:bg-blue-700 text-sm">
+                    <a href="{{ url_for('auth.profile') }}" class="flex-1 text-center py-2 bg-blue-800/50 rounded hover:bg-blue-700 transition-colors text-xs font-bold uppercase tracking-wide">
                         <i class="fas fa-cog mr-1"></i>{{ t('menu.profile') }}
                     </a>
-                    <a href="{{ url_for('auth.logout') }}" class="flex-1 text-center py-2 bg-red-600 rounded hover:bg-red-500 text-sm">
+                    <a href="{{ url_for('auth.logout') }}" class="flex-1 text-center py-2 bg-red-600/80 rounded hover:bg-red-600 transition-colors text-xs font-bold uppercase tracking-wide">
                         <i class="fas fa-sign-out-alt mr-1"></i>{{ t('global.logout') }}
                     </a>
                 </div>
             </div>
         </aside>
-        <main class="flex-1 ml-64 p-8">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                    <div class="mb-4 p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %}">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            {% block content %}{% endblock %}
+
+        <!-- Main Content Wrapper -->
+        <main class="flex-1 ml-64 min-h-screen flex flex-col bg-gray-50">
+            <!-- Admin Top Header -->
+            <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 h-20 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+                <div>
+                     <h2 class="text-2xl font-bold text-gray-800 tracking-tight">
+                        {% block header_title %}Tableau de Bord{% endblock %}
+                    </h2>
+                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">
+                        SGI-GP Portail de Gestion
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="/" class="group flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-bold text-sm hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-blue-200">
+                        <i class="fas fa-external-link-alt group-hover:scale-110 transition-transform"></i>
+                        <span>Retour au Portail</span>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="p-8 flex-1 overflow-y-auto">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="mb-6 p-4 rounded-xl shadow-sm border border-l-4 flex items-start gap-3
+                            {% if category == 'success' %}bg-green-50 border-green-500 text-green-800
+                            {% elif category == 'danger' %}bg-red-50 border-red-500 text-red-800
+                            {% elif category == 'warning' %}bg-yellow-50 border-yellow-500 text-yellow-800
+                            {% else %}bg-blue-50 border-blue-500 text-blue-800{% endif %}">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mt-1"></i>
+                            <div>{{ message }}</div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
         </main>
     </div>
     {% else %}
