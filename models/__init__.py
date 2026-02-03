@@ -147,7 +147,8 @@ class GoPass(db.Model):
     # Passenger Details
     holder_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     passenger_name = db.Column(db.String(100), nullable=False)
-    passenger_passport = db.Column(db.String(50), nullable=False)
+    passenger_passport = db.Column(db.String(50), nullable=False) # Document Number
+    passenger_document_type = db.Column(db.String(50), default='Passport') # Type (Passport, ID, etc.)
     
     # Pass Type
     pass_type_id = db.Column(db.Integer, db.ForeignKey('pass_types.id'))
@@ -192,6 +193,7 @@ class GoPass(db.Model):
             'seller': self.seller.to_dict() if self.seller else None,
             'passenger_name': self.passenger_name,
             'passenger_passport': self.passenger_passport,
+            'passenger_document_type': self.passenger_document_type,
             'pass_type': self.pass_type.to_dict() if self.pass_type else None,
             'status': self.status,
             'payment_status': self.payment_status,

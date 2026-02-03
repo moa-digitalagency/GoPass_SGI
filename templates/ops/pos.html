@@ -83,6 +83,33 @@
                     <input type="text" id="passenger_name" name="passenger_name" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Entrez le nom complet" required autocomplete="off">
                 </div>
 
+                <!-- Document Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2" for="passenger_document_type">
+                            Type de Pièce
+                        </label>
+                        <div class="relative">
+                            <select id="passenger_document_type" name="passenger_document_type" class="w-full p-4 border border-gray-300 rounded-lg appearance-none text-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white" required>
+                                <option value="Passeport" selected>Passeport</option>
+                                <option value="Carte d'Identité">Carte d'Identité</option>
+                                <option value="Permis de Conduire">Permis de Conduire</option>
+                                <option value="Carte d'Électeur">Carte d'Électeur</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2" for="passenger_passport">
+                            Numéro de Pièce
+                        </label>
+                        <input type="text" id="passenger_passport" name="passenger_passport" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="N° Document" required autocomplete="off">
+                    </div>
+                </div>
+
                 <!-- Action Buttons -->
                 <div class="pt-6">
                     <button type="submit" id="submitBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-8 rounded-lg text-2xl shadow-lg transform transition hover:scale-105 flex justify-center items-center">
@@ -114,7 +141,9 @@
 
             const formData = {
                 flight_id: document.getElementById('flight_id').value,
-                passenger_name: document.getElementById('passenger_name').value
+                passenger_name: document.getElementById('passenger_name').value,
+                passenger_document_type: document.getElementById('passenger_document_type').value,
+                passenger_passport: document.getElementById('passenger_passport').value
             };
 
             try {

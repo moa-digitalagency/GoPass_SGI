@@ -44,6 +44,7 @@ def checkout(flight_id):
     if request.method == 'POST':
         passenger_name = request.form.get('passenger_name')
         passport = request.form.get('passport')
+        document_type = request.form.get('document_type', 'Passeport')
 
         # Simulate payment
         # ... payment logic ...
@@ -51,7 +52,8 @@ def checkout(flight_id):
         gopass = GoPassService.create_gopass(
             flight_id=flight.id,
             passenger_name=passenger_name,
-            passenger_passport=passport
+            passenger_passport=passport,
+            passenger_document_type=document_type
         )
 
         return redirect(url_for('public.confirmation', id=gopass.id))
