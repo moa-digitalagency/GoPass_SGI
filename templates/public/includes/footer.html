@@ -1,0 +1,54 @@
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 pt-16 pb-8 z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <!-- Partners Section -->
+            <div class="mb-12 text-center">
+                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8">Partenaires & Institutions</p>
+                <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70">
+                     <!-- RVA -->
+                    <img class="h-14 w-auto grayscale hover:grayscale-0 transition-all duration-300" src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA">
+
+                    <!-- Ministry Placeholder -->
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-10 h-10 border-2 border-gray-300 rounded-full flex items-center justify-center text-gray-400 group-hover:border-blue-600 group-hover:text-blue-600 transition-colors">
+                            <i class="fas fa-landmark"></i>
+                         </div>
+                         <span class="text-xs font-bold text-gray-500 text-left leading-tight group-hover:text-gray-900 transition-colors">Ministère des<br>Transports</span>
+                    </div>
+
+                    <!-- Bank Placeholder 1 -->
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-10 h-10 border-2 border-gray-300 rounded-full flex items-center justify-center text-gray-400 group-hover:border-orange-600 group-hover:text-orange-600 transition-colors">
+                            <i class="fas fa-university"></i>
+                         </div>
+                         <span class="text-xs font-bold text-gray-500 group-hover:text-gray-900 transition-colors">Rawbank</span>
+                    </div>
+
+                    <!-- Bank Placeholder 2 -->
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-10 h-10 border-2 border-gray-300 rounded-full flex items-center justify-center text-gray-400 group-hover:border-red-600 group-hover:text-red-600 transition-colors">
+                            <i class="fas fa-money-bill-wave"></i>
+                         </div>
+                         <span class="text-xs font-bold text-gray-500 group-hover:text-gray-900 transition-colors">EquityBCDC</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 my-8"></div>
+
+            <!-- Bottom Footer -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-gray-900">SGI-GP RDC</span>
+                    <span class="text-gray-400 text-sm">&copy; {{ now.year }} Tous droits réservés.</span>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-6">
+                    <a href="#" class="text-sm text-gray-500 hover:text-blue-600 transition-colors">Conditions Générales (CGU)</a>
+                    <a href="#" class="text-sm text-gray-500 hover:text-blue-600 transition-colors">Politique de Confidentialité</a>
+                    <a href="#" class="text-sm text-gray-500 hover:text-blue-600 transition-colors">Mentions Légales</a>
+                </div>
+            </div>
+        </div>
+    </footer>

@@ -28,6 +28,10 @@ def set_language(lang):
 def index():
     return render_template('public/index.html', now=datetime.now())
 
+@public_bp.route('/aide')
+def aide():
+    return render_template('public/aide.html', now=datetime.now())
+
 @public_bp.route('/search', methods=['GET', 'POST'])
 def search():
     flights = []

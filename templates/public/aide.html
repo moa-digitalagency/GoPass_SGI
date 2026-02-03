@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content_public %}
+<div class="min-h-screen flex flex-col bg-gray-50 font-sans text-gray-800 relative overflow-hidden">
+    <!-- Decorative Background -->
+    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-20 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+
+    {% include 'public/includes/navbar.html' %}
+
+    <main class="flex-grow flex flex-col relative z-10 py-12 lg:py-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="text-center mb-16">
+                <span class="text-blue-600 font-bold uppercase tracking-wider text-sm">Support</span>
+                <h1 class="text-3xl md:text-5xl font-black text-gray-900 mt-2 mb-6">Centre d'Aide (FAQ)</h1>
+                <p class="text-lg text-gray-600">
+                    Questions fréquentes sur le paiement, la validité et l'utilisation de votre GoPass.
+                </p>
+            </div>
+
+            <!-- Categories -->
+            <div class="space-y-12">
+
+                <!-- Category 1: Achat & Paiement -->
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-lg">
+                            <i class="fas fa-credit-card"></i>
+                        </span>
+                        Achat & Paiement
+                    </h2>
+                    <div class="space-y-4">
+                        <!-- Q1 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden accordion-item">
+                            <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none accordion-header">
+                                <span class="font-bold text-gray-800">Quels sont les moyens de paiement acceptés ?</span>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content hidden px-6 pb-6 text-gray-600 border-t border-gray-50 pt-4 mt-2">
+                                Nous acceptons les cartes Visa et Mastercard, ainsi que les solutions Mobile Money (M-Pesa, Orange Money, Airtel Money).
+                            </div>
+                        </div>
+                        <!-- Q2 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden accordion-item">
+                            <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none accordion-header">
+                                <span class="font-bold text-gray-800">Le paiement est-il sécurisé ?</span>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content hidden px-6 pb-6 text-gray-600 border-t border-gray-50 pt-4 mt-2">
+                                Oui, toutes les transactions sont sécurisées via nos partenaires certifiés (Stripe et agrégateurs locaux) et validées par la RVA.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 2: Utilisation -->
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                         <span class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg">
+                            <i class="fas fa-qrcode"></i>
+                        </span>
+                        Utilisation du E-GoPass
+                    </h2>
+                    <div class="space-y-4">
+                         <!-- Q1 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden accordion-item">
+                            <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none accordion-header">
+                                <span class="font-bold text-gray-800">Dois-je imprimer mon QR Code ?</span>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content hidden px-6 pb-6 text-gray-600 border-t border-gray-50 pt-4 mt-2">
+                                Non, la présentation du QR Code sur votre téléphone suffit. Cependant, nous vous conseillons d'avoir une copie imprimée par sécurité.
+                            </div>
+                        </div>
+                        <!-- Q2 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden accordion-item">
+                            <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none accordion-header">
+                                <span class="font-bold text-gray-800">Combien de temps est valide mon GoPass ?</span>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content hidden px-6 pb-6 text-gray-600 border-t border-gray-50 pt-4 mt-2">
+                                Votre GoPass est valide uniquement pour le vol et la date que vous avez sélectionnés lors de l'achat. (1 Billet = 1 Vol = 1 Date).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 3: Technique -->
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                         <span class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-lg">
+                            <i class="fas fa-wrench"></i>
+                        </span>
+                        Problèmes Techniques
+                    </h2>
+                    <div class="space-y-4">
+                         <!-- Q1 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden accordion-item">
+                            <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none accordion-header">
+                                <span class="font-bold text-gray-800">Je n'ai pas reçu mon PDF, que faire ?</span>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content hidden px-6 pb-6 text-gray-600 border-t border-gray-50 pt-4 mt-2">
+                                Vous pouvez récupérer votre GoPass via la section "Mes GoPass" ou utiliser notre formulaire de contact si le problème persiste.
+                            </div>
+                        </div>
+                        <!-- Q2 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden accordion-item">
+                            <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none accordion-header">
+                                <span class="font-bold text-gray-800">J'ai fait une erreur dans mon nom.</span>
+                                <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content hidden px-6 pb-6 text-gray-600 border-t border-gray-50 pt-4 mt-2">
+                                Pour des raisons de sécurité, le nom sur le GoPass doit correspondre à votre pièce d'identité. Contactez le support rapidement pour une correction avant le vol.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Contact Block -->
+            <div class="mt-16 bg-blue-900 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden">
+                 <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-800 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+                <div class="relative z-10">
+                    <h3 class="text-2xl font-bold mb-4">Besoin d'aide supplémentaire ?</h3>
+                    <p class="text-blue-200 mb-8 max-w-2xl mx-auto">
+                        Notre équipe de support est disponible pour vous assister dans vos démarches.
+                    </p>
+                    <div class="flex flex-col md:flex-row justify-center gap-6">
+                        <a href="mailto:support@rva.cd" class="inline-flex items-center justify-center bg-white text-blue-900 font-bold py-4 px-8 rounded-xl hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-envelope mr-3"></i> support@rva.cd
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    {% include 'public/includes/footer.html' %}
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/public/aide.js') }}"></script>
+{% endblock %}
