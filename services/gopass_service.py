@@ -59,6 +59,16 @@ class GoPassService:
         """
         Logic for validation (Cas A, B, C, D)
         """
+        # Try to parse token as JSON if it matches the new format
+        lookup_token = token
+        try:
+            if token and token.strip().startswith('{'):
+                token_data = json.loads(token)
+                if 'hash_signature' in token_data:
+                    lookup_token = token_data['hash_signature']
+        except Exception:
+            pass # Use original token string
+
         # Check if flight is closed
         target_flight = Flight.query.get(flight_id)
         if target_flight and target_flight.status == 'closed':
@@ -70,7 +80,7 @@ class GoPassService:
                 'data': None
             }
 
-        gopass = GoPass.query.filter_by(token=token).first()
+        gopass = GoPass.query.filter_by(token=lookup_token).first()
 
         # Cas D: Invalide (Document non reconnu)
         if not gopass:
