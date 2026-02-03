@@ -51,8 +51,11 @@
                 <p id="current-flight-display" class="font-bold text-lg text-blue-400">--</p>
             </div>
             <div class="flex items-center space-x-3">
-                <div id="offline-indicator" class="hidden bg-yellow-600 px-2 py-1 rounded text-xs font-bold">
-                    OFFLINE (<span id="pending-count">0</span>)
+                <div id="offline-indicator" class="hidden flex items-center bg-yellow-600 px-2 py-1 rounded text-xs font-bold space-x-2">
+                    <span>OFFLINE (<span id="pending-count">0</span>)</span>
+                    <button id="sync-btn" class="bg-white text-yellow-800 px-2 rounded hover:bg-gray-100" title="Forcer la synchronisation">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
                 <button id="camera-toggle" class="bg-gray-700 p-2 rounded-full w-10 h-10 flex items-center justify-center">
                     <i class="fas fa-camera"></i>
@@ -273,9 +276,9 @@
                     message.textContent = data.data.passenger || "Bon Voyage";
                     break;
                 case 'ALREADY_SCANNED':
-                    colorClass = 'bg-red-600';
+                    colorClass = 'bg-red-600 animate-pulse';
                     icon.innerHTML = '<i class="fas fa-hand-paper"></i>';
-                    title.textContent = "STOP - DÉJÀ UTILISÉ";
+                    title.textContent = "FRAUDE DÉTECTÉE";
                     message.textContent = "Ce billet a déjà été scanné.";
 
                     if (data.data && data.data.original_scan) {
@@ -352,26 +355,24 @@
             }
         }
 
-        async function syncScans() {
+        window.syncScans = async function() {
             if (pendingScans.length === 0 || !navigator.onLine) return;
+
+            const btn = document.getElementById('sync-btn');
+            if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             const scansToSync = [...pendingScans];
             const remainingScans = [];
 
             for (const scan of scansToSync) {
                 try {
-                    // We send them to the server.
-                    // Note: If they turn out to be INVALID, we just log them?
-                    // The user is not watching anymore.
-                    // Ideally we should have a bulk sync endpoint.
-                    // For now, loop one by one.
                     await fetch('/api/scan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             token: scan.token,
                             flight_id: scan.flight_id,
-                            location: "{{ current_user.location }}" // Use current user loc
+                            location: "{{ current_user.location }}"
                         })
                     });
                 } catch (e) {
@@ -383,6 +384,16 @@
             pendingScans = remainingScans;
             localStorage.setItem('pendingScans', JSON.stringify(pendingScans));
             updateOfflineUI();
+
+            if(btn) btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+        }
+
+        const syncBtn = document.getElementById('sync-btn');
+        if(syncBtn) {
+            syncBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.syncScans();
+            });
         }
 
         window.addEventListener('online', () => {

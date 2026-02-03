@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, jsonify, url_for, flash
 from flask_login import login_required, current_user
 from services.flight_service import FlightService
 from services.gopass_service import GoPassService
+from models import db, GoPass
+from sqlalchemy import func
 from security import role_required, agent_required
 from datetime import datetime
 
@@ -17,7 +19,12 @@ def pos():
 
     flights = FlightService.get_flights(airport_code=airport_code, date=today)
 
-    return render_template('ops/pos.html', flights=flights, today=today)
+    total_sales = db.session.query(func.sum(GoPass.price)).filter(
+        GoPass.sold_by == current_user.id,
+        func.date(GoPass.issue_date) == today
+    ).scalar() or 0.0
+
+    return render_template('ops/pos.html', flights=flights, today=today, total_sales=total_sales)
 
 @ops_bp.route('/pos/sale', methods=['POST'])
 @agent_required
@@ -55,7 +62,8 @@ def pos_sale():
         return jsonify({
             'success': True,
             'gopass_id': gopass.id,
-            'pdf_url': url_for('public.download_pdf', id=gopass.id)
+            'pdf_url': url_for('public.download_pdf', id=gopass.id, format='thermal'),
+            'price': gopass.price
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
