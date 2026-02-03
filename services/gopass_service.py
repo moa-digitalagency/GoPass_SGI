@@ -1,3 +1,11 @@
+"""
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for gopass_service.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
 from models import db, GoPass, Flight, User, AccessLog, AppConfig
 from datetime import datetime
 import json
@@ -90,7 +98,12 @@ class GoPassService:
                 'data': None
             }
 
-        gopass = GoPass.query.filter_by(token=lookup_token).first()
+        try:
+            # Locking row to prevent race conditions (double scan)
+            gopass = GoPass.query.filter_by(token=lookup_token).with_for_update().first()
+        except Exception:
+            # Fallback for databases not supporting row-level locking (e.g. older SQLite)
+            gopass = GoPass.query.filter_by(token=lookup_token).first()
 
         # Cas D: Invalide (Document non reconnu)
         if not gopass:

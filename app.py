@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 """
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for app.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
+"""
 GO-PASS SGI-GP - Systeme de Gestion Integree GO-PASS
 Main Application Entry Point
 """
@@ -81,6 +89,13 @@ def create_app(config_name=None):
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '-1'
+
+        # CyberConfiance Security Headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Content-Security-Policy'] = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';"
         return response
     
     return app

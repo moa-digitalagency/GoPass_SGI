@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 """
+* Nom de l'application : GoPass SGI-GP
+ * Description : Logic and implementation for init_db.py
+ * Produit de : MOA Digital Agency, www.myoneart.com
+ * Fait par : Aisance KALONJI, www.aisancekalonji.com
+ * Auditer par : La CyberConfiance, www.cyberconfiance.com
+"""
+
+"""
 Database Initialization Script for GO-PASS SGI-GP
 This script creates all necessary tables and initializes default data.
 """
