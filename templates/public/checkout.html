@@ -139,20 +139,20 @@
 <div class="min-h-screen bg-gray-100 p-8">
     <div class="max-w-3xl mx-auto">
         <a href="{{ url_for('public.index') }}" class="text-blue-600 hover:text-blue-800 mb-6 inline-block">
-            <i class="fas fa-arrow-left mr-1"></i> Annuler
+            <i class="fas fa-arrow-left mr-1"></i> {{ t('global.cancel') }}
         </a>
 
         <div class="bg-white rounded-lg shadow-xl overflow-hidden">
             <div class="bg-blue-900 p-6 text-white">
-                <h1 class="text-2xl font-bold">Paiement GoPass</h1>
-                <p class="opacity-80">Finalisez votre achat pour le vol {{ flight.flight_number }}</p>
+                <h1 class="text-2xl font-bold">{{ t('public_buy.payment_title') }}</h1>
+                <p class="opacity-80">{{ t('public_buy.payment_subtitle') }} {{ flight.flight_number }}</p>
             </div>
 
             <div class="p-8">
                 <!-- Flight Summary -->
                 <div class="bg-blue-50 rounded-lg p-4 mb-8 border border-blue-100 flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-500">Vol sélectionné</p>
+                        <p class="text-sm text-gray-500">{{ t('public_buy.selected_flight') }}</p>
                         <p class="font-bold text-lg text-blue-900">{{ flight.flight_number }} - {{ flight.airline }}</p>
                         <p class="text-sm text-gray-700">
                             {{ flight.departure_airport }} <i class="fas fa-arrow-right mx-1"></i> {{ flight.arrival_airport }}
@@ -161,25 +161,25 @@
                         </p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm text-gray-500">Montant à payer</p>
+                        <p class="text-sm text-gray-500">{{ t('public_buy.amount_to_pay') }}</p>
                         <p class="font-bold text-3xl text-green-600">$50.00</p>
                     </div>
                 </div>
 
                 <form method="POST" class="space-y-6" id="checkout-form">
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Informations Passager</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">{{ t('public_buy.passenger_info') }}</h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="passenger_name">
-                                Nom Complet (Comme sur le passeport)
+                                {{ t('public_buy.passenger_name') }}
                             </label>
                             <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                   id="passenger_name" name="passenger_name" type="text" required placeholder="ex: JEAN DUPONT">
+                                   id="passenger_name" name="passenger_name" type="text" required placeholder="{{ t('public_buy.name_placeholder') }}">
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="document_type">
-                                Type de Pièce
+                                {{ t('public_buy.doc_type') }}
                             </label>
                             <select class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                                    id="document_type" name="document_type" required>
@@ -192,50 +192,54 @@
                         </div>
                         <div>
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="passport">
-                                Numéro de Pièce
+                                {{ t('public_buy.doc_number') }}
                             </label>
                             <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                   id="passport" name="passport" type="text" required placeholder="ex: A1234567">
+                                   id="passport" name="passport" type="text" required placeholder="{{ t('public_buy.doc_placeholder') }}">
                         </div>
                     </div>
 
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mt-8">Mode de Paiement</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mt-8">{{ t('public_buy.payment_method') }}</h3>
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {% if mobile_active %}
                         <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="mpesa" class="hidden peer" checked>
+                            <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer" checked>
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition">
                                 <i class="fas fa-mobile-alt text-2xl mb-2 text-green-600"></i>
                                 <div class="font-bold text-sm">M-Pesa</div>
                             </div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="orange" class="hidden peer">
+                            <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer">
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:bg-gray-50 transition">
                                 <i class="fas fa-mobile-alt text-2xl mb-2 text-orange-600"></i>
                                 <div class="font-bold text-sm">Orange Money</div>
                             </div>
                         </label>
                         <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="airtel" class="hidden peer">
+                            <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer">
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-red-500 peer-checked:bg-red-50 hover:bg-gray-50 transition">
                                 <i class="fas fa-mobile-alt text-2xl mb-2 text-red-600"></i>
                                 <div class="font-bold text-sm">Airtel Money</div>
                             </div>
                         </label>
-                        <label class="cursor-pointer hidden" id="option-stripe">
-                            <input type="radio" name="payment_method" value="card" class="hidden peer">
+                        {% endif %}
+                        {% if stripe_active %}
+                        <label class="cursor-pointer" id="option-stripe">
+                            <input type="radio" name="payment_method" value="STRIPE" class="hidden peer">
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition">
                                 <i class="fas fa-credit-card text-2xl mb-2 text-blue-600"></i>
-                                <div class="font-bold text-sm">Carte Bancaire</div>
+                                <div class="font-bold text-sm">{{ t('public_buy.pay_stripe') }}</div>
                             </div>
                         </label>
+                        {% endif %}
                     </div>
 
                     <!-- Stripe Element Section -->
                     <div id="stripe-section" class="hidden mt-6 bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-inner">
                         <label class="block text-gray-700 text-sm font-bold mb-3">
-                            <i class="fas fa-credit-card mr-2"></i>Détails de la Carte
+                            <i class="fas fa-credit-card mr-2"></i>{{ t('public_buy.card_details') }}
                         </label>
                         <div id="card-element" class="bg-white p-4 rounded border border-gray-300">
                             <!-- Stripe Element inserted here -->
@@ -245,10 +249,10 @@
 
                     <div class="pt-6">
                         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg text-lg transition transform hover:-translate-y-1">
-                            <i class="fas fa-lock mr-2"></i> Payer $50.00 et Générer GoPass
+                            <i class="fas fa-lock mr-2"></i> {{ t('public_buy.pay_btn') }}
                         </button>
                         <p class="text-center text-gray-500 text-xs mt-3">
-                            <i class="fas fa-shield-alt mr-1"></i> Paiement 100% sécurisé via Agrégateur National
+                            <i class="fas fa-shield-alt mr-1"></i> {{ t('public_buy.secure_msg') }}
                         </p>
                     </div>
                 </form>

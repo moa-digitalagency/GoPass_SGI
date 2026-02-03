@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app
 from services import FlightService, GoPassService
+from models import PaymentGateway
 from datetime import datetime
 import io
 import qrcode
@@ -7,6 +8,13 @@ import base64
 import json
 
 public_bp = Blueprint('public', __name__)
+
+@public_bp.route('/set-lang/<lang>')
+def set_language(lang):
+    if lang in ['fr', 'en']:
+        from flask import session
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('public.index'))
 
 @public_bp.route('/')
 def index():
@@ -34,21 +42,36 @@ def checkout(flight_id):
         flash('Vol non trouvé', 'danger')
         return redirect(url_for('public.search'))
 
+    # Check active payment methods
+    gateways = PaymentGateway.query.all()
+    stripe_active = any(g.provider == 'STRIPE' and g.is_active for g in gateways)
+    mobile_active = any(g.provider == 'MOBILE_MONEY_AGGREGATOR' and g.is_active for g in gateways)
+
     if request.method == 'POST':
         passenger_name = request.form.get('passenger_name')
         passport = request.form.get('passport')
         document_type = request.form.get('document_type', 'Passeport')
+        payment_method = request.form.get('payment_method')
+
+        if payment_method == 'STRIPE' and not stripe_active:
+             flash("Le paiement par Stripe est désactivé.", "danger")
+             return redirect(url_for('public.checkout', flight_id=flight_id))
+
+        if payment_method == 'MOBILE_MONEY' and not mobile_active:
+             flash("Le paiement par Mobile Money est désactivé.", "danger")
+             return redirect(url_for('public.checkout', flight_id=flight_id))
 
         gopass = GoPassService.create_gopass(
             flight_id=flight.id,
             passenger_name=passenger_name,
             passenger_passport=passport,
-            passenger_document_type=document_type
+            passenger_document_type=document_type,
+            payment_method=payment_method
         )
 
         return redirect(url_for('public.confirmation', id=gopass.id))
 
-    return render_template('public/checkout.html', flight=flight)
+    return render_template('public/checkout.html', flight=flight, stripe_active=stripe_active, mobile_active=mobile_active)
 
 @public_bp.route('/confirmation/<int:id>')
 def confirmation(id):
@@ -84,7 +107,9 @@ def download_pdf(id):
         return "Pass non trouvé", 404
 
     fmt = request.args.get('format', 'a4')
-    pdf_bytes = GoPassService.generate_pdf_bytes(gopass, fmt=fmt)
+    from flask import session
+    lang = session.get('lang', 'fr')
+    pdf_bytes = GoPassService.generate_pdf_bytes(gopass, fmt=fmt, lang=lang)
 
     buffer = io.BytesIO(pdf_bytes)
     filename = f"GoPass_{gopass.flight.flight_number}_{gopass.id}.pdf"

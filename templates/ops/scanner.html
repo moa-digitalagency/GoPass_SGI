@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner - GO-PASS</title>
+    <title>{{ t('scanner.title') }} - {{ t('global.app_name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -19,29 +19,29 @@
         <div class="flex justify-center mb-4">
             <img id="scanner-setup-logo" src="" class="h-16 hidden object-contain bg-white rounded p-2">
         </div>
-        <h1 class="text-2xl font-bold mb-6 text-center">Configuration Scanner</h1>
+        <h1 class="text-2xl font-bold mb-6 text-center">{{ t('scanner.setup') }}</h1>
 
         <div class="mb-6">
-            <label class="block text-gray-400 mb-2">Sélectionner le Vol ({{ today.strftime('%d/%m/%Y') }})</label>
+            <label class="block text-gray-400 mb-2">{{ t('scanner.select_flight') }} ({{ today.strftime('%d/%m/%Y') }})</label>
             <select id="flight_select" class="w-full p-4 bg-gray-800 border border-gray-700 rounded text-white text-lg">
-                <option value="" disabled selected>Choisir un vol...</option>
+                <option value="" disabled selected>{{ t('scanner.choose_flight_placeholder') }}</option>
                 {% for flight in flights %}
                 <option value="{{ flight.id }}" data-info="{{ flight.flight_number }}">
                     {{ flight.flight_number }} - {{ flight.airline }} ({{ flight.departure_time.strftime('%H:%M') }})
                 </option>
                 {% else %}
-                <option value="" disabled>Aucun vol aujourd'hui</option>
+                <option value="" disabled>{{ t('scanner.no_flight') }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <button id="start-btn" class="w-full bg-blue-600 py-4 rounded font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-            COMMENCER LE CONTRÔLE
+            {{ t('scanner.start') }}
         </button>
 
         <div class="mt-8 text-center text-gray-500 text-sm">
-            <p>Agent: {{ current_user.username }}</p>
-            <a href="{{ url_for('auth.logout') }}" class="text-red-400 mt-4 inline-block">Déconnexion</a>
+            <p>{{ t('scanner.agent') }}: {{ current_user.username }}</p>
+            <a href="{{ url_for('auth.logout') }}" class="text-red-400 mt-4 inline-block">{{ t('global.logout') }}</a>
         </div>
     </div>
 
@@ -52,14 +52,14 @@
             <div class="flex items-center">
                 <img id="scanner-header-logo" src="" class="h-10 w-auto bg-white rounded p-1 mr-3 hidden">
                 <div>
-                    <p class="text-xs text-gray-400">Vol en cours</p>
+                    <p class="text-xs text-gray-400">{{ t('scanner.current_flight') }}</p>
                     <p id="current-flight-display" class="font-bold text-lg text-blue-400">--</p>
                 </div>
             </div>
             <div class="flex items-center space-x-3">
                 <div id="offline-indicator" class="hidden flex items-center bg-yellow-600 px-2 py-1 rounded text-xs font-bold space-x-2">
-                    <span>OFFLINE (<span id="pending-count">0</span>)</span>
-                    <button id="sync-btn" class="bg-white text-yellow-800 px-2 rounded hover:bg-gray-100" title="Forcer la synchronisation">
+                    <span>{{ t('scanner.offline') }} (<span id="pending-count">0</span>)</span>
+                    <button id="sync-btn" class="bg-white text-yellow-800 px-2 rounded hover:bg-gray-100" title="{{ t('scanner.force_sync') }}">
                         <i class="fas fa-sync-alt"></i>
                     </button>
                 </div>
@@ -87,7 +87,7 @@
             </div>
 
             <div id="scan-status" class="absolute bottom-10 bg-black/50 px-4 py-2 rounded text-sm text-gray-300">
-                Prêt à scanner (Caméra ou Laser)
+                {{ t('scanner.ready') }}
             </div>
         </div>
 
@@ -105,10 +105,11 @@
             <!-- Details injected via JS -->
         </div>
 
-        <p class="mt-12 text-sm opacity-50 animate-pulse">Toucher pour continuer</p>
+        <p class="mt-12 text-sm opacity-50 animate-pulse">{{ t('scanner.tap_continue') }}</p>
     </div>
 
     <script>
+        const trans = {{ t('scanner') | tojson }};
         let currentFlightId = null;
         let html5QrcodeScanner = null;
         let isScanning = false;
@@ -278,13 +279,13 @@
                 case 'VALID':
                     colorClass = 'bg-green-600';
                     icon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                    title.textContent = "PASSAGE AUTORISÉ";
-                    message.textContent = data.data.passenger || "Bon Voyage";
+                    title.textContent = trans.status_valid;
+                    message.textContent = data.data.passenger || trans.bon_voyage;
 
                     if(data.data) {
                         details.innerHTML = `
                             <div class="mt-4 border-t border-white/20 pt-4">
-                                <p class="text-sm opacity-75">Document:</p>
+                                <p class="text-sm opacity-75">${trans.document}:</p>
                                 <p class="font-bold text-lg">${data.data.document_type || 'Passeport'}</p>
                                 <p class="font-mono text-xl">${data.data.passport || '---'}</p>
                             </div>
@@ -294,26 +295,26 @@
                 case 'ALREADY_SCANNED':
                     colorClass = 'bg-red-600 animate-pulse';
                     icon.innerHTML = '<i class="fas fa-hand-paper"></i>';
-                    title.textContent = "FRAUDE DÉTECTÉE";
-                    message.textContent = "Ce billet a déjà été scanné.";
+                    title.textContent = trans.status_fraud;
+                    message.textContent = trans.already_scanned_msg;
 
                     if (data.data && data.data.original_scan) {
                         details.innerHTML = `
-                            <p><strong>Premier scan:</strong> ${data.data.original_scan.scan_date}</p>
-                            <p><strong>Par:</strong> ${data.data.original_scan.scanned_by}</p>
-                            <p><strong>Lieu:</strong> ${data.data.original_scan.location}</p>
+                            <p><strong>${trans.first_scan}:</strong> ${data.data.original_scan.scan_date}</p>
+                            <p><strong>${trans.by}:</strong> ${data.data.original_scan.scanned_by}</p>
+                            <p><strong>${trans.location}:</strong> ${data.data.original_scan.location}</p>
                         `;
                     }
                     break;
                 case 'WRONG_FLIGHT':
                     colorClass = 'bg-orange-500';
                     icon.innerHTML = '<i class="fas fa-plane-slash"></i>';
-                    title.textContent = "MAUVAIS VOL";
-                    message.textContent = "Billet valide mais pour un autre vol.";
+                    title.textContent = trans.status_wrong_flight;
+                    message.textContent = trans.wrong_flight_msg;
                     if (data.data) {
                         details.innerHTML = `
-                            <p><strong>Vol Billet:</strong> ${data.data.valid_for}</p>
-                            <p><strong>Date:</strong> ${data.data.date}</p>
+                            <p><strong>${trans.flight_ticket}:</strong> ${data.data.valid_for}</p>
+                            <p><strong>${trans.date}:</strong> ${data.data.date}</p>
                         `;
                     }
                     break;
@@ -321,20 +322,20 @@
                 case 'FLIGHT_CLOSED':
                     colorClass = 'bg-red-600';
                     icon.innerHTML = '<i class="fas fa-times-circle"></i>';
-                    title.textContent = "INVALIDE";
-                    message.textContent = data.message || "Document non reconnu";
+                    title.textContent = trans.status_invalid;
+                    message.textContent = data.message || trans.invalid_doc;
                     break;
                 case 'offline':
                     colorClass = 'bg-blue-600';
                     icon.innerHTML = '<i class="fas fa-save"></i>';
-                    title.textContent = "ENREGISTRÉ";
-                    message.textContent = "Mode Hors-ligne. Synchronisation en attente.";
+                    title.textContent = trans.status_registered;
+                    message.textContent = trans.offline_msg;
                     break;
                 default:
                     colorClass = 'bg-red-600';
                     icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-                    title.textContent = "ERREUR";
-                    message.textContent = data.message || "Erreur système";
+                    title.textContent = trans.status_error;
+                    message.textContent = data.message || trans.system_error;
             }
 
             screen.classList.add(colorClass);

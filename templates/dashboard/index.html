@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Tableau de bord - GO-PASS SGI-GP{% endblock %}
+{% block title %}{{ t('dashboard.title') }} - {{ t('global.app_name') }}{% endblock %}
 
 {% block content %}
 <h1 class="text-3xl font-bold text-gray-800 mb-8">
-    <i class="fas fa-tachometer-alt mr-3"></i>Tableau de bord
+    <i class="fas fa-tachometer-alt mr-3"></i>{{ t('dashboard.title') }}
 </h1>
 
 <!-- KPI Cards -->
@@ -12,7 +12,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Total Passes</p>
+                <p class="text-gray-500 text-sm">{{ t('dashboard.total_passes') }}</p>
                 <h3 class="text-3xl font-bold text-gray-800">{{ pass_stats.total_passes }}</h3>
             </div>
             <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
@@ -24,7 +24,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Passes Actifs</p>
+                <p class="text-gray-500 text-sm">{{ t('dashboard.active_passes') }}</p>
                 <h3 class="text-3xl font-bold text-green-600">{{ pass_stats.active_passes }}</h3>
             </div>
             <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
@@ -36,7 +36,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Validations Aujourd'hui</p>
+                <p class="text-gray-500 text-sm">{{ t('dashboard.today_validations') }}</p>
                 <h3 class="text-3xl font-bold text-purple-600">{{ pass_stats.today_validations }}</h3>
             </div>
             <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
@@ -48,7 +48,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm">Total Utilisateurs</p>
+                <p class="text-gray-500 text-sm">{{ t('dashboard.total_users') }}</p>
                 <h3 class="text-3xl font-bold text-orange-600">{{ user_stats.total_users }}</h3>
             </div>
             <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center">
@@ -63,7 +63,7 @@
     <!-- Gap Analysis Chart -->
     <div class="bg-white rounded-xl shadow-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-balance-scale mr-2"></i>Audit Anti-Coulage (Gap Analysis)
+            <i class="fas fa-balance-scale mr-2"></i>{{ t('dashboard.audit_chart_title') }}
         </h3>
         <canvas id="auditChart"></canvas>
     </div>
@@ -71,7 +71,7 @@
     <!-- Financial Pie Chart -->
     <div class="bg-white rounded-xl shadow-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-chart-pie mr-2"></i>Recettes: Cash vs Mobile Money
+            <i class="fas fa-chart-pie mr-2"></i>{{ t('dashboard.revenue_chart_title') }}
         </h3>
         <div class="h-64 flex justify-center">
             <canvas id="revenueChart"></canvas>
@@ -83,15 +83,15 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-white rounded-xl shadow-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-history mr-2"></i>Validations Recentes
+            <i class="fas fa-history mr-2"></i>{{ t('dashboard.recent_validations') }}
         </h3>
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="text-left text-gray-500 text-sm border-b">
-                        <th class="pb-3">Pass</th>
-                        <th class="pb-3">Statut</th>
-                        <th class="pb-3">Heure</th>
+                        <th class="pb-3">{{ t('dashboard.pass') }}</th>
+                        <th class="pb-3">{{ t('dashboard.status') }}</th>
+                        <th class="pb-3">{{ t('dashboard.time') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,7 +100,7 @@
                         <td class="py-3 font-mono">{{ validation.pass_record.pass_number if validation.pass_record else 'N/A' }}</td>
                         <td class="py-3">
                             {% if validation.status == 'valid' or validation.status == 'granted' %}
-                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Valide</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">{{ t('scanner.status_valid') }}</span>
                             {% else %}
                             <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">{{ validation.status }}</span>
                             {% endif %}
@@ -109,7 +109,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="3" class="py-4 text-center text-gray-500">Aucune validation recente</td>
+                        <td colspan="3" class="py-4 text-center text-gray-500">{{ t('dashboard.no_validation') }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -119,7 +119,7 @@
     
     <div class="bg-white rounded-xl shadow-lg p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">
-            <i class="fas fa-id-card mr-2"></i>Derniers Passes Emis
+            <i class="fas fa-id-card mr-2"></i>{{ t('dashboard.recent_passes') }}
         </h3>
         <div class="space-y-4">
             {% for pass in recent_passes %}
@@ -137,7 +137,7 @@
                 </div>
             </div>
             {% else %}
-            <p class="text-center text-gray-500">Aucun pass emis recemment</p>
+            <p class="text-center text-gray-500">{{ t('dashboard.no_pass') }}</p>
             {% endfor %}
         </div>
     </div>
@@ -148,6 +148,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const trans = {{ t('dashboard.chart') | tojson }};
+
         // --- Audit Gap Analysis Chart ---
         const auditCtx = document.getElementById('auditChart').getContext('2d');
         const auditData = {{ audit_data | tojson }};
@@ -166,14 +168,14 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Déclaré par Compagnie',
+                        label: trans.declared,
                         data: declaredData,
                         backgroundColor: 'rgba(59, 130, 246, 0.6)',
                         borderColor: 'rgb(59, 130, 246)',
                         borderWidth: 1
                     },
                     {
-                        label: 'Scannés Réels',
+                        label: trans.scanned,
                         data: scannedData,
                         backgroundColor: scannedColors,
                         borderColor: scannedBorders,
@@ -193,7 +195,7 @@
                         callbacks: {
                             afterLabel: function(context) {
                                 if (context.datasetIndex === 1 && auditData[context.dataIndex].alert) {
-                                    return "⚠️ ALERTE: Surcharge détectée!";
+                                    return trans.alert;
                                 }
                             }
                         }

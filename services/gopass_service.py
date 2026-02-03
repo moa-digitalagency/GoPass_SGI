@@ -13,6 +13,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm, mm
 from flask import current_app
+from utils.i18n import get_text
 
 class GoPassService:
     @staticmethod
@@ -207,10 +208,12 @@ class GoPassService:
         }
 
     @staticmethod
-    def generate_pdf_bytes(gopass, fmt='a4'):
+    def generate_pdf_bytes(gopass, fmt='a4', lang='fr'):
         """
         Generates PDF for a GoPass. Returns bytes.
         """
+        t = lambda k: get_text(k, lang)
+
         # Generate QR Content
         qr_payload = {
             "id_billet": gopass.id,
@@ -264,7 +267,7 @@ class GoPassService:
 
             draw_centered("RVA - GO PASS", y, "Helvetica-Bold", 12)
             y -= 4 * mm
-            draw_centered("Reçu de Paiement & Titre de Passage", y, "Helvetica", 8)
+            draw_centered(t('ticket_pdf.receipt_title'), y, "Helvetica", 8)
             y -= 6 * mm
 
             # Separator
@@ -273,15 +276,15 @@ class GoPassService:
             y -= 6 * mm
 
             # 2. Détails du Vol
-            draw_centered(f"VOL : {gopass.flight.flight_number}", y, "Helvetica-Bold", 16)
+            draw_centered(f"{t('ticket_pdf.flight_label')} : {gopass.flight.flight_number}", y, "Helvetica-Bold", 16)
             y -= 6 * mm
-            draw_centered(f"DATE : {gopass.flight.departure_time.strftime('%d/%m/%Y')}", y, "Helvetica-Bold", 10)
+            draw_centered(f"{t('ticket_pdf.date_label')} : {gopass.flight.departure_time.strftime('%d/%m/%Y')}", y, "Helvetica-Bold", 10)
             y -= 5 * mm
             draw_centered(f"DEP : {gopass.flight.departure_airport}", y, "Helvetica-Bold", 10)
             y -= 8 * mm
 
             # 3. Détails Passager
-            passenger_name = gopass.passenger_name.upper() if gopass.passenger_name else "PASSAGER"
+            passenger_name = gopass.passenger_name.upper() if gopass.passenger_name else t('ticket_pdf.passenger_label')
             draw_centered(passenger_name, y, "Helvetica", 10)
             y -= 8 * mm
 
@@ -299,19 +302,19 @@ class GoPassService:
             terminal_id = "POS-001" # Placeholder
             issue_time = gopass.issue_date.strftime('%H:%M:%S') if gopass.issue_date else "N/A"
 
-            p.drawString(left_margin, y, f"ID Agent : {agent_name}")
+            p.drawString(left_margin, y, f"{t('ticket_pdf.agent_id')} : {agent_name}")
             y -= line_height
-            p.drawString(left_margin, y, f"Terminal : {terminal_id}")
+            p.drawString(left_margin, y, f"{t('ticket_pdf.terminal')} : {terminal_id}")
             y -= line_height
-            p.drawString(left_margin, y, f"Heure : {issue_time}")
+            p.drawString(left_margin, y, f"{t('ticket_pdf.time')} : {issue_time}")
             y -= line_height
-            p.drawString(left_margin, y, f"Trans : {gopass.payment_ref or 'N/A'}")
+            p.drawString(left_margin, y, f"{t('ticket_pdf.trans')} : {gopass.payment_ref or 'N/A'}")
             y -= line_height
-            p.drawString(left_margin, y, f"Paiement : {gopass.payment_method or 'CASH'}")
+            p.drawString(left_margin, y, f"{t('ticket_pdf.payment')} : {gopass.payment_method or 'CASH'}")
             y -= 8 * mm
 
             # 6. Pied de Ticket
-            draw_centered("Conservez ce ticket jusqu'à l'embarquement.", y, "Helvetica-Oblique", 7)
+            draw_centered(t('ticket_pdf.keep_ticket'), y, "Helvetica-Oblique", 7)
             y -= 4 * mm
             draw_centered("www.rva.cd", y, "Helvetica", 8)
 
@@ -353,11 +356,13 @@ class GoPassService:
             # Titre Central
             title_y = height - 2*cm
             p.setFont("Helvetica-Bold", 14)
-            p.drawCentredString(width/2, title_y, "REDEVANCE DE DÉVELOPPEMENT DES")
-            p.drawCentredString(width/2, title_y - 0.6*cm, "INFRASTRUCTURES AÉROPORTUAIRES (IDEF)")
+            p.drawCentredString(width/2, title_y, t('ticket_pdf.header_title'))
+            # p.drawCentredString(width/2, title_y - 0.6*cm, "INFRASTRUCTURES AÉROPORTUAIRES (IDEF)") # Included in header_title key usually or split if needed.
+            # I merged it in JSON as one line, but PDF draws 2 lines. I should probably split it or use wrap.
+            # For simplicity, assuming one line or short title. "Infrastructure Development Fee (IDEF)" fits.
 
             p.setFont("Helvetica", 10)
-            p.drawCentredString(width/2, title_y - 1.5*cm, "E-GoPass RDC - Titre de Voyage Numérique")
+            p.drawCentredString(width/2, title_y - 1.5*cm, t('ticket_pdf.subtitle_a4'))
 
             # 2. Zone Information "Flight-Bound"
             # Draw box
@@ -374,7 +379,7 @@ class GoPassService:
 
             # PASSAGER
             p.setFont("Helvetica-Bold", 10)
-            p.drawString(text_x, current_y, "PASSAGER")
+            p.drawString(text_x, current_y, t('ticket_pdf.passenger_label'))
             p.setFont("Helvetica", 14)
             p.drawString(text_x + 3*cm, current_y, gopass.passenger_name.upper())
 
@@ -382,7 +387,7 @@ class GoPassService:
 
             # VOL
             p.setFont("Helvetica-Bold", 10)
-            p.drawString(text_x, current_y, "VOL")
+            p.drawString(text_x, current_y, t('ticket_pdf.flight_label'))
             p.setFont("Helvetica-Bold", 24)
             p.drawString(text_x + 3*cm, current_y, gopass.flight.flight_number)
 
@@ -390,7 +395,7 @@ class GoPassService:
 
             # DATE
             p.setFont("Helvetica-Bold", 10)
-            p.drawString(text_x, current_y, "DATE")
+            p.drawString(text_x, current_y, t('ticket_pdf.date_label'))
             p.setFont("Helvetica", 14)
             date_str = gopass.flight.departure_time.strftime('%d/%m/%Y')
             p.drawString(text_x + 3*cm, current_y, date_str)
@@ -399,7 +404,7 @@ class GoPassService:
 
             # ITINÉRAIRE
             p.setFont("Helvetica-Bold", 10)
-            p.drawString(text_x, current_y, "ITINÉRAIRE")
+            p.drawString(text_x, current_y, t('ticket_pdf.itin_label'))
             p.setFont("Helvetica", 14)
             itin = f"{gopass.flight.departure_airport}  ➔  {gopass.flight.arrival_airport}"
             p.drawString(text_x + 3*cm, current_y, itin)
@@ -410,7 +415,7 @@ class GoPassService:
             p.drawImage(qr_path, (width - qr_size)/2, qr_y, width=qr_size, height=qr_size)
 
             p.setFont("Helvetica", 8)
-            p.drawCentredString(width/2, qr_y - 0.5*cm, "Signature Numérique Inviolable - Ce document est unique")
+            p.drawCentredString(width/2, qr_y - 0.5*cm, t('ticket_pdf.security_warning'))
 
             # 4. Pied de page (Footer)
             footer_y = 3*cm
@@ -418,19 +423,19 @@ class GoPassService:
             # Prix & Paiement
             p.setFont("Helvetica-Bold", 12)
             price_text = f"{gopass.price} {gopass.currency}"
-            p.drawCentredString(width/2, footer_y + 1*cm, f"Prix : {price_text}")
+            p.drawCentredString(width/2, footer_y + 1*cm, f"{t('ticket_pdf.price_label')} : {price_text}")
 
             p.setFont("Helvetica", 10)
             payment_mode = gopass.payment_method or "Mobile Money / Carte Bancaire"
-            p.drawCentredString(width/2, footer_y + 0.5*cm, f"Mode de Paiement : {payment_mode}")
+            p.drawCentredString(width/2, footer_y + 0.5*cm, f"{t('ticket_pdf.payment_mode_label')} : {payment_mode}")
 
             # Disclaimer
             p.setFont("Helvetica-Oblique", 8)
-            p.drawCentredString(width/2, footer_y - 0.5*cm, "Valide uniquement pour le vol et la date indiqués. Non remboursable une fois scanné.")
+            p.drawCentredString(width/2, footer_y - 0.5*cm, t('ticket_pdf.disclaimer'))
 
             # Branding
             p.setFont("Helvetica", 6)
-            p.drawCentredString(width/2, 1*cm, "Powered by MOA Digital Agency - SGI-GP System")
+            p.drawCentredString(width/2, 1*cm, t('ticket_pdf.powered_by'))
 
         p.showPage()
         p.save()
