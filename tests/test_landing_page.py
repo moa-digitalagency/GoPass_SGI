@@ -16,5 +16,5 @@ class LandingPageTestCase(unittest.TestCase):
         # Ê = \xc3\x8a
         # À = \xc3\x80
         self.assertIn(b"PR\xc3\x8aT \xc3\x80", response.data)
-        # Check for "Boarding Pass"
-        self.assertIn(b"Boarding Pass", response.data)
+        # Check for IDEF text
+        self.assertIn(b"IDEF", response.data)
