@@ -1,0 +1,4 @@
+/* Extracted from ops/scanner.html */
+
+body { touch-action: manipulation; overflow: hidden; }
+        #feedback-screen { transition: opacity 0.2s ease-in-out; }
