@@ -75,9 +75,19 @@ def create():
 @agent_required
 def sync():
     airport = request.args.get('airport', 'FIH')
+    date_str = request.args.get('date')
+    date = None
+
+    if date_str:
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            flash('Format de date invalide.', 'warning')
+
     try:
-        count = FlightService.sync_flights_from_api(airport)
-        flash(f'{count} vols synchronisés depuis l\'API pour {airport}.', 'success')
+        count = FlightService.sync_flights_from_api(airport, date=date)
+        msg_date = date_str if date_str else "Aujourd'hui"
+        flash(f'{count} vols synchronisés depuis l\'API pour {airport} ({msg_date}).', 'success')
     except Exception as e:
         flash(f'Erreur de synchronisation: {str(e)}', 'danger')
 
