@@ -259,7 +259,8 @@ def init_database():
         print("Checking app config...")
         configs = [
             {"key": "logo_rva_url", "value": "/static/images/default_rva.png", "description": "URL of the RVA logo"},
-            {"key": "logo_gopass_url", "value": "/static/images/default_gopass.png", "description": "URL of the GoPass logo"},
+            {"key": "logo_gopass_url", "value": "/static/images/default_gopass.png", "description": "URL of the GoPass logo (Platform)"},
+            {"key": "logo_gopass_ticket_url", "value": "/static/images/default_gopass.png", "description": "URL of the GoPass logo (Ticket/PDF)"},
             {"key": "site_name", "value": "SGI-GP RDC", "description": "Name of the application"},
             {"key": "idef_price_int", "value": "50", "description": "International IDEF Price"}
         ]

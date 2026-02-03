@@ -24,7 +24,8 @@
     <!-- Top Bar -->
     <header class="bg-primary text-white p-4 shadow-md flex justify-between items-center">
         <div class="flex items-center">
-            <i class="fas fa-cash-register text-2xl mr-3"></i>
+            <img id="pos-logo-rva" src="" class="h-10 w-auto bg-white rounded p-1 mr-3 hidden">
+            <i id="pos-default-icon" class="fas fa-cash-register text-2xl mr-3"></i>
             <div>
                 <h1 class="text-xl font-bold">Guichet Express</h1>
                 <p class="text-xs text-blue-200">{{ current_user.location }} - {{ today.strftime('%d/%m/%Y') }}</p>
@@ -205,6 +206,21 @@
             currentTotal += price;
             document.getElementById('totalSalesDisplay').textContent = currentTotal.toFixed(1) + " $";
         }
+
+        // Fetch Branding
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/settings/public')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.rva_logo) {
+                        const img = document.getElementById('pos-logo-rva');
+                        img.src = data.rva_logo;
+                        img.classList.remove('hidden');
+                        document.getElementById('pos-default-icon').classList.add('hidden');
+                    }
+                })
+                .catch(console.error);
+        });
     </script>
 </body>
 </html>
