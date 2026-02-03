@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS - GO-PASS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A8A',
+                        secondary: '#3B82F6',
+                        accent: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="bg-primary text-white p-4 shadow-md flex justify-between items-center">
+        <div class="flex items-center">
+            <i class="fas fa-cash-register text-2xl mr-3"></i>
+            <div>
+                <h1 class="text-xl font-bold">Guichet Express</h1>
+                <p class="text-xs text-blue-200">{{ current_user.location }} - {{ today.strftime('%d/%m/%Y') }}</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="text-right mr-4">
+                <p class="font-bold">{{ current_user.first_name }} {{ current_user.last_name }}</p>
+                <p class="text-xs text-blue-300">Agent Percepteur</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm transition">
+                <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 flex justify-center items-start mt-10">
+        <div class="bg-white rounded-xl shadow-xl p-8 w-full max-w-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">
+                <i class="fas fa-ticket-alt mr-2 text-primary"></i>Nouvelle Vente
+            </h2>
+
+            <form id="posForm" class="space-y-6">
+                <!-- Flight Selection -->
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2" for="flight_id">
+                        Vol (Aujourd'hui)
+                    </label>
+                    <div class="relative">
+                        <select id="flight_id" name="flight_id" class="w-full p-4 border border-gray-300 rounded-lg appearance-none text-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50" required>
+                            <option value="" disabled selected>Sélectionner un vol...</option>
+                            {% for flight in flights %}
+                            <option value="{{ flight.id }}">
+                                {{ flight.flight_number }} - {{ flight.airline }} ({{ flight.departure_time.strftime('%H:%M') }})
+                            </option>
+                            {% else %}
+                            <option value="" disabled>Aucun vol disponible aujourd'hui</option>
+                            {% endfor %}
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passenger Name -->
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2" for="passenger_name">
+                        Nom du Passager
+                    </label>
+                    <input type="text" id="passenger_name" name="passenger_name" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Entrez le nom complet" required autocomplete="off">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-6">
+                    <button type="submit" id="submitBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-8 rounded-lg text-2xl shadow-lg transform transition hover:scale-105 flex justify-center items-center">
+                        <i class="fas fa-money-bill-wave mr-4"></i>
+                        ENCAISSER CASH
+                    </button>
+                </div>
+            </form>
+
+            <div id="messageArea" class="mt-4 hidden p-4 rounded-lg text-center font-bold"></div>
+        </div>
+    </main>
+
+    <!-- Hidden iframe for printing -->
+    <iframe id="printFrame" style="display:none;"></iframe>
+
+    <script>
+        document.getElementById('posForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            const originalContent = btn.innerHTML;
+            const msgArea = document.getElementById('messageArea');
+
+            // Disable button
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+            msgArea.classList.add('hidden');
+
+            const formData = {
+                flight_id: document.getElementById('flight_id').value,
+                passenger_name: document.getElementById('passenger_name').value
+            };
+
+            try {
+                const response = await fetch("{{ url_for('ops.pos_sale') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Success
+                    msgArea.textContent = "Vente réussie ! Impression en cours...";
+                    msgArea.className = "mt-4 p-4 rounded-lg text-center font-bold bg-green-100 text-green-800 block";
+
+                    // Clear name but keep flight selection for speed
+                    document.getElementById('passenger_name').value = '';
+                    document.getElementById('passenger_name').focus();
+
+                    // Trigger Print
+                    printTicket(result.pdf_url);
+                } else {
+                    throw new Error(result.error || 'Erreur inconnue');
+                }
+            } catch (error) {
+                msgArea.textContent = "Erreur: " + error.message;
+                msgArea.className = "mt-4 p-4 rounded-lg text-center font-bold bg-red-100 text-red-800 block";
+            } finally {
+                // Restore button
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        });
+
+        function printTicket(url) {
+            // Option 1: Open in new window and print (might be blocked by popup blocker)
+            // Option 2: Use hidden iframe (better for automatic feeling)
+            const iframe = document.getElementById('printFrame');
+            iframe.src = url;
+
+            iframe.onload = function() {
+                setTimeout(function() {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                }, 500);
+            };
+        }
+    </script>
+</body>
+</html>
