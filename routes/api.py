@@ -1,10 +1,11 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from models import User, Flight, GoPass, AccessLog
-from services import FlightService, GoPassService
-from security import agent_required
+from services import FlightService, GoPassService, FinanceService
+from security import agent_required, admin_required
 from datetime import datetime
 from sqlalchemy.orm import joinedload
+import os
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -88,3 +89,81 @@ def recent_validations():
     ).limit(limit).all()
 
     return jsonify([v.to_dict() for v in validations])
+
+@api_bp.route('/sales/cash-drop', methods=['POST'])
+@login_required
+def cash_drop():
+    if current_user.role != 'admin':
+         return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    agent_id = data.get('agent_id')
+    amount = data.get('amount')
+    notes = data.get('notes', '')
+
+    if not agent_id or amount is None:
+        return jsonify({'error': 'Agent ID and Amount required'}), 400
+
+    try:
+        deposit = FinanceService.record_deposit(
+            agent_id=agent_id,
+            supervisor_id=current_user.id,
+            amount=float(amount),
+            notes=notes
+        )
+        return jsonify({'message': 'Deposit recorded', 'id': deposit.id})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/flights/manual', methods=['POST'])
+@login_required
+def create_manual_flight():
+    if current_user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    try:
+        # Handle dep_time parsing from ISO format likely sent by JSON
+        dep_time = datetime.fromisoformat(data.get('dep_time').replace('Z', '+00:00')) if data.get('dep_time') else None
+        arr_time = datetime.fromisoformat(data.get('arr_time').replace('Z', '+00:00')) if data.get('arr_time') else None
+
+        if not dep_time:
+             return jsonify({'error': 'Departure time required'}), 400
+
+        flight = FlightService.create_manual_flight(
+            flight_number=data.get('flight_number'),
+            airline=data.get('airline'),
+            dep_airport=data.get('dep_airport'),
+            arr_airport=data.get('arr_airport'),
+            dep_time=dep_time,
+            arr_time=arr_time,
+            capacity=data.get('capacity', 0),
+            aircraft_registration=data.get('aircraft_registration')
+        )
+        return jsonify(flight.to_dict()), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@api_bp.route('/manifest/upload', methods=['POST'])
+@login_required
+def upload_manifest():
+    if current_user.role not in ['admin', 'agent']:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    flight_id = request.form.get('flight_id')
+
+    if not flight_id:
+         return jsonify({'error': 'Flight ID required'}), 400
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        count = FlightService.import_manifest(flight_id, file)
+        return jsonify({'message': 'Manifest uploaded', 'passenger_count': count})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

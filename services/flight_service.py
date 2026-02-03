@@ -1,8 +1,9 @@
-from models import db, Flight
+from models import db, Flight, FlightManifest
 from datetime import datetime, timedelta
 import requests
 import os
 from flask import current_app
+from werkzeug.utils import secure_filename
 
 class FlightService:
     @staticmethod
@@ -48,7 +49,7 @@ class FlightService:
         return flight
 
     @staticmethod
-    def import_manifest(flight_id, file):
+    def import_manifest(flight_id, file, upload_folder='statics/uploads/manifests'):
         flight = Flight.query.get(flight_id)
         if not flight:
             raise ValueError("Vol introuvable")
@@ -59,28 +60,53 @@ class FlightService:
 
         # Basic extension check
         ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        if ext not in ['xlsx', 'pdf', 'xls']:
+            raise ValueError("Format non supporté. Veuillez utiliser Excel (.xlsx) ou PDF.")
+
+        # Ensure upload folder exists
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+
+        # Save file
+        safe_filename = secure_filename(filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        final_filename = f"{timestamp}_{safe_filename}"
+        file_path = os.path.join(upload_folder, final_filename)
+
+        # Reset file pointer if needed and save
+        file.seek(0)
+        file.save(file_path)
 
         count = 0
 
         if ext == 'xlsx':
-            import openpyxl
-            wb = openpyxl.load_workbook(file)
-            sheet = wb.active
-            # Assuming header is row 1, we count rows from 2.
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                # Check if row is not empty (at least one cell has value)
-                if any(row):
-                    count += 1
-        else:
-             # Fallback or error? Prompt implies "Excel/PDF".
-             # For PDF, parsing is hard without a specific library and layout.
-             # We will accept it but return 0 or log a warning,
-             # OR implemented a dummy count if not xlsx?
-             # Let's enforce XLSX for the "Parsing" requirement to be accurate.
-             raise ValueError("Format non supporté. Veuillez utiliser Excel (.xlsx) pour le calcul automatique.")
+            try:
+                import openpyxl
+                wb = openpyxl.load_workbook(file_path)
+                sheet = wb.active
+                # Assuming header is row 1, we count rows from 2.
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    # Check if row is not empty (at least one cell has value)
+                    if any(row):
+                        count += 1
+            except Exception as e:
+                # If parsing fails, we still kept the file
+                pass
 
-        flight.manifest_pax_count = count
+        # Update Flight
+        if count > 0:
+            flight.manifest_pax_count = count
+
+        # Create FlightManifest record
+        manifest = FlightManifest(
+            flight_id=flight.id,
+            passenger_count_declared=count,
+            file_upload_path=file_path,
+            upload_date=datetime.utcnow()
+        )
+        db.session.add(manifest)
         db.session.commit()
+
         return count
 
     @staticmethod
