@@ -25,7 +25,7 @@ class SettingsService:
 
     @staticmethod
     def update_tariff(tariff_id, price):
-        tariff = Tariff.query.get(tariff_id)
+        tariff = db.session.get(Tariff, tariff_id)
         if tariff:
             tariff.price = float(price)
             db.session.commit()
@@ -53,7 +53,7 @@ class SettingsService:
 
     @staticmethod
     def update_airport(airport_id, data):
-        airport = Airport.query.get(airport_id)
+        airport = db.session.get(Airport, airport_id)
         if airport:
             airport.iata_code = data.get('iata_code', airport.iata_code).upper()
             airport.city = data.get('city', airport.city)
@@ -68,7 +68,7 @@ class SettingsService:
 
     @staticmethod
     def delete_airport(airport_id):
-        airport = Airport.query.get(airport_id)
+        airport = db.session.get(Airport, airport_id)
         if airport:
             db.session.delete(airport)
             db.session.commit()
@@ -106,7 +106,7 @@ class SettingsService:
 
     @staticmethod
     def update_airline(airline_id, data, logo_file=None):
-        airline = Airline.query.get(airline_id)
+        airline = db.session.get(Airline, airline_id)
         if airline:
             airline.name = data.get('name', airline.name)
 
@@ -145,7 +145,7 @@ class SettingsService:
 
     @staticmethod
     def delete_airline(airline_id):
-        airline = Airline.query.get(airline_id)
+        airline = db.session.get(Airline, airline_id)
         if airline:
             db.session.delete(airline)
             db.session.commit()

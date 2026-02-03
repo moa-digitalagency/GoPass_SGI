@@ -14,7 +14,7 @@ This script creates all necessary tables and initializes default data.
 
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import inspect, text
 
 def check_and_update_schema(db, app):
@@ -24,16 +24,26 @@ def check_and_update_schema(db, app):
     print("Checking database schema...")
     inspector = inspect(db.engine)
 
-    # Define critical columns for each table that might have been added recently
-    # This is a manual mapping based on models/__init__.py
+    # Define critical columns for each table based on models/__init__.py
     expected_schema = {
-        'users': ['uuid', 'role', 'location', 'is_active', 'phone'],
-        'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration'],
-        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel', 'passenger_document_type'],
-        'access_logs': ['status', 'validation_time'],
-        'pass_types': ['color'],
+        'users': ['uuid', 'role', 'location', 'is_active', 'phone', 'first_name', 'last_name', 'email', 'username', 'password_hash'],
+        'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration', 'flight_number', 'airline', 'departure_airport', 'arrival_airport', 'departure_time'],
+        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel', 'passenger_document_type', 'transaction_id', 'issue_date'],
+        'access_logs': ['status', 'validation_time', 'is_offline', 'validator_id', 'pass_id'],
+        'pass_types': ['color', 'name'],
         'app_configs': ['value', 'description', 'updated_at'],
-        'payment_gateways': ['is_active', 'config_json']
+        'payment_gateways': ['is_active', 'config_json', 'provider'],
+        'transactions': ['uuid', 'agent_id', 'amount_collected', 'currency', 'payment_method', 'provider_ref', 'status', 'is_offline_sync', 'created_at'],
+        'cash_deposits': ['agent_id', 'supervisor_id', 'amount', 'deposit_date', 'notes'],
+        'mobile_money_logs': ['transaction_ref', 'amount', 'currency', 'provider', 'status', 'timestamp', 'reconciled'],
+        'offline_sync_logs': ['agent_id', 'sync_time', 'record_count', 'status', 'details'],
+        'devices': ['unique_id', 'mac_address', 'device_type', 'last_ping', 'app_version', 'battery_level', 'is_sync'],
+        'printers': ['name', 'location', 'status', 'assigned_to'],
+        'security_keys': ['key_value', 'key_type', 'is_active', 'expires_at'],
+        'airports': ['iata_code', 'city', 'type'],
+        'airlines': ['name', 'logo_path', 'is_active'],
+        'tariffs': ['flight_type', 'passenger_category', 'price', 'currency'],
+        'flight_manifests': ['flight_id', 'passenger_count_declared', 'file_upload_path', 'upload_date']
     }
 
     # Only create tables if they don't exist
@@ -47,31 +57,35 @@ def check_and_update_schema(db, app):
             for col in columns:
                 if col not in existing_columns:
                     print(f"Missing column '{col}' in table '{table}'. Attempting to add...")
-                    # Construct ALTER TABLE statement.
-                    # Note: Type inference is tricky here without full introspection of models.
-                    # We will use text types for simplicity or specific types if known criticals.
-                    col_type = 'VARCHAR(255)'
-                    if col in ['is_active']:
-                        col_type = 'BOOLEAN DEFAULT TRUE'
-                    elif col in ['capacity', 'manifest_pax_count']:
-                        col_type = 'INTEGER DEFAULT 0'
-                    elif col in ['scan_date', 'validation_time', 'updated_at']:
+
+                    col_type = 'VARCHAR(255)' # Default fallback
+
+                    # Heuristic type mapping based on column names and common usage in this app
+                    if col in ['is_active', 'is_offline', 'is_offline_sync', 'is_sync', 'reconciled']:
+                        col_type = 'BOOLEAN DEFAULT FALSE' # Default false is safer for flags usually
+                        if col == 'is_active': col_type = 'BOOLEAN DEFAULT TRUE'
+                    elif col in ['capacity', 'manifest_pax_count', 'record_count', 'battery_level', 'agent_id', 'flight_id', 'pass_id', 'validator_id', 'supervisor_id', 'holder_id', 'pass_type_id', 'transaction_id', 'sold_by', 'assigned_to', 'passenger_count_declared']:
+                        col_type = 'INTEGER'
+                    elif col in ['scan_date', 'validation_time', 'updated_at', 'created_at', 'departure_time', 'arrival_time', 'last_ping', 'deposit_date', 'timestamp', 'sync_time', 'expires_at', 'issue_date', 'upload_date']:
                         col_type = 'TIMESTAMP'
-                    elif col in ['price']:
-                        col_type = 'FLOAT'
+                    elif col in ['price', 'amount', 'amount_collected']:
+                        col_type = 'FLOAT DEFAULT 0.0'
                     elif col in ['config_json']:
-                        col_type = 'JSON'
-                    elif col in ['value']:
+                        col_type = 'JSON' # SQLite might treat this as TEXT, Postgres as JSON
+                    elif col in ['value', 'key_value', 'notes', 'details']:
                         col_type = 'TEXT'
 
                     try:
                         with db.engine.connect() as conn:
+                            # Adjust for SQLite vs Postgres if necessary, but standard SQL usually works for simple adds
+                            # SQLite doesn't support adding columns with constraints easily in one go sometimes, but basic ADD COLUMN is supported.
                             conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
                             conn.commit()
                         print(f"Successfully added column '{col}' to '{table}'.")
                     except Exception as e:
                         print(f"Failed to add column '{col}' to '{table}': {e}")
-    # Check for index on validation_time
+
+    # Check for index on validation_time in access_logs
     if 'access_logs' in existing_tables:
         indexes = inspector.get_indexes('access_logs')
         has_index = False
@@ -84,7 +98,6 @@ def check_and_update_schema(db, app):
             print("Creating index on access_logs.validation_time...")
             try:
                 with db.engine.connect() as conn:
-                    # Generic SQL, should work for SQLite and Postgres
                     conn.execute(text("CREATE INDEX ix_access_logs_validation_time ON access_logs (validation_time)"))
                     conn.commit()
                 print("Index created.")
@@ -199,9 +212,9 @@ def init_database():
         print("Checking infrastructure data...")
         if Device.query.count() == 0:
             devices = [
-                Device(unique_id='PDA-001', mac_address='00:1A:2B:3C:4D:5E', device_type='PDA', app_version='1.0.2', battery_level=85, last_ping=datetime.utcnow()),
-                Device(unique_id='PDA-002', mac_address='00:1A:2B:3C:4D:5F', device_type='PDA', app_version='1.0.1', battery_level=12, last_ping=datetime.utcnow() - timedelta(hours=2)), # Offline
-                Device(unique_id='TERM-001', mac_address='11:22:33:44:55:66', device_type='Terminal', app_version='2.1.0', battery_level=100, last_ping=datetime.utcnow(), is_sync=False)
+                Device(unique_id='PDA-001', mac_address='00:1A:2B:3C:4D:5E', device_type='PDA', app_version='1.0.2', battery_level=85, last_ping=datetime.now(timezone.utc)),
+                Device(unique_id='PDA-002', mac_address='00:1A:2B:3C:4D:5F', device_type='PDA', app_version='1.0.1', battery_level=12, last_ping=datetime.now(timezone.utc) - timedelta(hours=2)), # Offline
+                Device(unique_id='TERM-001', mac_address='11:22:33:44:55:66', device_type='Terminal', app_version='2.1.0', battery_level=100, last_ping=datetime.now(timezone.utc), is_sync=False)
             ]
             db.session.add_all(devices)
             print("Sample devices created.")
@@ -217,8 +230,8 @@ def init_database():
 
         if SecurityKey.query.count() == 0:
             keys = [
-                SecurityKey(key_value=secrets.token_hex(32), key_type='flight_bound', expires_at=datetime.utcnow() + timedelta(days=90)),
-                SecurityKey(key_value=secrets.token_hex(32), key_type='flight_bound', is_active=False, expires_at=datetime.utcnow() - timedelta(days=10))
+                SecurityKey(key_value=secrets.token_hex(32), key_type='flight_bound', expires_at=datetime.now(timezone.utc) + timedelta(days=90)),
+                SecurityKey(key_value=secrets.token_hex(32), key_type='flight_bound', is_active=False, expires_at=datetime.now(timezone.utc) - timedelta(days=10))
             ]
             db.session.add_all(keys)
             print("Sample security keys created.")
@@ -266,15 +279,15 @@ def init_database():
         # Seed App Config
         print("Checking app config...")
         configs = [
-            {"key": "logo_rva_url", "value": "/static/images/default_rva.png", "description": "URL of the RVA logo"},
-            {"key": "logo_gopass_url", "value": "/static/images/default_gopass.png", "description": "URL of the GoPass logo (Platform)"},
-            {"key": "logo_gopass_ticket_url", "value": "/static/images/default_gopass.png", "description": "URL of the GoPass logo (Ticket/PDF)"},
+            {"key": "logo_rva_url", "value": "/static/img/logo_rva.png", "description": "URL of the RVA logo"},
+            {"key": "logo_gopass_url", "value": "/static/img/logo_gopass.png", "description": "URL of the GoPass logo (Platform)"},
+            {"key": "logo_gopass_ticket_url", "value": "/static/img/logo_gopass.png", "description": "URL of the GoPass logo (Ticket/PDF)"},
             {"key": "site_name", "value": "SGI-GP RDC", "description": "Name of the application"},
             {"key": "idef_price_int", "value": "50", "description": "International IDEF Price"}
         ]
 
         for conf in configs:
-            existing = AppConfig.query.get(conf['key'])
+            existing = db.session.get(AppConfig, conf['key'])
             if not existing:
                 new_conf = AppConfig(key=conf['key'], value=conf['value'], description=conf['description'])
                 db.session.add(new_conf)
