@@ -120,12 +120,40 @@ def init_database():
         check_and_update_schema(db, app)
         
         # Create Default Users
+        # Security Hardening: Remove hardcoded admin
         users_data = [
-            {'username': 'admin', 'email': 'admin@gopass.local', 'role': 'admin', 'first': 'Administrateur', 'last': 'Système', 'pass': 'admin123', 'loc': None},
             {'username': 'agent', 'email': 'agent@gopass.local', 'role': 'agent', 'first': 'Agent', 'last': 'Percepteur', 'pass': 'agent123', 'loc': 'FIH'},
             {'username': 'controller', 'email': 'controller@gopass.local', 'role': 'controller', 'first': 'Agent', 'last': 'Contrôleur', 'pass': 'controller123', 'loc': 'FIH'},
             {'username': 'traveler1', 'email': 'traveler1@example.com', 'role': 'holder', 'first': 'Jean', 'last': 'Dupont', 'pass': 'traveler123', 'loc': None}
         ]
+
+        # 1. Handle Super Admin securely
+        print("Checking for Super Admin...")
+        admin_email = os.environ.get('SUPER_ADMIN_EMAIL')
+        admin_pass = os.environ.get('SUPER_ADMIN_PASSWORD')
+
+        # Check if any admin exists
+        admin_user = User.query.filter_by(role='admin').first()
+
+        if not admin_user:
+            if admin_email and admin_pass:
+                print(f"Creating Super Admin ({admin_email})...")
+                admin_user = User(
+                    username='admin',
+                    email=admin_email,
+                    first_name='Super',
+                    last_name='Admin',
+                    role='admin',
+                    location=None,
+                    is_active=True
+                )
+                admin_user.set_password(admin_pass)
+                db.session.add(admin_user)
+            else:
+                if os.environ.get('FLASK_ENV') == 'production':
+                    raise Exception("CRITICAL: SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD must be set in production to create the initial admin.")
+                else:
+                    print("WARNING: Super Admin not created. Set SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD to create one.")
 
         for u in users_data:
             user = User.query.filter_by(username=u['username']).first()
