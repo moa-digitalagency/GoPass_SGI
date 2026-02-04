@@ -26,9 +26,9 @@ def check_and_update_schema(db, app):
 
     # Define critical columns for each table based on models/__init__.py
     expected_schema = {
-        'users': ['uuid', 'role', 'location', 'is_active', 'phone', 'first_name', 'last_name', 'email', 'username', 'password_hash'],
-        'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration', 'flight_number', 'airline', 'departure_airport', 'arrival_airport', 'departure_time'],
-        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel', 'passenger_document_type', 'transaction_id', 'issue_date'],
+        'users': ['uuid', 'role', 'location', 'is_active', 'phone', 'first_name', 'last_name', 'email', 'username', 'password_hash', 'created_at', 'updated_at'],
+        'flights': ['source', 'capacity', 'status', 'manifest_pax_count', 'aircraft_registration', 'flight_number', 'airline', 'departure_airport', 'arrival_airport', 'departure_time', 'arrival_time', 'created_at'],
+        'gopasses': ['token', 'pass_number', 'payment_status', 'payment_ref', 'scan_date', 'scan_location', 'payment_method', 'sold_by', 'sales_channel', 'passenger_document_type', 'transaction_id', 'issue_date', 'flight_id', 'holder_id', 'pass_type_id', 'price', 'currency', 'passenger_name', 'passenger_passport', 'status', 'scanned_by'],
         'access_logs': ['status', 'validation_time', 'is_offline', 'validator_id', 'pass_id'],
         'pass_types': ['color', 'name'],
         'app_configs': ['value', 'description', 'updated_at'],
@@ -64,7 +64,7 @@ def check_and_update_schema(db, app):
                     if col in ['is_active', 'is_offline', 'is_offline_sync', 'is_sync', 'reconciled']:
                         col_type = 'BOOLEAN DEFAULT FALSE' # Default false is safer for flags usually
                         if col == 'is_active': col_type = 'BOOLEAN DEFAULT TRUE'
-                    elif col in ['capacity', 'manifest_pax_count', 'record_count', 'battery_level', 'agent_id', 'flight_id', 'pass_id', 'validator_id', 'supervisor_id', 'holder_id', 'pass_type_id', 'transaction_id', 'sold_by', 'assigned_to', 'passenger_count_declared']:
+                    elif col in ['capacity', 'manifest_pax_count', 'record_count', 'battery_level', 'agent_id', 'flight_id', 'pass_id', 'validator_id', 'supervisor_id', 'holder_id', 'pass_type_id', 'transaction_id', 'sold_by', 'assigned_to', 'passenger_count_declared', 'scanned_by']:
                         col_type = 'INTEGER'
                     elif col in ['scan_date', 'validation_time', 'updated_at', 'created_at', 'departure_time', 'arrival_time', 'last_ping', 'deposit_date', 'timestamp', 'sync_time', 'expires_at', 'issue_date', 'upload_date']:
                         col_type = 'TIMESTAMP'
