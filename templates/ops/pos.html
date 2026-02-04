@@ -593,14 +593,27 @@
             // Check flight
             if (appState.step !== 1) return setSubmit(false);
 
-            // Check Passengers (Must have > 0 rows, and ALL rows must be valid)
             if (appState.passengers.length === 0) return setSubmit(false);
 
-            const allValid = appState.passengers.every(p =>
-                p.name.trim().length > 0 && p.doc_num.trim().length > 0
-            );
+            let validCount = 0;
+            let partialCount = 0;
 
-            setSubmit(allValid);
+            appState.passengers.forEach(p => {
+                const hasName = p.name.trim().length > 0;
+                const hasDoc = p.doc_num.trim().length > 0;
+
+                if (hasName && hasDoc) {
+                    validCount++;
+                } else if (hasName || hasDoc) {
+                    partialCount++;
+                }
+                // Empty rows (neither Name nor Doc) are ignored
+            });
+
+            // Enable if at least one valid passenger AND no partial/invalid rows blocking
+            const canSubmit = (validCount > 0) && (partialCount === 0);
+
+            setSubmit(canSubmit);
         }
 
         function setSubmit(enabled) {
@@ -622,6 +635,11 @@
             els.submitBtn.disabled = true;
             els.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> TRAITEMENT...';
 
+            // Filter out empty rows before sending
+            const validPassengers = appState.passengers.filter(p =>
+                p.name.trim().length > 0 && p.doc_num.trim().length > 0
+            );
+
             // Payload Construction
             const payload = {
                 flight_mode: appState.flightMode,
@@ -629,7 +647,7 @@
                 manual_flight_number: (appState.flightMode === 'manual') ? document.getElementById('manual_flight_number').value : null,
                 manual_flight_date: (appState.flightMode === 'manual') ? document.getElementById('manual_flight_date').value : null,
 
-                passengers: appState.passengers,
+                passengers: validPassengers,
                 price: appState.unitPrice,
                 verification_source: appState.verificationSource,
                 flight_details: appState.flightDetails
