@@ -224,34 +224,15 @@
                         <div id="phase-passengers" class="hidden space-y-6">
 
                             <!-- Passenger List -->
-                            <div id="passenger-list" class="space-y-3">
-                                <!-- Items will be added here -->
+                            <div id="passenger-list" class="space-y-4">
+                                <!-- Dynamic Rows -->
                             </div>
 
-                            <!-- Add Passenger Form -->
-                            <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
-                                <h3 class="text-sm font-bold text-blue-800 mb-4"><i class="fas fa-user-plus mr-2"></i>Ajouter un passager</h3>
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <input type="text" id="new_p_name" class="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white" placeholder="Nom Complet (ex: Jean Dupont)" autocomplete="off">
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <div class="col-span-1">
-                                            <select id="new_p_type" class="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white">
-                                                <option value="Passeport">Passeport</option>
-                                                <option value="Carte d'Identité">Carte ID</option>
-                                                <option value="Permis de Conduire">Permis</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-span-2">
-                                            <input type="text" id="new_p_doc" class="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white" placeholder="N° Document">
-                                        </div>
-                                    </div>
-                                    <button type="button" onclick="addPassenger()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                                        Ajouter à la liste
-                                    </button>
-                                </div>
+                            <!-- Add Button -->
+                            <div class="flex justify-end">
+                                <button type="button" onclick="addPassengerRow()" class="text-blue-600 font-bold hover:text-blue-800 flex items-center bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-blue-100">
+                                    <i class="fas fa-plus-circle mr-2"></i> Ajouter un autre passager
+                                </button>
                             </div>
 
                         </div>
@@ -304,7 +285,7 @@
             step: 0, // 0: Flight, 1: Passengers
             flightMode: 'today',
             flightData: null, // {id, number, airline, date, ...}
-            passengers: [],
+            passengers: [], // Array of objects {name, doc_num, doc_type}
             unitPrice: 50.0,
             verificationSource: 'manual',
             flightDetails: null // Full JSON from API if available
@@ -322,12 +303,7 @@
             submitBtn: document.getElementById('submitBtn'),
             displayAmount: document.getElementById('display-amount'),
             countPassengers: document.getElementById('count-passengers'),
-            passengerList: document.getElementById('passenger-list'),
-            inputs: {
-                new_name: document.getElementById('new_p_name'),
-                new_doc: document.getElementById('new_p_doc'),
-                new_type: document.getElementById('new_p_type')
-            }
+            passengerList: document.getElementById('passenger-list')
         };
 
         // --- PHASE 1: FLIGHT LOGIC ---
@@ -365,17 +341,16 @@
 
             const opt = select.options[select.selectedIndex];
             const text = opt.text;
-            // Parse simplistic text "HH:MM | Airline No | -> Dest"
-            // Or just use text for display.
 
             appState.flightData = {
                 id: val,
                 desc: text,
                 mode: 'today'
             };
+
             const price = parseFloat(opt.dataset.price || "50.0");
             appState.unitPrice = price;
-            appState.verificationSource = 'manual'; // It's from DB list, so trusted but manual selection
+            appState.verificationSource = 'manual';
             appState.flightDetails = null;
 
             lockFlightPhase();
@@ -421,7 +396,6 @@
                     appState.verificationSource = 'api';
                     appState.flightDetails = data.flight_data;
 
-                    // Directly confirm if found
                     lockFlightPhase();
 
                 } else {
@@ -462,7 +436,6 @@
                  };
                  appState.verificationSource = 'manual';
                  appState.flightDetails = null;
-                 // Price already set by updatePriceManual
              }
 
              lockFlightPhase();
@@ -502,8 +475,9 @@
             // Show Passengers
             els.phasePassengers.classList.remove('hidden');
 
-            // Focus
-            setTimeout(() => els.inputs.new_name.focus(), 100);
+            // Initial Empty Passenger
+            appState.passengers = [{ name: '', doc_num: '', doc_type: 'Passeport' }];
+            renderPassengers();
 
             checkValidation();
         }
@@ -531,52 +505,74 @@
 
         // --- PHASE 2: PASSENGER LOGIC ---
 
-        function addPassenger() {
-            const name = els.inputs.new_name.value.trim();
-            const doc = els.inputs.new_doc.value.trim();
-            const type = els.inputs.new_type.value;
-
-            if (!name || !doc) {
-                alert("Nom et Numéro de document requis.");
-                return;
-            }
-
-            appState.passengers.push({ name, doc_num: doc, doc_type: type });
-
-            // Clear inputs
-            els.inputs.new_name.value = '';
-            els.inputs.new_doc.value = '';
-            els.inputs.new_name.focus();
-
+        function addPassengerRow() {
+            appState.passengers.push({ name: '', doc_num: '', doc_type: 'Passeport' });
             renderPassengers();
             checkValidation();
         }
 
         function removePassenger(index) {
+            if (appState.passengers.length <= 1) return; // Prevent deleting last one
             appState.passengers.splice(index, 1);
             renderPassengers();
             checkValidation();
         }
 
+        function updatePassengerData(index, field, value) {
+            appState.passengers[index][field] = value;
+            checkValidation();
+        }
+
         function renderPassengers() {
             els.passengerList.innerHTML = '';
+
             appState.passengers.forEach((p, idx) => {
                 const el = document.createElement('div');
-                el.className = "flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 shadow-sm";
-                el.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center text-gray-500 text-sm font-bold">
-                            ${idx + 1}
-                        </div>
+                el.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm relative";
+
+                // Header (Passager X)
+                const headerHtml = `
+                    <div class="flex justify-between items-center mb-3">
+                         <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Passager ${idx + 1}</span>
+                         ${ (appState.passengers.length > 1) ?
+                            `<button type="button" onclick="removePassenger(${idx})" class="text-red-400 hover:text-red-600 text-xs font-bold"><i class="fas fa-trash-alt mr-1"></i> Supprimer</button>`
+                            : ''
+                         }
+                    </div>
+                `;
+
+                // Inputs
+                const inputsHtml = `
+                    <div class="space-y-3">
                         <div>
-                            <p class="font-bold text-gray-800">${p.name}</p>
-                            <p class="text-xs text-gray-500">${p.doc_type}: ${p.doc_num}</p>
+                            <input type="text"
+                                   value="${p.name}"
+                                   oninput="updatePassengerData(${idx}, 'name', this.value)"
+                                   class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white"
+                                   placeholder="Nom Complet (ex: Jean Dupont)"
+                                   autocomplete="off">
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-1">
+                                <select onchange="updatePassengerData(${idx}, 'doc_type', this.value)"
+                                        class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white">
+                                    <option value="Passeport" ${p.doc_type === 'Passeport' ? 'selected' : ''}>Passeport</option>
+                                    <option value="Carte d'Identité" ${p.doc_type === "Carte d'Identité" ? 'selected' : ''}>Carte ID</option>
+                                    <option value="Permis de Conduire" ${p.doc_type === 'Permis de Conduire' ? 'selected' : ''}>Permis</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <input type="text"
+                                       value="${p.doc_num}"
+                                       oninput="updatePassengerData(${idx}, 'doc_num', this.value)"
+                                       class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white"
+                                       placeholder="N° Document">
+                            </div>
                         </div>
                     </div>
-                    <button onclick="removePassenger(${idx})" class="text-red-400 hover:text-red-600 p-2">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
                 `;
+
+                el.innerHTML = headerHtml + inputsHtml;
                 els.passengerList.appendChild(el);
             });
 
@@ -594,9 +590,21 @@
         // --- PHASE 3: VALIDATION & SUBMIT ---
 
         function checkValidation() {
-            const isValid = appState.step === 1 && appState.passengers.length > 0;
+            // Check flight
+            if (appState.step !== 1) return setSubmit(false);
 
-            if (isValid) {
+            // Check Passengers (Must have > 0 rows, and ALL rows must be valid)
+            if (appState.passengers.length === 0) return setSubmit(false);
+
+            const allValid = appState.passengers.every(p =>
+                p.name.trim().length > 0 && p.doc_num.trim().length > 0
+            );
+
+            setSubmit(allValid);
+        }
+
+        function setSubmit(enabled) {
+             if (enabled) {
                 els.submitBtn.disabled = false;
                 els.submitBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
                 els.submitBtn.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600', 'text-white', 'shadow-lg', 'hover:from-emerald-600');
@@ -650,8 +658,10 @@
                     // PRINT LOOP
                     await printLoop(result.tickets);
 
-                    // Reset Logic
-                    resetAfterSale();
+                    // Reset Logic (Keep flight, reset passengers to one empty)
+                    appState.passengers = [{ name: '', doc_num: '', doc_type: 'Passeport' }];
+                    renderPassengers();
+                    checkValidation();
 
                 } else {
                     alert("Erreur: " + (result.error || "Inconnue"));
@@ -663,16 +673,8 @@
             } finally {
                 els.submitBtn.disabled = false;
                 els.submitBtn.innerHTML = originalHtml;
-                checkValidation(); // Will disable it because list cleared
+                checkValidation();
             }
-        }
-
-        function resetAfterSale() {
-            // Keep flight locked (Operator might process next family for same flight)
-            // Just clear passengers
-            appState.passengers = [];
-            renderPassengers();
-            checkValidation(); // disables button
         }
 
         // --- PRINTING ---
@@ -704,13 +706,6 @@
              const list = document.getElementById('history-list');
              const empty = document.getElementById('empty-state');
              if (empty) empty.remove();
-
-             // For bulk sale, maybe group them? Or list individual?
-             // Prompt says "1 Ticket Thermique par passager".
-             // History usually shows transactions.
-             // We'll show one entry per passenger to be consistent with old view, or a group entry.
-             // Let's show a group entry "Famille (3p)" or similar.
-             // But existing design shows individual. Let's stick to individual for audit clarity in UI.
 
              data.tickets.forEach(ticket => {
                  const item = document.createElement('div');
