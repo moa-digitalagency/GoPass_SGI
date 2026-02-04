@@ -98,7 +98,11 @@
     "by": "Par",
     "location": "Lieu",
     "flight_ticket": "Vol Billet",
-    "date": "Date"
+    "date": "Date",
+    "status_expired": "BILLET EXPIRÉ",
+    "expired_msg": "Ce billet n'est pas valide pour la date d'aujourd'hui.",
+    "date_expected": "Date Attendue",
+    "redirect_instruction": "Ce passager est sur le vol "
   },
   "public_buy": {
     "title": "Acheter votre E-GoPass",

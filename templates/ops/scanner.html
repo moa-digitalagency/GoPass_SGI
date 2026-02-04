@@ -275,7 +275,7 @@
             const message = document.getElementById('feedback-message');
             const details = document.getElementById('feedback-details');
 
-            screen.classList.remove('hidden', 'bg-green-600', 'bg-red-600', 'bg-orange-500', 'bg-gray-800');
+            screen.classList.remove('hidden', 'bg-green-600', 'bg-red-600', 'bg-orange-500', 'bg-gray-800', 'animate-pulse');
             screen.classList.add('flex'); // Enable flex
 
             let colorClass = 'bg-gray-800';
@@ -308,9 +308,16 @@
 
                     if (data.data && data.data.original_scan) {
                         details.innerHTML = `
-                            <p><strong>${trans.first_scan}:</strong> ${data.data.original_scan.scan_date}</p>
-                            <p><strong>${trans.by}:</strong> ${data.data.original_scan.scanned_by}</p>
-                            <p><strong>${trans.location}:</strong> ${data.data.original_scan.location}</p>
+                            <div class="bg-white/10 p-4 rounded text-center">
+                                <p class="text-yellow-300 font-bold uppercase text-sm mb-2">${trans.first_scan}</p>
+                                <p class="text-2xl font-mono font-bold mb-1">${data.data.original_scan.scan_date.split(' ')[1] || data.data.original_scan.scan_date}</p>
+                                <p class="text-sm">${data.data.original_scan.scan_date.split(' ')[0] || ''}</p>
+                                <hr class="border-white/20 my-2">
+                                <p class="text-xs uppercase opacity-75">${trans.by}</p>
+                                <p class="font-bold">${data.data.original_scan.scanned_by}</p>
+                                <p class="text-xs uppercase opacity-75 mt-1">${trans.location}</p>
+                                <p class="font-bold">${data.data.original_scan.location || 'Unknown'}</p>
+                            </div>
                         `;
                     }
                     break;
@@ -318,11 +325,42 @@
                     colorClass = 'bg-orange-500';
                     icon.innerHTML = '<i class="fas fa-plane-slash"></i>';
                     title.textContent = trans.status_wrong_flight;
-                    message.textContent = trans.wrong_flight_msg;
+
+                    if (data.data && data.data.valid_for) {
+                        message.textContent = `${trans.redirect_instruction} ${data.data.valid_for}. Redirigez-le.`;
+                        details.innerHTML = `
+                            <div class="mt-2 text-center">
+                                <p class="text-sm opacity-75">${trans.flight_ticket}</p>
+                                <p class="text-3xl font-bold">${data.data.valid_for}</p>
+                                <p class="text-lg">${data.data.date}</p>
+                            </div>
+                        `;
+                    } else {
+                        message.textContent = trans.wrong_flight_msg;
+                    }
+                    break;
+                case 'EXPIRED':
+                    colorClass = 'bg-red-600';
+                    icon.innerHTML = '<i class="fas fa-calendar-times"></i>';
+                    title.textContent = trans.status_expired;
+                    message.textContent = trans.expired_msg;
+
                     if (data.data) {
                         details.innerHTML = `
-                            <p><strong>${trans.flight_ticket}:</strong> ${data.data.valid_for}</p>
-                            <p><strong>${trans.date}:</strong> ${data.data.date}</p>
+                            <div class="grid grid-cols-2 gap-4 text-center mt-2">
+                                <div>
+                                    <p class="text-xs opacity-75">${trans.date} (Billet)</p>
+                                    <p class="text-xl font-bold text-red-300">${data.data.valid_for_date}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs opacity-75">${trans.date_expected}</p>
+                                    <p class="text-xl font-bold text-green-300">${data.data.expected_date}</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="text-sm opacity-75">${trans.flight_ticket}</p>
+                                <p class="text-2xl font-bold">${data.data.flight}</p>
+                            </div>
                         `;
                     }
                     break;
@@ -346,7 +384,8 @@
                     message.textContent = data.message || trans.system_error;
             }
 
-            screen.classList.add(colorClass);
+            // Safe add for multiple classes
+            colorClass.split(' ').forEach(cls => screen.classList.add(cls));
 
             // Play sound? (Optional)
 
