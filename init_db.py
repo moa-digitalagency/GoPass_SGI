@@ -72,7 +72,7 @@ def check_and_update_schema(db, app):
                         col_type = 'TIMESTAMP'
                     elif col in ['price', 'amount', 'amount_collected']:
                         col_type = 'FLOAT DEFAULT 0.0'
-                    elif col in ['config_json']:
+                    elif col in ['config_json', 'subscriptions']:
                         col_type = 'JSON' # SQLite might treat this as TEXT, Postgres as JSON
                     elif col in ['value', 'key_value', 'notes', 'details']:
                         col_type = 'TEXT'

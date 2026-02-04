@@ -19,7 +19,7 @@
     <script src="/static/js/base.js"></script>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and (not request.endpoint or not request.endpoint.startswith('public.')) %}
     <div class="flex">
         <!-- Sidebar -->
         <aside class="w-64 bg-blue-900 min-h-screen fixed left-0 top-0 text-white shadow-2xl z-50 flex flex-col">
