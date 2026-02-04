@@ -40,16 +40,12 @@ def pos_sale():
     data = request.get_json()
     flight_mode = data.get('flight_mode', 'today')
 
-    passenger_name = data.get('passenger_name')
-    passenger_passport = data.get('passenger_passport')
-    passenger_document_type = data.get('passenger_document_type', 'Passeport')
-
     flight_id = data.get('flight_id')
 
     # New fields for verification
     verification_source = data.get('verification_source', 'manual')
     flight_details = data.get('flight_details')
-    price = float(data.get('price', 50.0))
+    unit_price = float(data.get('price', 50.0))
 
     if flight_mode == 'manual':
         manual_date_str = data.get('manual_flight_date')
@@ -71,36 +67,79 @@ def pos_sale():
         if not flight_id:
             return jsonify({'error': 'Vol non sélectionné'}), 400
 
-    if not passenger_name or not passenger_passport:
-        return jsonify({'error': 'Données passager manquantes'}), 400
+    # Handle Passengers (Bulk or Single Legacy)
+    passengers = data.get('passengers', [])
+    if not passengers:
+        # Backward compatibility
+        p_name = data.get('passenger_name')
+        p_doc = data.get('passenger_passport')
+        p_type = data.get('passenger_document_type', 'Passeport')
+        if p_name and p_doc:
+            passengers.append({
+                'name': p_name,
+                'doc_num': p_doc,
+                'doc_type': p_type
+            })
+
+    if not passengers:
+        return jsonify({'error': 'Aucun passager spécifié'}), 400
+
+    created_tickets = []
+    total_price = 0.0
 
     try:
-        gopass = GoPassService.create_gopass(
-            flight_id=flight_id,
-            passenger_name=passenger_name,
-            passenger_passport=passenger_passport,
-            passenger_document_type=passenger_document_type,
-            price=price,
-            payment_method='Cash',
-            sold_by=current_user.id,
-            sales_channel='pos',
-            verification_source=verification_source,
-            flight_details=flight_details
-        )
+        for p in passengers:
+            name = p.get('name') or p.get('passenger_name')
+            doc_num = p.get('doc_num') or p.get('passenger_passport')
+            doc_type = p.get('doc_type') or p.get('passenger_document_type', 'Passeport')
 
-        issue_time = gopass.issue_date.strftime('%H:%M') if gopass.issue_date else datetime.now().strftime('%H:%M')
+            if not name or not doc_num:
+                raise ValueError("Données passager incomplètes")
+
+            gopass = GoPassService.create_gopass(
+                flight_id=flight_id,
+                passenger_name=name,
+                passenger_passport=doc_num,
+                passenger_document_type=doc_type,
+                price=unit_price,
+                payment_method='Cash',
+                sold_by=current_user.id,
+                sales_channel='pos',
+                verification_source=verification_source,
+                flight_details=flight_details,
+                commit=False
+            )
+            created_tickets.append(gopass)
+            total_price += unit_price
+
+        # Commit all transactions at once
+        db.session.commit()
+
+        # Prepare Response
+        response_tickets = []
+        last_gopass = None
+        for gp in created_tickets:
+            last_gopass = gp
+            response_tickets.append({
+                'gopass_id': gp.id,
+                'pdf_url': url_for('public.download_pdf', id=gp.id, format='thermal'),
+                'passenger_name': gp.passenger_name,
+                'price': gp.price
+            })
+
+        issue_time = datetime.now().strftime('%H:%M')
 
         return jsonify({
             'success': True,
-            'gopass_id': gopass.id,
-            'pdf_url': url_for('public.download_pdf', id=gopass.id, format='thermal'),
-            'price': gopass.price,
+            'tickets': response_tickets,
+            'total_price': total_price,
             'time': issue_time,
-            'flight_number': gopass.flight.flight_number,
-            'passenger_name': gopass.passenger_name,
+            'flight_number': last_gopass.flight.flight_number if last_gopass else "",
             'status': 'Payé'
         })
+
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @ops_bp.route('/scanner')

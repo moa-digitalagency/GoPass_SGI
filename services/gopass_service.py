@@ -25,7 +25,7 @@ from utils.i18n import get_text
 
 class GoPassService:
     @staticmethod
-    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None):
+    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None, commit=True):
         flight = Flight.query.get(flight_id)
         if not flight:
             raise ValueError("Vol invalide")
@@ -80,7 +80,8 @@ class GoPassService:
         )
 
         db.session.add(gopass)
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
         return gopass
 
