@@ -40,21 +40,17 @@
         <div class="w-full border-b-2 border-black mb-4"></div>
 
         <!-- Critical Details -->
-        <div class="w-full mb-2">
-            <div class="flex justify-between items-baseline">
-                <span class="text-xs font-bold uppercase">VOL / FLIGHT</span>
-            </div>
-            <div class="text-3xl font-black text-center my-1">{{ gopass.flight.flight_number }}</div>
-            <div class="text-[10px] font-bold text-center uppercase mb-2">
+        <div class="w-full mb-3 text-center">
+            <span class="text-xs font-bold uppercase block mb-1">VOL / FLIGHT</span>
+            <div class="text-3xl font-black text-center my-1 leading-none">{{ gopass.flight.flight_number }}</div>
+            <div class="text-[10px] font-bold text-center uppercase mb-1">
                  {{ gopass.flight.airline|default('AIRLINE', true) }}
             </div>
         </div>
 
-        <div class="w-full mb-2">
-            <div class="flex justify-between items-baseline">
-                <span class="text-xs font-bold uppercase">DATE & HEURE</span>
-            </div>
-             <div class="text-xl font-bold text-center my-1 uppercase">
+        <div class="w-full mb-3 text-center">
+             <span class="text-xs font-bold uppercase block mb-1">DATE & HEURE / TIME</span>
+             <div class="text-xl font-bold text-center my-1 uppercase leading-none">
                 {{ gopass.flight.departure_time.strftime('%d/%m/%Y') }}
              </div>
              <div class="text-sm font-bold text-center uppercase">
@@ -62,11 +58,9 @@
              </div>
         </div>
 
-        <div class="w-full mb-4 mt-2">
-            <div class="flex justify-between items-baseline">
-                <span class="text-xs font-bold uppercase">ITINÉRAIRE</span>
-            </div>
-            <div class="text-lg font-black text-center uppercase">
+        <div class="w-full mb-3 mt-2 text-center">
+            <span class="text-xs font-bold uppercase block mb-1">ITINÉRAIRE / ROUTE</span>
+            <div class="text-lg font-black text-center uppercase leading-none">
                 {{ gopass.flight.departure_airport }} <span class="mx-1">➔</span> {{ gopass.flight.arrival_airport }}
             </div>
         </div>

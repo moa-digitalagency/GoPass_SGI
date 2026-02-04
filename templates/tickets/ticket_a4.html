@@ -71,7 +71,7 @@
             </div>
 
             <!-- Flight Info Block -->
-            <div class="border-2 border-blue-900 rounded-2xl p-4 bg-blue-50/50 mb-6 shadow-sm relative overflow-hidden flex-1">
+            <div class="border-2 border-blue-900 rounded-2xl p-4 bg-blue-50/50 mb-6 shadow-sm relative overflow-hidden flex-1 pb-6">
                 <!-- Decorative corner -->
                 <div class="absolute top-0 right-0 bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded-bl-2xl">
                     {{ gopass.status|upper }}
@@ -96,9 +96,15 @@
                         <p class="text-xl font-bold text-gray-800 uppercase truncate leading-tight">{{ gopass.passenger_name }}</p>
                     </div>
 
+                    <!-- Class / Type -->
+                    <div class="col-span-2 pt-1">
+                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
+                         <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
+                    </div>
+
                     <!-- Itinéraire + Airline -->
                     <div class="col-span-2">
-                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie</p>
+                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
                          <div class="flex items-center gap-2">
                             <p class="text-lg font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                             <span class="text-gray-300">|</span>
@@ -108,26 +114,37 @@
                 </div>
             </div>
 
-            <!-- Security QR Code -->
-            <div class="flex flex-col items-center justify-center mb-4">
-                <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-md">
-                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Security" class="w-32 h-32 object-contain">
+            <!-- Bottom Section: 2 Columns -->
+            <div class="grid grid-cols-2 gap-4 items-center mb-4">
+                <!-- Left: QR Code -->
+                <div class="flex flex-col items-center justify-center">
+                    <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-md">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Security" class="w-24 h-24 object-contain">
+                    </div>
+                    <p class="text-center text-[8px] font-bold text-gray-500 mt-1 uppercase tracking-wider leading-none">
+                        Signature Numérique Inviolable<br>Unique Document
+                    </p>
                 </div>
-                <p class="text-center text-[10px] font-bold text-gray-500 mt-2 uppercase tracking-wider leading-none">
-                    Signature Numérique Inviolable<br>Ce document est unique
-                </p>
+
+                <!-- Right: Price & Payment -->
+                <div class="flex flex-col items-end justify-center text-right pr-2">
+                    <p class="text-3xl font-black text-blue-900 leading-none">{{ gopass.price }} {{ gopass.currency }}</p>
+                     <div class="mt-2">
+                         <p class="text-[9px] font-bold text-gray-500 uppercase">Payé via / Paid via</p>
+                         <p class="text-sm font-bold text-gray-800">{{ gopass.payment_method }}</p>
+                     </div>
+                     <div class="mt-1">
+                         <p class="text-[9px] font-bold text-gray-500 uppercase">Ref</p>
+                         <p class="text-[10px] text-gray-400 font-mono">{{ gopass.payment_ref }}</p>
+                     </div>
+                </div>
             </div>
 
             <!-- Footer -->
-            <div class="mt-auto border-t border-gray-200 pt-3">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <p class="text-[10px] text-gray-700 italic">À présenter au contrôle / Present to control.</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-black text-blue-900 leading-none">{{ gopass.price }} {{ gopass.currency }}</p>
-                        <p class="text-[8px] text-gray-400 mt-0.5">Ref: {{ gopass.payment_ref }}</p>
-                    </div>
+            <div class="mt-auto border-t border-gray-200 pt-2 text-center">
+                <p class="text-[9px] text-gray-700 italic mb-2">À présenter au contrôle avant l'embarquement / Present to control before boarding.</p>
+                <div class="text-[8px] text-gray-400 uppercase tracking-widest">
+                    Powered by SGI-GP System • RVA RDC
                 </div>
             </div>
         </div>
@@ -157,7 +174,7 @@
             </div>
 
             <!-- Flight Info Block -->
-            <div class="border-2 border-blue-900 rounded-2xl p-4 bg-blue-50/50 mb-6 shadow-sm relative overflow-hidden flex-1">
+            <div class="border-2 border-blue-900 rounded-2xl p-4 bg-blue-50/50 mb-6 shadow-sm relative overflow-hidden flex-1 pb-6">
                 <!-- Decorative corner -->
                 <div class="absolute top-0 right-0 bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded-bl-2xl">
                     {{ gopass.status|upper }}
@@ -182,9 +199,15 @@
                         <p class="text-xl font-bold text-gray-800 uppercase truncate leading-tight">{{ gopass.passenger_name }}</p>
                     </div>
 
+                    <!-- Class / Type -->
+                    <div class="col-span-2 pt-1">
+                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
+                         <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
+                    </div>
+
                     <!-- Itinéraire + Airline -->
                     <div class="col-span-2">
-                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie</p>
+                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
                          <div class="flex items-center gap-2">
                             <p class="text-lg font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                             <span class="text-gray-300">|</span>
@@ -194,26 +217,37 @@
                 </div>
             </div>
 
-            <!-- Security QR Code -->
-            <div class="flex flex-col items-center justify-center mb-4">
-                <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-md">
-                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Security" class="w-32 h-32 object-contain">
+            <!-- Bottom Section: 2 Columns -->
+            <div class="grid grid-cols-2 gap-4 items-center mb-4">
+                <!-- Left: QR Code -->
+                <div class="flex flex-col items-center justify-center">
+                    <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-md">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Security" class="w-24 h-24 object-contain">
+                    </div>
+                    <p class="text-center text-[8px] font-bold text-gray-500 mt-1 uppercase tracking-wider leading-none">
+                        Signature Numérique Inviolable<br>Unique Document
+                    </p>
                 </div>
-                <p class="text-center text-[10px] font-bold text-gray-500 mt-2 uppercase tracking-wider leading-none">
-                    Signature Numérique Inviolable<br>Ce document est unique
-                </p>
+
+                <!-- Right: Price & Payment -->
+                <div class="flex flex-col items-end justify-center text-right pr-2">
+                    <p class="text-3xl font-black text-blue-900 leading-none">{{ gopass.price }} {{ gopass.currency }}</p>
+                     <div class="mt-2">
+                         <p class="text-[9px] font-bold text-gray-500 uppercase">Payé via / Paid via</p>
+                         <p class="text-sm font-bold text-gray-800">{{ gopass.payment_method }}</p>
+                     </div>
+                     <div class="mt-1">
+                         <p class="text-[9px] font-bold text-gray-500 uppercase">Ref</p>
+                         <p class="text-[10px] text-gray-400 font-mono">{{ gopass.payment_ref }}</p>
+                     </div>
+                </div>
             </div>
 
             <!-- Footer -->
-            <div class="mt-auto border-t border-gray-200 pt-3">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <p class="text-[10px] text-gray-700 italic">À présenter au contrôle / Present to control.</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-black text-blue-900 leading-none">{{ gopass.price }} {{ gopass.currency }}</p>
-                        <p class="text-[8px] text-gray-400 mt-0.5">Ref: {{ gopass.payment_ref }}</p>
-                    </div>
+            <div class="mt-auto border-t border-gray-200 pt-2 text-center">
+                <p class="text-[9px] text-gray-700 italic mb-2">À présenter au contrôle avant l'embarquement / Present to control before boarding.</p>
+                <div class="text-[8px] text-gray-400 uppercase tracking-widest">
+                    Powered by SGI-GP System • RVA RDC
                 </div>
             </div>
         </div>
