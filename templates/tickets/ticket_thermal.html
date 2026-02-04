@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Ticket</title>
+    <script src="/static/js/tailwindcss.js"></script>
+    <style>
+        /* 80mm width approx 302px (assuming 96dpi) */
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+        body {
+            width: 80mm;
+            margin: 0 auto;
+            background: white;
+            color: black;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .thermal-container {
+            padding: 5mm;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .dashed-line {
+            border-top: 1px dashed black;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="text-black bg-white">
+    <div class="thermal-container flex flex-col items-center">
+        <!-- Header -->
+        <img src="/static/img/logo_rva.png" alt="RVA" class="h-12 w-auto mb-2 grayscale">
+        <h1 class="text-lg font-black uppercase tracking-widest mb-1">RVA / GO-PASS</h1>
+        <p class="text-[10px] font-bold uppercase text-center mb-4">Redevance IDEF</p>
+
+        <!-- Divider -->
+        <div class="w-full border-b-2 border-black mb-4"></div>
+
+        <!-- Critical Details -->
+        <div class="w-full mb-2">
+            <div class="flex justify-between items-baseline">
+                <span class="text-xs font-bold uppercase">VOL / FLIGHT</span>
+            </div>
+            <div class="text-3xl font-black text-center my-1">{{ gopass.flight.flight_number }}</div>
+        </div>
+
+        <div class="w-full mb-4">
+            <div class="flex justify-between items-baseline">
+                <span class="text-xs font-bold uppercase">DATE</span>
+            </div>
+             <div class="text-2xl font-bold text-center my-1">{{ gopass.flight.departure_time.strftime('%d/%m') }}</div>
+             <div class="text-xs text-center font-bold">{{ gopass.flight.departure_time.strftime('%Y') }}</div>
+        </div>
+
+        <div class="w-full border-b border-black border-dashed mb-4"></div>
+
+        <!-- Transaction Details -->
+        <div class="w-full space-y-2 mb-4">
+             <div>
+                <span class="text-[10px] font-bold uppercase block">Passager</span>
+                <span class="text-sm font-bold uppercase block truncate">{{ gopass.passenger_name[:20] }}{% if gopass.passenger_name|length > 20 %}...{% endif %}</span>
+            </div>
+             <div class="flex justify-between items-center pt-2">
+                <span class="text-[10px] font-bold uppercase">Prix</span>
+                <span class="text-xl font-black">{{ gopass.price }} {{ gopass.currency }}</span>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="mb-4 flex flex-col items-center">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR" class="w-32 h-32 mb-1">
+            <span class="text-[8px] uppercase">Scan for validation</span>
+        </div>
+
+        <!-- Footer / Traceability -->
+        <div class="w-full text-[8px] font-mono leading-tight space-y-1 pt-2 border-t border-black">
+            <div class="flex justify-between">
+                <span>AGENT:</span>
+                <span>{{ gopass.seller.username if gopass.seller else 'WEB/AUTO' }}</span>
+            </div>
+             <div class="flex justify-between">
+                <span>TERM:</span>
+                <span>POS-{{ gopass.sold_by or '000' }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span>DATE:</span>
+                <span>{{ gopass.issue_date.strftime('%d/%m/%y %H:%M') }}</span>
+            </div>
+             <div class="flex justify-between">
+                <span>REF:</span>
+                <span class="truncate max-w-[100px]">{{ gopass.payment_ref }}</span>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <p class="text-[8px] italic">*** BON VOYAGE ***</p>
+        </div>
+    </div>
+</body>
+</html>
