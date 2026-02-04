@@ -12,5 +12,6 @@ from .flight_service import FlightService
 from .gopass_service import GoPassService
 from .finance_service import FinanceService
 from .telegram_service import TelegramService
+from .mock_payment_service import MockPaymentService
 
-__all__ = ['QRService', 'UserService', 'FlightService', 'GoPassService', 'FinanceService', 'TelegramService']
+__all__ = ['QRService', 'UserService', 'FlightService', 'GoPassService', 'FinanceService', 'TelegramService', 'MockPaymentService']

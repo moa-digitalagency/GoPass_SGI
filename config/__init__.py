@@ -17,6 +17,7 @@ class Config:
         raise ValueError("SESSION_SECRET environment variable must be set")
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     AVIATIONSTACK_API_KEY = os.environ.get('AVIATIONSTACK_API_KEY')
+    ENABLE_DEMO_PAYMENT = os.environ.get('ENABLE_DEMO_PAYMENT') == 'True'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'statics/uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024

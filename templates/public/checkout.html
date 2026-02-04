@@ -17,6 +17,9 @@
         // For this mission, we respect the prompt's explicit "$55.00" example.
         const unitPrice = 55.00;
 
+        // DEMO MODE FLAG
+        const isDemoMode = {{ 'true' if enable_demo_payment else 'false' }};
+
         let passengerCount = 1;
 
         // --- DOM ELEMENTS ---
@@ -188,15 +191,22 @@
             console.error("Error loading settings", e);
         }
 
-        // Toggle Stripe
+        // Toggle Stripe & Mobile Money Inputs
         const radios = document.querySelectorAll('input[name="payment_method"]');
         const stripeSection = document.getElementById('stripe-section');
+        const mobileMoneySection = document.getElementById('mobile-money-section');
+
         radios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 if (e.target.value === 'STRIPE') {
                     stripeSection.classList.remove('hidden');
+                    if(mobileMoneySection) mobileMoneySection.classList.add('hidden');
+                } else if (e.target.value === 'MOBILE_MONEY') {
+                    stripeSection.classList.add('hidden');
+                    if(mobileMoneySection) mobileMoneySection.classList.remove('hidden');
                 } else {
                     stripeSection.classList.add('hidden');
+                    if(mobileMoneySection) mobileMoneySection.classList.add('hidden');
                 }
             });
         });
@@ -204,6 +214,13 @@
         // Form Submit
         form.addEventListener('submit', async (e) => {
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+            if (isDemoMode) {
+                 // In Demo Mode, just show spinner and submit
+                 setLoading(true);
+                 // Allow form submission to proceed
+                 return;
+            }
 
             if (paymentMethod === 'STRIPE' && stripeEnabled) {
                 e.preventDefault();
@@ -291,6 +308,17 @@
 {% block content_public %}
 <div class="min-h-screen bg-gray-100 p-8 pb-32">
     <div class="max-w-4xl mx-auto">
+
+        {% if enable_demo_payment %}
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8 rounded shadow-sm flex items-start" role="alert">
+            <i class="fas fa-exclamation-triangle mt-1 mr-3 text-yellow-600"></i>
+            <div>
+                <p class="font-bold">Mode Simulation Actif - Aucun débit réel</p>
+                <p class="text-sm">Le système est en mode démonstration. Utilisez les numéros de test fournis pour simuler des paiements.</p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-gray-800">{{ t('public_buy.payment_title') }}</h1>
@@ -441,8 +469,34 @@
                             <label class="block text-gray-700 text-sm font-bold mb-3">
                                 <i class="fas fa-credit-card mr-2"></i>{{ t('public_buy.card_details') }}
                             </label>
-                            <div id="card-element" class="bg-white p-4 rounded-lg border border-gray-300"></div>
-                            <div id="card-errors" class="text-red-500 text-sm mt-2 font-bold" role="alert"></div>
+
+                            {% if enable_demo_payment %}
+                                <!-- Mock Input for Demo -->
+                                <input type="text" name="card_number" class="w-full bg-white text-gray-900 font-bold border-2 border-gray-300 focus:border-blue-500 rounded-xl py-3 px-4 transition-colors"
+                                       placeholder="Numéro de carte de test (ex: 4242...)"
+                                       title="Utilisez 4242... pour succès, 4000... pour échec">
+                                <p class="text-xs text-gray-500 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i> <strong>Tests:</strong> 4242 4242... (Succès) | 4000... (Fonds insuffisants)
+                                </p>
+                            {% else %}
+                                <!-- Real Stripe Element -->
+                                <div id="card-element" class="bg-white p-4 rounded-lg border border-gray-300"></div>
+                                <div id="card-errors" class="text-red-500 text-sm mt-2 font-bold" role="alert"></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Mobile Money Input (Demo Only or Enhanced UI) -->
+                        <div id="mobile-money-section" class="hidden mb-8 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-inner">
+                             <label class="block text-gray-700 text-sm font-bold mb-3">
+                                <i class="fas fa-mobile-alt mr-2"></i>Numéro Mobile Money
+                            </label>
+                            <input type="text" name="mobile_number" class="w-full bg-white text-gray-900 font-bold border-2 border-gray-300 focus:border-green-500 rounded-xl py-3 px-4 transition-colors"
+                                   placeholder="099..." >
+                            {% if enable_demo_payment %}
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i> <strong>Tests:</strong> 0990000000 (Succès) | 0999999999 (Timeout)
+                            </p>
+                            {% endif %}
                         </div>
 
                          <div id="payment-actions" class="hidden">
