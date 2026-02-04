@@ -25,3 +25,5 @@ stripe
 playwright
 pytest
 Flask-WTF==1.2.1
+cryptography
+python-telegram-bot

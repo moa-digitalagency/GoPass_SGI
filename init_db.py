@@ -43,7 +43,9 @@ def check_and_update_schema(db, app):
         'airports': ['iata_code', 'city', 'type'],
         'airlines': ['name', 'logo_path', 'is_active'],
         'tariffs': ['flight_type', 'passenger_category', 'price', 'currency'],
-        'flight_manifests': ['flight_id', 'passenger_count_declared', 'file_upload_path', 'upload_date']
+        'flight_manifests': ['flight_id', 'passenger_count_declared', 'file_upload_path', 'upload_date'],
+        'telegram_bot_configs': ['bot_token', 'is_active', 'updated_at'],
+        'telegram_subscribers': ['chat_id', 'username', 'first_name', 'status', 'role_label', 'subscriptions', 'requested_at', 'approved_at', 'approved_by']
     }
 
     # Only create tables if they don't exist

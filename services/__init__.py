@@ -11,5 +11,6 @@ from .user_service import UserService
 from .flight_service import FlightService
 from .gopass_service import GoPassService
 from .finance_service import FinanceService
+from .telegram_service import TelegramService
 
-__all__ = ['QRService', 'UserService', 'FlightService', 'GoPassService', 'FinanceService']
+__all__ = ['QRService', 'UserService', 'FlightService', 'GoPassService', 'FinanceService', 'TelegramService']

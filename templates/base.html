@@ -68,6 +68,9 @@
 
                 <!-- Configuration Menu -->
                 <div class="px-6 py-3 text-blue-300 text-xs uppercase font-bold tracking-wider mt-4">{{ t('menu.config') }}</div>
+                <a href="{{ url_for('telegram.index') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'telegram' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
+                    <i class="fas fa-paper-plane mr-3 w-5 text-center"></i>Notifications & Bot
+                </a>
                 <a href="{{ url_for('settings.tariffs') }}" class="flex items-center px-6 py-2 hover:bg-blue-800 transition-colors {% if 'settings.tariffs' in request.endpoint %}bg-blue-800 border-r-4 border-white{% endif %}">
                     <i class="fas fa-tags mr-3 w-5 text-center"></i>{{ t('menu.tariffs') }}
                 </a>
