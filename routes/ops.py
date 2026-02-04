@@ -46,6 +46,11 @@ def pos_sale():
 
     flight_id = data.get('flight_id')
 
+    # New fields for verification
+    verification_source = data.get('verification_source', 'manual')
+    flight_details = data.get('flight_details')
+    price = float(data.get('price', 50.0))
+
     if flight_mode == 'manual':
         manual_date_str = data.get('manual_flight_date')
         manual_number = data.get('manual_flight_number')
@@ -75,9 +80,12 @@ def pos_sale():
             passenger_name=passenger_name,
             passenger_passport=passenger_passport,
             passenger_document_type=passenger_document_type,
+            price=price,
             payment_method='Cash',
             sold_by=current_user.id,
-            sales_channel='pos'
+            sales_channel='pos',
+            verification_source=verification_source,
+            flight_details=flight_details
         )
 
         issue_time = gopass.issue_date.strftime('%H:%M') if gopass.issue_date else datetime.now().strftime('%H:%M')

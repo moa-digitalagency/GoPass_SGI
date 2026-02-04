@@ -125,6 +125,11 @@ class Transaction(db.Model):
     provider_ref = db.Column(db.String(100)) # ID transaction M-Pesa/Airtel
     status = db.Column(db.String(20), default='completed')
     is_offline_sync = db.Column(db.Boolean, default=False)
+
+    # New fields for POS Flight Verification
+    verification_source = db.Column(db.String(20), default='manual') # 'api', 'manual'
+    flight_details = db.Column(db.JSON) # Snapshot of verified flight data (IATA, Times, etc.)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     agent = db.relationship('User', foreign_keys=[agent_id])
