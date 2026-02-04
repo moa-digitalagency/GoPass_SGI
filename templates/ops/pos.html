@@ -34,6 +34,11 @@
             background-color: #E5E7EB;
             border-radius: 20px;
         }
+
+        .step-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-[#F3F4F6] text-gray-800 h-screen flex flex-col overflow-hidden">
@@ -93,153 +98,143 @@
                         </span>
                         Émission de Titre de Voyage
                     </h2>
-                    <div class="text-xs text-gray-400 font-medium">
-                        {{ today.strftime('%d %B %Y') }}
+
+                    <!-- Steps Indicator -->
+                    <div class="flex items-center space-x-2 text-sm">
+                        <span id="badge-step-1" class="px-3 py-1 rounded-full bg-blue-600 text-white font-bold">1. Vol</span>
+                        <div class="w-4 h-0.5 bg-gray-300"></div>
+                        <span id="badge-step-2" class="px-3 py-1 rounded-full bg-gray-200 text-gray-500 font-bold">2. Passagers</span>
                     </div>
                 </div>
 
                 <!-- Scrollable Form Area -->
-                <div class="p-8 lg:overflow-y-auto flex-1 custom-scrollbar">
+                <div class="p-8 lg:overflow-y-auto flex-1 custom-scrollbar relative">
                     <form id="posForm" class="space-y-8 max-w-3xl mx-auto">
 
-                        <!-- Composant A : Sélecteur de Mode -->
-                        <div class="bg-gray-100 p-1.5 rounded-xl flex shadow-inner">
-                            <button type="button" onclick="setFlightMode('today')" id="btn-mode-today" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600">
-                                <i class="fas fa-calendar-day mr-2"></i> Vols du Jour
-                            </button>
-                            <button type="button" onclick="setFlightMode('manual')" id="btn-mode-manual" class="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all">
-                                <i class="fas fa-calendar-plus mr-2"></i> Vol Ultérieur / Manuel
-                            </button>
-                        </div>
-                        <input type="hidden" id="flight_mode" name="flight_mode" value="today">
+                        <!-- ================= PHASE 1: SÉLECTION VOL ================= -->
+                        <div id="phase-flight">
 
-                        <!-- Zone Vol : TODAY -->
-                        <div id="zone-today" class="transition-all duration-300">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Sélectionner un vol</label>
-                            <div class="relative">
-                                <select id="flight_id" name="flight_id" class="w-full pl-4 pr-10 py-4 border border-gray-200 rounded-xl appearance-none text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-shadow hover:border-gray-300 text-lg">
-                                    <option value="" disabled selected>-- Choisir dans la liste --</option>
-                                    {% for flight in flights %}
-                                    <option value="{{ flight.id }}">
-                                        {{ flight.departure_time.strftime('%H:%M') }} | {{ flight.airline }} {{ flight.flight_number }} | -> {{ flight.arrival_airport }}
-                                    </option>
-                                    {% else %}
-                                    <option value="" disabled>Aucun vol prévu aujourd'hui</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
+                            <!-- Mode Switcher -->
+                            <div class="bg-gray-100 p-1.5 rounded-xl flex shadow-inner mb-6">
+                                <button type="button" onclick="setFlightMode('today')" id="btn-mode-today" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600">
+                                    <i class="fas fa-calendar-day mr-2"></i> Vols du Jour
+                                </button>
+                                <button type="button" onclick="setFlightMode('manual')" id="btn-mode-manual" class="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all">
+                                    <i class="fas fa-calendar-plus mr-2"></i> Vol Ultérieur / Manuel
+                                </button>
                             </div>
-                        </div>
+                            <input type="hidden" id="flight_mode" name="flight_mode" value="today">
 
-                        <!-- Zone Vol : MANUAL -->
-                        <div id="zone-manual" class="hidden transition-all duration-300 space-y-4">
-                            <div class="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Date de Départ</label>
-                                    <input type="date" id="manual_flight_date" name="manual_flight_date" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm" onchange="checkFlightInput()">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Numéro de Vol</label>
-                                    <div class="relative">
-                                        <input type="text" id="manual_flight_number" name="manual_flight_number" placeholder="ex: AF123" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm uppercase pr-12" oninput="checkFlightInput()">
-                                        <div id="flight-spinner" class="absolute right-4 top-4 hidden">
-                                            <i class="fas fa-circle-notch fa-spin text-blue-500"></i>
-                                        </div>
+                            <!-- Zone Vol : TODAY -->
+                            <div id="zone-today" class="transition-all duration-300 space-y-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Sélectionner un vol</label>
+                                <div class="relative">
+                                    <select id="flight_id" name="flight_id" class="w-full pl-4 pr-10 py-4 border border-gray-200 rounded-xl appearance-none text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-shadow hover:border-gray-300 text-lg">
+                                        <option value="" disabled selected>-- Choisir dans la liste --</option>
+                                        {% for flight in flights %}
+                                        <option value="{{ flight.id }}" data-price="{{ 50.0 }}">
+                                            {{ flight.departure_time.strftime('%H:%M') }} | {{ flight.airline }} {{ flight.flight_number }} | -> {{ flight.arrival_airport }}
+                                        </option>
+                                        {% else %}
+                                        <option value="" disabled>Aucun vol prévu aujourd'hui</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                        <i class="fas fa-chevron-down"></i>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Bouton Vérifier -->
-                            <div id="verify-btn-container" class="hidden">
-                                <button type="button" onclick="verifyFlight()" class="w-full bg-blue-100 text-blue-700 font-bold py-3 rounded-xl hover:bg-blue-200 transition-colors flex items-center justify-center">
-                                    <i class="fas fa-search mr-2"></i> Vérifier le vol via AviationStack
+                                <button type="button" onclick="confirmTodayFlight()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-md mt-4">
+                                    <i class="fas fa-check mr-2"></i> Confirmer ce vol
                                 </button>
                             </div>
 
-                            <!-- Résultat : Carte de Vol -->
-                            <div id="flight-result-card" class="hidden bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                <div class="absolute top-0 right-0 p-2">
-                                    <span id="price-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">INTERNATIONAL</span>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
-                                        <i class="fas fa-plane"></i>
+                            <!-- Zone Vol : MANUAL -->
+                            <div id="zone-manual" class="hidden transition-all duration-300 space-y-4">
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date de Départ</label>
+                                        <input type="date" id="manual_flight_date" name="manual_flight_date" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm" onchange="checkFlightInput()">
                                     </div>
                                     <div>
-                                        <h4 id="card-airline" class="font-bold text-gray-800">Air France</h4>
-                                        <p class="text-sm text-gray-500">
-                                            <span id="card-route">FIH (20:00) ➔ CDG</span>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="mt-4 flex space-x-3">
-                                    <button type="button" onclick="confirmFlight()" class="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-700">
-                                        <i class="fas fa-check mr-1"></i> Confirmer ce vol
-                                    </button>
-                                    <button type="button" onclick="resetManualSearch()" class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Fallback : Erreur & Saisie Manuelle -->
-                            <div id="flight-error-msg" class="hidden bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">
-                                <div class="flex items-center mb-2">
-                                    <i class="fas fa-exclamation-circle mr-2"></i>
-                                    <span>Vol introuvable dans la base globale.</span>
-                                </div>
-                                <button type="button" onclick="enableManualOverride()" class="text-red-700 font-bold underline hover:text-red-800">
-                                    Saisir manuellement
-                                </button>
-                            </div>
-
-                            <!-- Sélecteur Type de Vol (Caché par défaut) -->
-                            <div id="manual-type-selector" class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                                <label class="block text-sm font-semibold text-yellow-800 mb-2">Type de Vol (Saisie Forcée)</label>
-                                <select id="manual_flight_type" class="w-full p-3 border border-yellow-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400" onchange="updatePriceManual()">
-                                    <option value="international">International (55$)</option>
-                                    <option value="national">Domestique (15$)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Separator -->
-                        <div class="border-t border-gray-100"></div>
-
-                        <!-- Composant B : Passager -->
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom Complet du Passager</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <i class="fas fa-user text-gray-300"></i>
-                                    </div>
-                                    <input type="text" id="passenger_name" name="passenger_name" class="w-full pl-11 pr-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm text-lg" placeholder="Entrer le nom" required autocomplete="off">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-6">
-                                <div class="col-span-1">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Type Doc.</label>
-                                    <div class="relative">
-                                        <select id="passenger_document_type" name="passenger_document_type" class="w-full p-4 border border-gray-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
-                                            <option value="Passeport" selected>Passeport</option>
-                                            <option value="Carte d'Identité">Carte d'ID</option>
-                                            <option value="Permis de Conduire">Permis</option>
-                                            <option value="Autre">Autre</option>
-                                        </select>
-                                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
-                                            <i class="fas fa-chevron-down text-xs"></i>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Numéro de Vol</label>
+                                        <div class="relative">
+                                            <input type="text" id="manual_flight_number" name="manual_flight_number" placeholder="ex: AF123" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm uppercase pr-12" oninput="checkFlightInput()">
+                                            <div id="flight-spinner" class="absolute right-4 top-4 hidden">
+                                                <i class="fas fa-circle-notch fa-spin text-blue-500"></i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-span-2">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Numéro Document</label>
-                                    <input type="text" id="passenger_passport" name="passenger_passport" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm" placeholder="ex: A1234567" required autocomplete="off">
+
+                                <!-- Bouton Vérifier -->
+                                <div id="verify-btn-container" class="hidden">
+                                    <button type="button" onclick="verifyManualFlight()" class="w-full bg-blue-100 text-blue-700 font-bold py-3 rounded-xl hover:bg-blue-200 transition-colors flex items-center justify-center">
+                                        <i class="fas fa-search mr-2"></i> Vérifier le vol via AviationStack
+                                    </button>
+                                </div>
+
+                                <!-- Fallback Error -->
+                                <div id="flight-error-msg" class="hidden bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-exclamation-circle mr-2"></i>
+                                        <span>Vol introuvable dans la base globale.</span>
+                                    </div>
+                                    <button type="button" onclick="enableManualOverride()" class="text-red-700 font-bold underline hover:text-red-800">
+                                        Saisir manuellement
+                                    </button>
+                                </div>
+
+                                <!-- Override Selector -->
+                                <div id="manual-type-selector" class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                                    <label class="block text-sm font-semibold text-yellow-800 mb-2">Type de Vol (Saisie Forcée)</label>
+                                    <select id="manual_flight_type" class="w-full p-3 border border-yellow-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400" onchange="updatePriceManual()">
+                                        <option value="international">International (55$)</option>
+                                        <option value="national">Domestique (15$)</option>
+                                    </select>
+                                    <button type="button" onclick="confirmManualFlight(true)" class="w-full bg-yellow-500 text-white font-bold py-2 mt-3 rounded-lg hover:bg-yellow-600">
+                                        Confirmer Saisie Manuelle
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- ================= PHASE 1.5: CONFIRMED FLIGHT CARD ================= -->
+                        <div id="confirmed-flight-card" class="hidden bg-white border-2 border-green-500 rounded-xl p-4 shadow-sm relative overflow-hidden">
+                             <div class="absolute top-0 right-0 p-2">
+                                <span id="cf-price-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">INTERNATIONAL</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-plane"></i>
+                                </div>
+                                <div>
+                                    <h4 id="cf-airline" class="font-bold text-gray-800">Air France</h4>
+                                    <p class="text-sm text-gray-500">
+                                        <span id="cf-route">FIH ➔ CDG</span> | <span id="cf-date">2023-10-27</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="resetFlightSelection()" class="absolute bottom-2 right-2 text-xs text-gray-400 hover:text-red-500 underline">
+                                Changer de vol
+                            </button>
+                        </div>
+
+
+                        <!-- ================= PHASE 2: PASSENGERS ================= -->
+                        <div id="phase-passengers" class="hidden space-y-6">
+
+                            <!-- Passenger List -->
+                            <div id="passenger-list" class="space-y-4">
+                                <!-- Dynamic Rows -->
+                            </div>
+
+                            <!-- Add Button -->
+                            <div class="flex justify-end">
+                                <button type="button" onclick="addPassengerRow()" class="text-blue-600 font-bold hover:text-blue-800 flex items-center bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-blue-100">
+                                    <i class="fas fa-plus-circle mr-2"></i> Ajouter un autre passager
+                                </button>
+                            </div>
+
                         </div>
                     </form>
                 </div>
@@ -248,10 +243,10 @@
                 <div class="p-6 bg-gray-50 border-t border-gray-200 z-10">
                     <div class="max-w-3xl mx-auto flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500">Montant à percevoir</p>
-                                    <p class="text-3xl font-bold text-gray-800" id="display-amount">50.00 $</p>
+                            <p class="text-sm text-gray-500">Montant à percevoir (<span id="count-passengers">0</span> passagers)</p>
+                            <p class="text-3xl font-bold text-gray-800" id="display-amount">0.00 $</p>
                         </div>
-                        <button type="submit" form="posForm" id="submitBtn" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-emerald-200 transform transition hover:-translate-y-0.5 active:translate-y-0 flex items-center text-lg">
+                        <button type="button" onclick="submitSale()" id="submitBtn" class="bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-4 px-10 rounded-2xl shadow-none flex items-center text-lg transition-all" disabled>
                             <i class="fas fa-print mr-3"></i>
                             <span>ENCAISSER & IMPRIMER</span>
                         </button>
@@ -275,64 +270,91 @@
                         <i class="fas fa-receipt text-4xl mb-3 opacity-20"></i>
                         <p class="text-sm">Aucune vente cette session</p>
                     </div>
-
-                    <!-- Dynamic Items will be appended here -->
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Hidden iframe for printing -->
-    <iframe id="printFrame" style="display:none;"></iframe>
+    <!-- Hidden iframe container for printing loop -->
+    <div id="print-container" style="display:none;"></div>
 
     <script>
-        // --- LOGIC ---
+        // --- STATE MANAGEMENT ---
+        const appState = {
+            step: 0, // 0: Flight, 1: Passengers
+            flightMode: 'today',
+            flightData: null, // {id, number, airline, date, ...}
+            passengers: [], // Array of objects {name, doc_num, doc_type}
+            unitPrice: 50.0,
+            verificationSource: 'manual',
+            flightDetails: null // Full JSON from API if available
+        };
 
-        // Globals for verification state
-        let verifiedFlightData = null;
-        let verificationSource = 'manual'; // 'manual' or 'api'
-        let currentPrice = 50.0;
+        // --- DOM ELEMENTS ---
+        const els = {
+            phaseFlight: document.getElementById('phase-flight'),
+            phasePassengers: document.getElementById('phase-passengers'),
+            zoneToday: document.getElementById('zone-today'),
+            zoneManual: document.getElementById('zone-manual'),
+            badge1: document.getElementById('badge-step-1'),
+            badge2: document.getElementById('badge-step-2'),
+            confirmedCard: document.getElementById('confirmed-flight-card'),
+            submitBtn: document.getElementById('submitBtn'),
+            displayAmount: document.getElementById('display-amount'),
+            countPassengers: document.getElementById('count-passengers'),
+            passengerList: document.getElementById('passenger-list')
+        };
+
+        // --- PHASE 1: FLIGHT LOGIC ---
 
         function setFlightMode(mode) {
+            appState.flightMode = mode;
             document.getElementById('flight_mode').value = mode;
 
             const btnToday = document.getElementById('btn-mode-today');
             const btnManual = document.getElementById('btn-mode-manual');
-            const zoneToday = document.getElementById('zone-today');
-            const zoneManual = document.getElementById('zone-manual');
 
             if (mode === 'today') {
                 btnToday.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600";
                 btnManual.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all";
-                zoneToday.classList.remove('hidden');
-                zoneManual.classList.add('hidden');
-
-                document.getElementById('flight_id').required = true;
-                document.getElementById('manual_flight_date').required = false;
-                document.getElementById('manual_flight_number').required = false;
-
-                // Reset Price to default or flight specific? Assuming 50 for now or logic needed.
-                updatePriceDisplay(50.0);
-
+                els.zoneToday.classList.remove('hidden');
+                els.zoneManual.classList.add('hidden');
+                appState.unitPrice = 50.0;
             } else {
                 btnToday.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all";
                 btnManual.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600";
-                zoneToday.classList.add('hidden');
-                zoneManual.classList.remove('hidden');
-
-                document.getElementById('flight_id').required = false;
-                document.getElementById('manual_flight_date').required = true;
-                document.getElementById('manual_flight_number').required = true;
-
-                // Default to 55 for manual/international or 50?
-                // Logic says 55 for Int, 15 Dom.
-                // Default to 55 (Int) until verified or selected.
-                updatePriceDisplay(55.0);
+                els.zoneToday.classList.add('hidden');
+                els.zoneManual.classList.remove('hidden');
+                appState.unitPrice = 55.0; // Default Int
             }
+            updateTotals();
         }
 
-        // --- FLIGHT VERIFICATION LOGIC ---
+        function confirmTodayFlight() {
+            const select = document.getElementById('flight_id');
+            const val = select.value;
+            if (!val) {
+                alert("Veuillez sélectionner un vol.");
+                return;
+            }
+
+            const opt = select.options[select.selectedIndex];
+            const text = opt.text;
+
+            appState.flightData = {
+                id: val,
+                desc: text,
+                mode: 'today'
+            };
+
+            const price = parseFloat(opt.dataset.price || "50.0");
+            appState.unitPrice = price;
+            appState.verificationSource = 'manual';
+            appState.flightDetails = null;
+
+            lockFlightPhase();
+        }
 
         function checkFlightInput() {
             const num = document.getElementById('manual_flight_number').value;
@@ -346,224 +368,393 @@
             }
         }
 
-        async function verifyFlight() {
+        async function verifyManualFlight() {
             const num = document.getElementById('manual_flight_number').value;
             const date = document.getElementById('manual_flight_date').value;
             const spinner = document.getElementById('flight-spinner');
-            const resultCard = document.getElementById('flight-result-card');
-            const errorMsg = document.getElementById('flight-error-msg');
-            const manualSelector = document.getElementById('manual-type-selector');
 
             spinner.classList.remove('hidden');
-            resultCard.classList.add('hidden');
-            errorMsg.classList.add('hidden');
-            manualSelector.classList.add('hidden');
 
             try {
-                const response = await fetch("{{ url_for('api.verify_flight') }}", {
+                 const response = await fetch("{{ url_for('api.verify_flight') }}", {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': "{{ csrf_token() }}"
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
                     body: JSON.stringify({ flight_number: num, flight_date: date })
                 });
 
                 const data = await response.json();
 
                 if (response.ok && data.found) {
-                    // Show Card
-                    verifiedFlightData = data.flight_data;
-                    verificationSource = 'api';
+                    appState.flightData = {
+                        number: data.flight_data.airline + ' ' + num.toUpperCase(),
+                        date: date,
+                        route: `${data.flight_data.departure.iata} ➔ ${data.flight_data.arrival.iata}`,
+                        airline: data.flight_data.airline,
+                        mode: 'manual'
+                    };
+                    appState.unitPrice = data.pricing.amount;
+                    appState.verificationSource = 'api';
+                    appState.flightDetails = data.flight_data;
 
-                    document.getElementById('card-airline').innerText = data.flight_data.airline;
-                    document.getElementById('card-route').innerText = `${data.flight_data.departure.iata} (${data.flight_data.departure.time}) ➔ ${data.flight_data.arrival.iata}`;
-
-                    const badge = document.getElementById('price-badge');
-                    badge.innerText = data.pricing.type;
-                    if (data.pricing.type === 'DOMESTIQUE') {
-                        badge.className = "bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded";
-                    } else {
-                        badge.className = "bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded";
-                    }
-
-                    currentPrice = data.pricing.amount;
-
-                    resultCard.classList.remove('hidden');
-                    document.getElementById('verify-btn-container').classList.add('hidden');
+                    lockFlightPhase();
 
                 } else {
-                    // Show Error / Fallback
-                    verifiedFlightData = null;
-                    verificationSource = 'manual';
-                    errorMsg.classList.remove('hidden');
+                     document.getElementById('flight-error-msg').classList.remove('hidden');
                 }
 
-            } catch (e) {
-                console.error(e);
-                errorMsg.classList.remove('hidden');
-                verificationSource = 'manual';
+            } catch(e) {
+                alert("Erreur de connexion");
             } finally {
                 spinner.classList.add('hidden');
             }
         }
 
-        function confirmFlight() {
-            // Lock inputs
-            document.getElementById('manual_flight_number').readOnly = true;
-            document.getElementById('manual_flight_date').readOnly = true;
-            document.getElementById('manual_flight_number').classList.add('bg-gray-100');
-            document.getElementById('manual_flight_date').classList.add('bg-gray-100');
-
-            // Focus Name
-            document.getElementById('passenger_name').focus();
-
-            // Update Price
-            updatePriceDisplay(currentPrice);
-
-            // Hide Confirm Button in card to show it's locked?
-            // Or just leave it.
-        }
-
-        function resetManualSearch() {
-            document.getElementById('manual_flight_number').readOnly = false;
-            document.getElementById('manual_flight_date').readOnly = false;
-            document.getElementById('manual_flight_number').classList.remove('bg-gray-100');
-            document.getElementById('manual_flight_date').classList.remove('bg-gray-100');
-
-            document.getElementById('flight-result-card').classList.add('hidden');
-            checkFlightInput();
-
-            verifiedFlightData = null;
-            verificationSource = 'manual';
-            updatePriceDisplay(55.0); // Reset to default
-        }
-
         function enableManualOverride() {
             document.getElementById('flight-error-msg').classList.add('hidden');
             document.getElementById('manual-type-selector').classList.remove('hidden');
-            document.getElementById('verify-btn-container').classList.add('hidden');
-
-            // Trigger price update based on default selection
             updatePriceManual();
         }
 
         function updatePriceManual() {
             const type = document.getElementById('manual_flight_type').value;
-            if (type === 'national') {
-                updatePriceDisplay(15.0);
+            appState.unitPrice = (type === 'national') ? 15.0 : 55.0;
+        }
+
+        function confirmManualFlight(force = false) {
+             const num = document.getElementById('manual_flight_number').value;
+             const date = document.getElementById('manual_flight_date').value;
+
+             if (!num || !date) return;
+
+             if (force) {
+                 appState.flightData = {
+                     number: num.toUpperCase(),
+                     date: date,
+                     route: "Vol Manuel",
+                     airline: "Inconnu",
+                     mode: 'manual'
+                 };
+                 appState.verificationSource = 'manual';
+                 appState.flightDetails = null;
+             }
+
+             lockFlightPhase();
+        }
+
+        function lockFlightPhase() {
+            appState.step = 1;
+
+            // Hide Selector
+            els.phaseFlight.classList.add('hidden');
+
+            // Show Card
+            els.confirmedCard.classList.remove('hidden');
+
+            // Fill Card
+            if (appState.flightMode === 'today') {
+                document.getElementById('cf-airline').textContent = "Vol du Jour";
+                document.getElementById('cf-route').textContent = appState.flightData.desc;
+                document.getElementById('cf-date').textContent = new Date().toISOString().split('T')[0];
             } else {
-                updatePriceDisplay(55.0);
+                document.getElementById('cf-airline').textContent = appState.flightData.airline;
+                document.getElementById('cf-route').textContent = appState.flightData.route || (appState.flightData.number);
+                document.getElementById('cf-date').textContent = appState.flightData.date;
+            }
+
+            document.getElementById('cf-price-badge').textContent = (appState.unitPrice < 50) ? 'DOMESTIQUE' : 'INTERNATIONAL';
+            document.getElementById('cf-price-badge').className = (appState.unitPrice < 50)
+                ? "bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded"
+                : "bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded";
+
+            // Update Steps
+            els.badge1.classList.replace('bg-blue-600', 'bg-green-500');
+            els.badge1.innerHTML = '<i class="fas fa-check mr-1"></i> Vol OK';
+            els.badge2.classList.replace('bg-gray-200', 'bg-blue-600');
+            els.badge2.classList.replace('text-gray-500', 'text-white');
+
+            // Show Passengers
+            els.phasePassengers.classList.remove('hidden');
+
+            // Initial Empty Passenger
+            appState.passengers = [{ name: '', doc_num: '', doc_type: 'Passeport' }];
+            renderPassengers();
+
+            checkValidation();
+        }
+
+        function resetFlightSelection() {
+            if (!confirm("Attention : Cela va réinitialiser la liste des passagers. Continuer ?")) return;
+
+            appState.step = 0;
+            appState.passengers = [];
+            appState.flightData = null;
+
+            els.phaseFlight.classList.remove('hidden');
+            els.confirmedCard.classList.add('hidden');
+            els.phasePassengers.classList.add('hidden');
+
+            // Reset Badges
+            els.badge1.classList.replace('bg-green-500', 'bg-blue-600');
+            els.badge1.innerHTML = '1. Vol';
+            els.badge2.classList.replace('bg-blue-600', 'bg-gray-200');
+            els.badge2.classList.replace('text-white', 'text-gray-500');
+
+            renderPassengers();
+            checkValidation();
+        }
+
+        // --- PHASE 2: PASSENGER LOGIC ---
+
+        function addPassengerRow() {
+            appState.passengers.push({ name: '', doc_num: '', doc_type: 'Passeport' });
+            renderPassengers();
+            checkValidation();
+        }
+
+        function removePassenger(index) {
+            if (appState.passengers.length <= 1) return; // Prevent deleting last one
+            appState.passengers.splice(index, 1);
+            renderPassengers();
+            checkValidation();
+        }
+
+        function updatePassengerData(index, field, value) {
+            appState.passengers[index][field] = value;
+            checkValidation();
+        }
+
+        function renderPassengers() {
+            els.passengerList.innerHTML = '';
+
+            appState.passengers.forEach((p, idx) => {
+                const el = document.createElement('div');
+                el.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm relative";
+
+                // Header (Passager X)
+                const headerHtml = `
+                    <div class="flex justify-between items-center mb-3">
+                         <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Passager ${idx + 1}</span>
+                         ${ (appState.passengers.length > 1) ?
+                            `<button type="button" onclick="removePassenger(${idx})" class="text-red-400 hover:text-red-600 text-xs font-bold"><i class="fas fa-trash-alt mr-1"></i> Supprimer</button>`
+                            : ''
+                         }
+                    </div>
+                `;
+
+                // Inputs
+                const inputsHtml = `
+                    <div class="space-y-3">
+                        <div>
+                            <input type="text"
+                                   value="${p.name}"
+                                   oninput="updatePassengerData(${idx}, 'name', this.value)"
+                                   class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white"
+                                   placeholder="Nom Complet (ex: Jean Dupont)"
+                                   autocomplete="off">
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-1">
+                                <select onchange="updatePassengerData(${idx}, 'doc_type', this.value)"
+                                        class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white">
+                                    <option value="Passeport" ${p.doc_type === 'Passeport' ? 'selected' : ''}>Passeport</option>
+                                    <option value="Carte d'Identité" ${p.doc_type === "Carte d'Identité" ? 'selected' : ''}>Carte ID</option>
+                                    <option value="Permis de Conduire" ${p.doc_type === 'Permis de Conduire' ? 'selected' : ''}>Permis</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <input type="text"
+                                       value="${p.doc_num}"
+                                       oninput="updatePassengerData(${idx}, 'doc_num', this.value)"
+                                       class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white"
+                                       placeholder="N° Document">
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                el.innerHTML = headerHtml + inputsHtml;
+                els.passengerList.appendChild(el);
+            });
+
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const count = appState.passengers.length;
+            const total = count * appState.unitPrice;
+
+            els.countPassengers.textContent = count;
+            els.displayAmount.textContent = total.toFixed(2) + " $";
+        }
+
+        // --- PHASE 3: VALIDATION & SUBMIT ---
+
+        function checkValidation() {
+            // Check flight
+            if (appState.step !== 1) return setSubmit(false);
+
+            if (appState.passengers.length === 0) return setSubmit(false);
+
+            let validCount = 0;
+            let partialCount = 0;
+
+            appState.passengers.forEach(p => {
+                const hasName = p.name.trim().length > 0;
+                const hasDoc = p.doc_num.trim().length > 0;
+
+                if (hasName && hasDoc) {
+                    validCount++;
+                } else if (hasName || hasDoc) {
+                    partialCount++;
+                }
+                // Empty rows (neither Name nor Doc) are ignored
+            });
+
+            // Enable if at least one valid passenger AND no partial/invalid rows blocking
+            const canSubmit = (validCount > 0) && (partialCount === 0);
+
+            setSubmit(canSubmit);
+        }
+
+        function setSubmit(enabled) {
+             if (enabled) {
+                els.submitBtn.disabled = false;
+                els.submitBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                els.submitBtn.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600', 'text-white', 'shadow-lg', 'hover:from-emerald-600');
+            } else {
+                els.submitBtn.disabled = true;
+                els.submitBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                els.submitBtn.classList.remove('bg-gradient-to-r', 'from-emerald-500', 'to-teal-600', 'text-white', 'shadow-lg', 'hover:from-emerald-600');
             }
         }
 
-        function updatePriceDisplay(amount) {
-            currentPrice = amount;
-            document.getElementById('display-amount').innerText = amount.toFixed(2) + " $";
-        }
+        async function submitSale() {
+            if (els.submitBtn.disabled) return;
 
-        document.getElementById('posForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+            const originalHtml = els.submitBtn.innerHTML;
+            els.submitBtn.disabled = true;
+            els.submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> TRAITEMENT...';
 
-            const btn = document.getElementById('submitBtn');
-            const originalContent = btn.innerHTML;
+            // Filter out empty rows before sending
+            const validPassengers = appState.passengers.filter(p =>
+                p.name.trim().length > 0 && p.doc_num.trim().length > 0
+            );
 
-            // Disable button
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> TRAITEMENT...';
-            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            // Payload Construction
+            const payload = {
+                flight_mode: appState.flightMode,
+                flight_id: (appState.flightMode === 'today') ? appState.flightData.id : null,
+                manual_flight_number: (appState.flightMode === 'manual') ? document.getElementById('manual_flight_number').value : null,
+                manual_flight_date: (appState.flightMode === 'manual') ? document.getElementById('manual_flight_date').value : null,
 
-            const formData = {
-                flight_mode: document.getElementById('flight_mode').value,
-                flight_id: document.getElementById('flight_id').value,
-                manual_flight_date: document.getElementById('manual_flight_date').value,
-                manual_flight_number: document.getElementById('manual_flight_number').value,
-                passenger_name: document.getElementById('passenger_name').value,
-                passenger_document_type: document.getElementById('passenger_document_type').value,
-                passenger_passport: document.getElementById('passenger_passport').value,
-
-                // New Fields
-                price: currentPrice,
-                verification_source: verificationSource,
-                flight_details: verifiedFlightData
+                passengers: validPassengers,
+                price: appState.unitPrice,
+                verification_source: appState.verificationSource,
+                flight_details: appState.flightDetails
             };
 
             try {
                 const response = await fetch("{{ url_for('ops.pos_sale') }}", {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify(formData)
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // Success Feedback
-                    showToast('Vente effectuée avec succès !');
+                    showToast(`${result.tickets.length} billets générés !`);
 
-                    // Reset form partially
-                    document.getElementById('passenger_name').value = '';
-                    document.getElementById('passenger_passport').value = '';
-                    document.getElementById('passenger_name').focus();
-
-                    // Print
-                    printTicket(result.pdf_url);
-
-                    // Update Totals
-                    if (result.price) {
-                        updateTotalSales(result.price);
-                    }
-
-                    // Add to History
+                    // Add to history
                     addToHistory(result);
 
+                    // Update Session Total
+                    let currentTotal = parseFloat(document.getElementById('totalSalesDisplay').textContent);
+                    currentTotal += result.total_price;
+                    document.getElementById('totalSalesDisplay').textContent = currentTotal.toFixed(1) + " $";
+
+                    // PRINT LOOP
+                    await printLoop(result.tickets);
+
+                    // Reset Logic (Keep flight, reset passengers to one empty)
+                    appState.passengers = [{ name: '', doc_num: '', doc_type: 'Passeport' }];
+                    renderPassengers();
+                    checkValidation();
+
                 } else {
-                    throw new Error(result.error || 'Erreur inconnue');
+                    alert("Erreur: " + (result.error || "Inconnue"));
                 }
-            } catch (error) {
-                alert("Erreur: " + error.message);
+
+            } catch(e) {
+                alert("Erreur réseau: " + e.message);
+                console.error(e);
             } finally {
-                // Restore button
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                els.submitBtn.disabled = false;
+                els.submitBtn.innerHTML = originalHtml;
+                checkValidation();
             }
-        });
-
-        function addToHistory(data) {
-            const list = document.getElementById('history-list');
-            const emptyState = document.getElementById('empty-state');
-            if (emptyState) emptyState.remove();
-
-            const item = document.createElement('div');
-            item.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center animate-fade-in-down";
-            item.innerHTML = `
-                <div>
-                    <div class="flex items-center space-x-2 mb-1">
-                        <span class="text-xs font-bold text-gray-400">${data.time}</span>
-                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">${data.flight_number}</span>
-                    </div>
-                    <p class="font-bold text-gray-800 text-sm truncate max-w-[150px]">${data.passenger_name}</p>
-                    <p class="text-xs text-green-600 font-semibold mt-1">
-                        <i class="fas fa-check-circle mr-1"></i> Payé ${data.price} $
-                    </p>
-                </div>
-                <button onclick="printTicket('${data.pdf_url}')" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors" title="Réimprimer">
-                    <i class="fas fa-print"></i>
-                </button>
-            `;
-
-            // Insert at top
-            list.insertBefore(item, list.firstChild);
         }
 
-        function printTicket(url) {
-            const iframe = document.getElementById('printFrame');
-            iframe.src = url;
-            iframe.onload = function() {
+        // --- PRINTING ---
+        async function printLoop(tickets) {
+            const container = document.getElementById('print-container');
+            container.innerHTML = '';
+
+            for (const ticket of tickets) {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = ticket.pdf_url;
+                container.appendChild(iframe);
+
+                // Wait for load and print
+                await new Promise((resolve) => {
+                    iframe.onload = () => {
+                         setTimeout(() => {
+                             iframe.contentWindow.focus();
+                             iframe.contentWindow.print();
+                             resolve();
+                         }, 1000); // 1s delay between prints
+                    };
+                });
+            }
+        }
+
+        // --- HISTORY ---
+        function addToHistory(data) {
+             const list = document.getElementById('history-list');
+             const empty = document.getElementById('empty-state');
+             if (empty) empty.remove();
+
+             data.tickets.forEach(ticket => {
+                 const item = document.createElement('div');
+                 item.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center animate-fade-in-down mb-2";
+                 item.innerHTML = `
+                    <div>
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-xs font-bold text-gray-400">${data.time}</span>
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">${data.flight_number}</span>
+                        </div>
+                        <p class="font-bold text-gray-800 text-sm truncate max-w-[150px]">${ticket.passenger_name}</p>
+                        <p class="text-xs text-green-600 font-semibold mt-1">
+                            <i class="fas fa-check-circle mr-1"></i> Payé ${ticket.price} $
+                        </p>
+                    </div>
+                    <button onclick="reprintOne('${ticket.pdf_url}')" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors" title="Réimprimer">
+                        <i class="fas fa-print"></i>
+                    </button>
+                 `;
+                 list.insertBefore(item, list.firstChild);
+             });
+        }
+
+        function reprintOne(url) {
+             const container = document.getElementById('print-container');
+             container.innerHTML = '';
+             const iframe = document.createElement('iframe');
+             iframe.style.display = 'none';
+             iframe.src = url;
+             container.appendChild(iframe);
+             iframe.onload = function() {
                 setTimeout(function() {
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
@@ -571,15 +762,8 @@
             };
         }
 
-        let currentTotal = {{ total_sales|default(0.0) }};
-        function updateTotalSales(price) {
-            currentTotal += price;
-            document.getElementById('totalSalesDisplay').textContent = currentTotal.toFixed(1) + " $";
-        }
-
         // Simple Toast
         function showToast(message) {
-            // Check if toast container exists
             let container = document.getElementById('toast-container');
             if (!container) {
                 container = document.createElement('div');
@@ -587,28 +771,20 @@
                 container.className = "fixed bottom-6 right-6 z-50 flex flex-col space-y-2";
                 document.body.appendChild(container);
             }
-
             const toast = document.createElement('div');
             toast.className = "bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl flex items-center transform transition-all duration-300 translate-y-10 opacity-0";
             toast.innerHTML = `<i class="fas fa-check-circle text-green-400 mr-3"></i> ${message}`;
-
             container.appendChild(toast);
-
-            // Animate in
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            });
-
-            // Remove after 3s
+            requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
-        // Branding
+        // Branding Load
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('/api/settings/public')
+             fetch('/api/settings/public')
                 .then(r => r.json())
                 .then(data => {
                     if (data.rva_logo) {
@@ -619,8 +795,8 @@
                 })
                 .catch(console.error);
         });
-    </script>
 
+    </script>
     <style>
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-10px); }
