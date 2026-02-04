@@ -97,7 +97,8 @@
                     </div>
 
                     <!-- Split Row: Class (Left) & Route (Right) with custom proportions -->
-                    <div class="col-span-2 grid grid-cols-[0.8fr_1.2fr] gap-4 pt-1">
+                    <!-- Changed from 0.8fr_1.2fr to 0.6fr_1.4fr to give more space for long airline names -->
+                    <div class="col-span-2 grid grid-cols-[0.6fr_1.4fr] gap-4 pt-1">
                         <!-- Class / Type -->
                         <div>
                              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
@@ -108,9 +109,10 @@
                         <div>
                              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
                              <div class="flex items-center gap-2">
-                                <p class="text-base font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
+                                <p class="text-base font-bold text-gray-800 uppercase whitespace-nowrap">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                                 <span class="text-gray-300">|</span>
-                                <p class="text-sm font-bold text-blue-900 uppercase">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
+                                <!-- Added whitespace-nowrap and slightly smaller font if needed (text-xs md:text-sm) but keeping text-sm for now as space is wider -->
+                                <p class="text-sm font-bold text-blue-900 uppercase whitespace-nowrap">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
                              </div>
                         </div>
                     </div>
@@ -203,7 +205,7 @@
                     </div>
 
                     <!-- Split Row: Class (Left) & Route (Right) with custom proportions -->
-                    <div class="col-span-2 grid grid-cols-[0.8fr_1.2fr] gap-4 pt-1">
+                    <div class="col-span-2 grid grid-cols-[0.6fr_1.4fr] gap-4 pt-1">
                         <!-- Class / Type -->
                         <div>
                              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
@@ -214,9 +216,9 @@
                         <div>
                              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
                              <div class="flex items-center gap-2">
-                                <p class="text-base font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
+                                <p class="text-base font-bold text-gray-800 uppercase whitespace-nowrap">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                                 <span class="text-gray-300">|</span>
-                                <p class="text-sm font-bold text-blue-900 uppercase">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
+                                <p class="text-xs font-black text-blue-900 uppercase whitespace-nowrap">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
                              </div>
                         </div>
                     </div>

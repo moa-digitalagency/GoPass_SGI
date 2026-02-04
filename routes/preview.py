@@ -12,7 +12,7 @@ class MockFlight:
         self.departure_time = datetime(2023, 10, 25, 14, 30)
         self.departure_airport = 'FIH'
         self.arrival_airport = 'CDG'
-        self.airline = 'AIR FRANCE'
+        self.airline = 'SOUTH AFRICAN AIRWAYS'
 
 class MockUser:
     def __init__(self):
