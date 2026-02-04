@@ -70,6 +70,7 @@ def create_app(config_name=None):
     from routes.telegram import telegram_bp
     from routes.preview import preview_bp
     from routes.api_sync import api_sync_bp
+    from routes.api_export import api_export_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -85,6 +86,7 @@ def create_app(config_name=None):
     app.register_blueprint(ops_bp)
     app.register_blueprint(telegram_bp)
     app.register_blueprint(preview_bp)
+    app.register_blueprint(api_export_bp)
 
     # CSRF Exemption for Webhooks
     csrf.exempt(app.view_functions['telegram.webhook'])

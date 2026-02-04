@@ -1,0 +1,42 @@
+{% macro export_buttons(entity_type) %}
+<div class="flex space-x-2" id="export-buttons-{{ entity_type }}">
+    <a href="#" onclick="triggerExport('{{ entity_type }}', 'pdf'); return false;" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded inline-flex items-center transition duration-150 ease-in-out">
+        <i class="fas fa-file-pdf mr-2"></i> Exporter PDF
+    </a>
+    <a href="#" onclick="triggerExport('{{ entity_type }}', 'csv'); return false;" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded inline-flex items-center transition duration-150 ease-in-out">
+        <i class="fas fa-file-csv mr-2"></i> Exporter CSV
+    </a>
+</div>
+
+<script>
+    function triggerExport(entityType, format) {
+        let params = new URLSearchParams(window.location.search);
+
+        // Entity specific param gathering if URL params are missing
+        // This is needed for pages where filtering is done client-side (JS) or form elements don't update URL
+
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : null;
+        };
+
+        if (entityType === 'airports') {
+             const search = getVal('searchInput');
+             const country = getVal('countryFilter');
+             const type = getVal('typeFilter');
+             if (search) params.set('search', search);
+             if (country) params.set('country', country);
+             if (type) params.set('type', type);
+        }
+        else if (entityType === 'airlines') {
+             const search = getVal('searchInput');
+             const country = getVal('countryFilter');
+             if (search) params.set('search', search);
+             if (country) params.set('country', country);
+        }
+
+        params.set('format', format);
+        window.location.href = `/api/export/${entityType}?${params.toString()}`;
+    }
+</script>
+{% endmacro %}
