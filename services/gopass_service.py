@@ -25,7 +25,7 @@ from utils.i18n import get_text
 
 class GoPassService:
     @staticmethod
-    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None, commit=True, transaction_id=None):
+    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None, commit=True, transaction_id=None, payment_reference=None, source_metadata=None):
         flight = Flight.query.get(flight_id)
         if not flight:
             raise ValueError("Vol invalide")
@@ -41,8 +41,8 @@ class GoPassService:
         token_hash = hashlib.sha256(token_string.encode()).hexdigest()
 
         # Create Transaction Record for Audit
-        # Check if sold_by is valid (it should be an ID)
-        if not transaction_id and sold_by:
+        # Always create transaction (even for Web/Self-Service where sold_by is None)
+        if not transaction_id:
             transaction = Transaction(
                 agent_id=sold_by,
                 amount_collected=price,
@@ -51,7 +51,10 @@ class GoPassService:
                 provider_ref=payment_ref or f"PAY-{uuid.uuid4().hex[:8].upper()}",
                 status='completed',
                 verification_source=verification_source,
-                flight_details=flight_details
+                flight_details=flight_details,
+                sales_channel=sales_channel,
+                payment_reference=payment_reference or payment_ref, # Use specific ref or fallback to generic
+                source_metadata=source_metadata
             )
             db.session.add(transaction)
             db.session.flush() # Generate ID

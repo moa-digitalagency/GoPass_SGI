@@ -96,6 +96,17 @@ def pos_sale():
             if not name or not doc_num:
                 raise ValueError("Données passager incomplètes")
 
+            # Generate Metadata
+            terminal_id = "POS-01" # In real app, from config or cookie
+            session_ref = f"SES-{int(datetime.now().timestamp())}"
+            payment_ref_str = f"{terminal_id}-{session_ref}"
+
+            source_metadata = {
+                "terminal_id": terminal_id,
+                "session_id": session_ref,
+                "agent_name": current_user.username
+            }
+
             gopass = GoPassService.create_gopass(
                 flight_id=flight_id,
                 passenger_name=name,
@@ -103,8 +114,11 @@ def pos_sale():
                 passenger_document_type=doc_type,
                 price=unit_price,
                 payment_method='Cash',
+                payment_ref=payment_ref_str, # Use Session/Trans ID as payment_ref too
                 sold_by=current_user.id,
-                sales_channel='pos',
+                sales_channel='DESK',
+                payment_reference=payment_ref_str,
+                source_metadata=source_metadata,
                 verification_source=verification_source,
                 flight_details=flight_details,
                 commit=False

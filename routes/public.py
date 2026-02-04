@@ -89,7 +89,15 @@ def checkout(flight_id):
              return redirect(url_for('public.checkout', flight_id=flight_id))
 
         # Generate a batch Payment Ref
-        batch_ref = f"WEB-{uuid.uuid4().hex[:8].upper()}"
+        # Using a mock Stripe-like ID if Stripe, else generic
+        ref_prefix = "ch_" if payment_method == 'STRIPE' else "WEB-"
+        batch_ref = f"{ref_prefix}{uuid.uuid4().hex[:12]}" if payment_method == 'STRIPE' else f"WEB-{uuid.uuid4().hex[:8].upper()}"
+
+        source_metadata = {
+            "ip_address": request.remote_addr,
+            "user_agent": request.headers.get('User-Agent'),
+            "platform": "Web Store"
+        }
 
         try:
             for i in range(len(passenger_names)):
@@ -105,6 +113,9 @@ def checkout(flight_id):
                         passenger_document_type=dtype,
                         payment_method=payment_method,
                         payment_ref=batch_ref,
+                        sales_channel='WEB',
+                        payment_reference=batch_ref,
+                        source_metadata=source_metadata,
                         commit=False
                     )
 

@@ -6,12 +6,18 @@
  * Auditer par : La CyberConfiance, www.cyberconfiance.com
 """
 
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, make_response, send_file
 from flask_login import login_required
 from models import db, Flight, GoPass, AccessLog
 from sqlalchemy import func, case
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
+import io
+import csv
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -129,3 +135,103 @@ def anomalies():
     ).limit(100).all()
 
     return render_template('reports/anomalies.html', anomalies=anomalies_list)
+
+@reports_bp.route('/export/csv')
+@login_required
+def export_csv_report():
+    # Reuse Revenue Data Logic
+    revenue_query = db.session.query(
+        GoPass.payment_method,
+        func.sum(GoPass.price)
+    ).filter(
+        GoPass.payment_status == 'paid'
+    ).group_by(
+        GoPass.payment_method
+    ).all()
+
+    # Reuse Audit Logic
+    flights = Flight.query.order_by(Flight.departure_time.desc()).limit(50).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Section 1: Revenue
+    writer.writerow(['--- REVENUS ---'])
+    writer.writerow(['Moyen de Paiement', 'Montant Total'])
+    for method, total in revenue_query:
+        writer.writerow([method, total])
+
+    writer.writerow([])
+
+    # Section 2: Audit
+    writer.writerow(['--- AUDIT VOLS ---'])
+    writer.writerow(['Vol', 'Date', 'Manifeste', 'Scannés', 'Statut'])
+    for f in flights:
+        scanned_count = GoPass.query.filter_by(flight_id=f.id).filter(GoPass.scan_date != None).count()
+        status = 'Alarme' if scanned_count > f.manifest_pax_count else 'OK'
+        writer.writerow([f.flight_number, f.departure_time, f.manifest_pax_count, scanned_count, status])
+
+    output.seek(0)
+    return make_response(output.getvalue(), 200, {
+        'Content-Disposition': f'attachment; filename=rapport_complet_{datetime.now().strftime("%Y%m%d")}.csv',
+        'Content-Type': 'text/csv'
+    })
+
+@reports_bp.route('/export/pdf')
+@login_required
+def export_pdf_report():
+    # Gather Data
+    revenue_query = db.session.query(GoPass.payment_method, func.sum(GoPass.price)).filter(GoPass.payment_status == 'paid').group_by(GoPass.payment_method).all()
+    flights = Flight.query.order_by(Flight.departure_time.desc()).limit(20).all()
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Title
+    elements.append(Paragraph(f"Rapport Global - {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Revenue Table
+    elements.append(Paragraph("Répartition des Recettes", styles['Heading2']))
+    data = [['Moyen de Paiement', 'Montant']]
+    for method, total in revenue_query:
+        data.append([method or 'Inconnu', f"{total:,.2f}"])
+
+    t = Table(data)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    elements.append(t)
+    elements.append(Spacer(1, 24))
+
+    # Audit Table
+    elements.append(Paragraph("Audit Anti-Coulage (Derniers Vols)", styles['Heading2']))
+    data = [['Vol', 'Date', 'Manifeste', 'Scannés', 'Écart']]
+    for f in flights:
+        scanned = GoPass.query.filter_by(flight_id=f.id).filter(GoPass.scan_date != None).count()
+        diff = scanned - f.manifest_pax_count
+        data.append([
+            f.flight_number,
+            f.departure_time.strftime('%d/%m/%Y'),
+            str(f.manifest_pax_count),
+            str(scanned),
+            str(diff) if diff > 0 else "OK"
+        ])
+
+    t = Table(data)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    elements.append(t)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    return send_file(buffer, as_attachment=True, download_name=f"rapport_global_{datetime.now().strftime('%Y%m%d')}.pdf", mimetype='application/pdf')

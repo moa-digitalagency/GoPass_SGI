@@ -118,13 +118,18 @@ class Transaction(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
-    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     amount_collected = db.Column(db.Float, default=0.0)
     currency = db.Column(db.String(10), default='USD')
     payment_method = db.Column(db.String(20)) # CASH, MOBILE_MONEY, CARD
     provider_ref = db.Column(db.String(100)) # ID transaction M-Pesa/Airtel
     status = db.Column(db.String(20), default='completed')
     is_offline_sync = db.Column(db.Boolean, default=False)
+
+    # New fields for traceability
+    sales_channel = db.Column(db.String(50), default='DESK') # WEB, DESK
+    payment_reference = db.Column(db.String(100)) # Stripe ID or POS Session ID
+    source_metadata = db.Column(db.JSON) # IP, Agent Name, etc.
 
     # New fields for POS Flight Verification
     verification_source = db.Column(db.String(20), default='manual') # 'api', 'manual'

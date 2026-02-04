@@ -14,7 +14,7 @@ import io
 
 class FinanceService:
     @staticmethod
-    def get_transactions(start_date=None, end_date=None, agent_id=None, payment_method=None):
+    def get_transactions(start_date=None, end_date=None, agent_id=None, payment_method=None, sales_channel=None):
         query = GoPass.query
 
         if start_date:
@@ -35,6 +35,9 @@ class FinanceService:
 
         if payment_method:
             query = query.filter(GoPass.payment_method == payment_method)
+
+        if sales_channel:
+             query = query.filter(GoPass.sales_channel == sales_channel)
 
         # Order by newest first
         return query.order_by(GoPass.issue_date.desc()).all()
