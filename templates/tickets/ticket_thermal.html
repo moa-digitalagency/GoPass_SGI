@@ -45,14 +45,30 @@
                 <span class="text-xs font-bold uppercase">VOL / FLIGHT</span>
             </div>
             <div class="text-3xl font-black text-center my-1">{{ gopass.flight.flight_number }}</div>
+            <div class="text-[10px] font-bold text-center uppercase mb-2">
+                 {{ gopass.flight.airline|default('AIRLINE', true) }}
+            </div>
         </div>
 
         <div class="w-full mb-2">
             <div class="flex justify-between items-baseline">
-                <span class="text-xs font-bold uppercase">DATE</span>
+                <span class="text-xs font-bold uppercase">DATE & HEURE</span>
             </div>
-             <div class="text-2xl font-bold text-center my-1">{{ gopass.flight.departure_time.strftime('%d/%m') }}</div>
-             <div class="text-xs text-center font-bold">{{ gopass.flight.departure_time.strftime('%Y') }}</div>
+             <div class="text-xl font-bold text-center my-1 uppercase">
+                {{ gopass.flight.departure_time.strftime('%d/%m/%Y') }}
+             </div>
+             <div class="text-sm font-bold text-center uppercase">
+                {{ gopass.flight.departure_time.strftime('%H:%M') }} (EST)
+             </div>
+        </div>
+
+        <div class="w-full mb-4 mt-2">
+            <div class="flex justify-between items-baseline">
+                <span class="text-xs font-bold uppercase">ITINÉRAIRE</span>
+            </div>
+            <div class="text-lg font-black text-center uppercase">
+                {{ gopass.flight.departure_airport }} <span class="mx-1">➔</span> {{ gopass.flight.arrival_airport }}
+            </div>
         </div>
 
         <div class="w-full mb-4 text-center">
