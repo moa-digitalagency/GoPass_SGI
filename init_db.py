@@ -299,7 +299,7 @@ def init_database():
         print("Checking payment gateways...")
         gateways = [
             {"provider": "STRIPE", "is_active": True, "config_json": {}},
-            {"provider": "MOBILE_MONEY_AGGREGATOR", "is_active": False, "config_json": {}}
+            {"provider": "MOBILE_MONEY_AGGREGATOR", "is_active": True, "config_json": {}}
         ]
 
         for gw in gateways:

@@ -25,7 +25,7 @@ from utils.i18n import get_text
 
 class GoPassService:
     @staticmethod
-    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None, commit=True):
+    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None, commit=True, transaction_id=None):
         flight = Flight.query.get(flight_id)
         if not flight:
             raise ValueError("Vol invalide")
@@ -42,7 +42,7 @@ class GoPassService:
 
         # Create Transaction Record for Audit
         # Check if sold_by is valid (it should be an ID)
-        if sold_by:
+        if not transaction_id and sold_by:
             transaction = Transaction(
                 agent_id=sold_by,
                 amount_collected=price,
@@ -56,8 +56,6 @@ class GoPassService:
             db.session.add(transaction)
             db.session.flush() # Generate ID
             transaction_id = transaction.id
-        else:
-            transaction_id = None
 
         # In a real system, we would sign this with a private key.
         # For now, the hash acts as the secure token stored in DB.
@@ -251,38 +249,11 @@ class GoPassService:
         }
 
     @staticmethod
-    def generate_pdf_bytes(gopass, fmt='a4', lang='fr'):
-        """
-        Generates PDF for a GoPass. Returns bytes.
-        """
+    def _draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang='fr'):
         t = lambda k: get_text(k, lang)
-
-        # Generate QR Content
-        qr_payload = {
-            "id_billet": gopass.id,
-            "vol": gopass.flight.flight_number,
-            "date": gopass.flight.departure_time.strftime('%Y-%m-%d'),
-            "hash_signature": gopass.token
-        }
-        qr_data = json.dumps(qr_payload)
-
-        # Generate QR Code
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(qr_data)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
-            img.save(tmp.name)
-            qr_path = tmp.name
-
-        buffer = io.BytesIO()
 
         if fmt == 'thermal':
             # MODULE B: THERMAL TICKET (80mm)
-            width = 80 * mm
-            height = 180 * mm
-            p = canvas.Canvas(buffer, pagesize=(width, height))
 
             def draw_centered(text, y, font="Helvetica", size=10):
                 p.setFont(font, size)
@@ -363,8 +334,6 @@ class GoPassService:
 
         else:
             # MODULE A: A4 PDF (E-GoPass)
-            p = canvas.Canvas(buffer, pagesize=A4)
-            width, height = A4
 
             # 1. En-tête (Header)
             # Fetch Logos from Config
@@ -480,6 +449,44 @@ class GoPassService:
             p.setFont("Helvetica", 6)
             p.drawCentredString(width/2, 1*cm, t('ticket_pdf.powered_by'))
 
+
+    @staticmethod
+    def _create_qr_temp(gopass):
+        qr_payload = {
+            "id_billet": gopass.id,
+            "vol": gopass.flight.flight_number,
+            "date": gopass.flight.departure_time.strftime('%Y-%m-%d'),
+            "hash_signature": gopass.token
+        }
+        qr_data = json.dumps(qr_payload)
+
+        # Generate QR Code
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            img.save(tmp.name)
+            return tmp.name
+
+    @staticmethod
+    def generate_pdf_bytes(gopass, fmt='a4', lang='fr'):
+        """
+        Generates PDF for a GoPass. Returns bytes.
+        """
+        qr_path = GoPassService._create_qr_temp(gopass)
+        buffer = io.BytesIO()
+
+        if fmt == 'thermal':
+            width = 80 * mm
+            height = 180 * mm
+        else:
+            width, height = A4
+
+        p = canvas.Canvas(buffer, pagesize=(width, height))
+        GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang)
+
         p.showPage()
         p.save()
 
@@ -487,6 +494,36 @@ class GoPassService:
             os.unlink(qr_path)
         except:
             pass
+
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    @staticmethod
+    def generate_bulk_pdf(gopass_list, lang='fr'):
+        """
+        Generates a single PDF containing all GoPasses in the list (one per page).
+        """
+        buffer = io.BytesIO()
+        width, height = A4 # Bulk PDF assumes A4 for now
+        p = canvas.Canvas(buffer, pagesize=(width, height))
+
+        qr_paths = []
+
+        for gopass in gopass_list:
+            qr_path = GoPassService._create_qr_temp(gopass)
+            qr_paths.append(qr_path)
+
+            GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, 'a4', lang)
+            p.showPage()
+
+        p.save()
+
+        # Cleanup
+        for path in qr_paths:
+            try:
+                os.unlink(path)
+            except:
+                pass
 
         buffer.seek(0)
         return buffer.getvalue()

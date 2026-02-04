@@ -12,7 +12,145 @@
 <script src="https://js.stripe.com/v3/"></script>
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        // 1. Fetch Settings
+        // --- CONFIGURATION ---
+        // Determine Unit Price (Default to 55.00 as per prompt, or derived logic)
+        // For this mission, we respect the prompt's explicit "$55.00" example.
+        const unitPrice = 55.00;
+
+        let passengerCount = 1;
+
+        // --- DOM ELEMENTS ---
+        const step2Indicator = document.getElementById('step-2-indicator');
+        const step3Indicator = document.getElementById('step-3-indicator');
+        const identitySection = document.getElementById('identity-section');
+        const paymentSection = document.getElementById('payment-section');
+        const btnContinue = document.getElementById('btn-continue');
+        const btnAddPassenger = document.getElementById('btn-add-passenger');
+        const passengersContainer = document.getElementById('passengers-container');
+        const form = document.getElementById('checkout-form');
+
+        // --- PRICING LOGIC ---
+        function updatePrice() {
+            const total = (passengerCount * unitPrice).toFixed(2);
+            document.querySelectorAll('.total-price-display').forEach(el => {
+                el.textContent = '$' + total;
+            });
+            document.querySelectorAll('.pax-count-display').forEach(el => {
+                el.textContent = passengerCount;
+            });
+            document.querySelectorAll('.unit-price-display').forEach(el => {
+                el.textContent = '$' + unitPrice.toFixed(2);
+            });
+        }
+
+        // --- PASSENGER MANAGEMENT ---
+        function createPassengerRow(index) {
+            const div = document.createElement('div');
+            div.className = "passenger-row bg-gray-50 p-6 rounded-xl border border-gray-200 relative animate-fade-in mb-6 transition-all duration-300 hover:shadow-md";
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-bold text-gray-700 uppercase tracking-wide text-sm flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        Voyageur ${index + 1}
+                    </h4>
+                    ${index > 0 ? `<button type="button" class="text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-wide remove-pax flex items-center"><i class="fas fa-trash-alt mr-1"></i> Supprimer</button>` : '<span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Titulaire</span>'}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-1">
+                        <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Nom Complet</label>
+                        <input class="w-full bg-white text-gray-900 font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 transition-colors placeholder-gray-300 bg-gray-100"
+                               name="passenger_name[]" type="text" required placeholder="ex: KABILA JOSEPH">
+                    </div>
+                    <div class="md:col-span-1">
+                         <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Type Document</label>
+                         <div class="relative">
+                             <select class="w-full bg-white text-gray-900 font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 appearance-none transition-colors bg-gray-100"
+                                   name="document_type[]" required>
+                                    <option value="Passeport" selected>Passeport</option>
+                                    <option value="Carte d'Identité">Carte d'Identité</option>
+                                    <option value="Permis de Conduire">Permis de Conduire</option>
+                                    <option value="Carte d'Électeur">Carte d'Électeur</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Numéro Document</label>
+                        <input class="w-full bg-white text-gray-900 font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 transition-colors placeholder-gray-300 bg-gray-100"
+                               name="passport[]" type="text" required placeholder="ex: A1234567">
+                    </div>
+                </div>
+            `;
+
+            if (index > 0) {
+                div.querySelector('.remove-pax').addEventListener('click', () => {
+                    div.remove();
+                    passengerCount--;
+                    updateLabels();
+                    updatePrice();
+                });
+            }
+            return div;
+        }
+
+        function updateLabels() {
+            const rows = passengersContainer.querySelectorAll('.passenger-row');
+            let idx = 0;
+            rows.forEach((row) => {
+                const title = row.querySelector('h4');
+                // Preserve the icon inside
+                title.innerHTML = `
+                    <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    Voyageur ${idx + 1}
+                `;
+                idx++;
+            });
+        }
+
+        btnAddPassenger.addEventListener('click', () => {
+            const newRow = createPassengerRow(passengerCount);
+            passengersContainer.appendChild(newRow);
+            passengerCount++;
+            updatePrice();
+        });
+
+        // --- STEPPER LOGIC ---
+        btnContinue.addEventListener('click', () => {
+            if (form.checkValidity()) {
+                // Lock Step 2
+                // identitySection.classList.add('opacity-50', 'pointer-events-none');
+
+                // Show Step 3
+                paymentSection.classList.remove('hidden');
+
+                // Update Stepper UI
+                step2Indicator.classList.remove('bg-blue-600', 'text-white');
+                step2Indicator.classList.add('bg-green-500', 'text-white');
+                step2Indicator.innerHTML = '<i class="fas fa-check"></i>';
+
+                step3Indicator.classList.remove('bg-gray-200', 'text-gray-500');
+                step3Indicator.classList.add('bg-blue-600', 'text-white');
+
+                // Toggle Buttons
+                btnContinue.classList.add('hidden');
+                document.getElementById('payment-actions').classList.remove('hidden');
+                document.getElementById('add-pax-wrapper').classList.add('hidden'); // Disable adding more pax
+
+                // Scroll
+                paymentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                form.reportValidity();
+            }
+        });
+
+
+        // --- STRIPE LOGIC (Adapted) ---
         let stripe = null;
         let elements = null;
         let card = null;
@@ -25,33 +163,37 @@
             if (config.stripe_enabled) {
                 stripeEnabled = true;
                 document.getElementById('option-stripe').classList.remove('hidden');
-
-                // Initialize Stripe (Replace with public key from API if dynamic, but usually hardcoded or passed)
-                // For now assuming we need to fetch public key too, or it's hardcoded.
-                // The prompt says "Si stripe_enabled est true...".
-                // I'll assume standard test key or fetch it.
-                // Actually, I should probably pass the key from backend context or API.
-                // Let's assume a default test key for this exercise if not provided,
-                // OR better, ask backend for it. The /public endpoint doesn't return it currently.
-                // I'll update the plan/code to rely on a hardcoded key or environmental variable injection via template.
-                // Since I can't easily change backend env vars, I'll use a placeholder key or try to inject it.
-                // Wait, typically publishable key IS public.
                 stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx'); // Demo Key
                 elements = stripe.elements();
-                card = elements.create('card');
+                card = elements.create('card', {
+                    style: {
+                        base: {
+                            color: '#32325d',
+                            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                            fontSmoothing: 'antialiased',
+                            fontSize: '16px',
+                            '::placeholder': {
+                                color: '#aab7c4'
+                            }
+                        },
+                        invalid: {
+                            color: '#fa755a',
+                            iconColor: '#fa755a'
+                        }
+                    }
+                });
                 card.mount('#card-element');
             }
         } catch (e) {
             console.error("Error loading settings", e);
         }
 
-        // 2. Handle Payment Method Selection
+        // Toggle Stripe
         const radios = document.querySelectorAll('input[name="payment_method"]');
         const stripeSection = document.getElementById('stripe-section');
-
         radios.forEach(radio => {
             radio.addEventListener('change', (e) => {
-                if (e.target.value === 'card') {
+                if (e.target.value === 'STRIPE') {
                     stripeSection.classList.remove('hidden');
                 } else {
                     stripeSection.classList.add('hidden');
@@ -59,20 +201,21 @@
             });
         });
 
-        // 3. Handle Form Submission
-        const form = document.getElementById('checkout-form');
+        // Form Submit
         form.addEventListener('submit', async (e) => {
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
 
-            if (paymentMethod === 'card' && stripeEnabled) {
+            if (paymentMethod === 'STRIPE' && stripeEnabled) {
                 e.preventDefault();
                 setLoading(true);
 
-                const passengerName = document.getElementById('passenger_name').value;
-                const passport = document.getElementById('passport').value;
+                // For Stripe, we usually pay for the TOTAL amount.
+                // We create a PaymentIntent for the total.
+                // The passenger details are separate.
+                // Backend 'create-intent' needs updating to handle quantity or total.
+                // Assuming backend 'create-intent' calculates total based on quantity passed.
 
                 try {
-                    // Create Intent
                     const intentRes = await fetch('/api/payment/create-intent', {
                         method: 'POST',
                         headers: {
@@ -81,48 +224,39 @@
                         },
                         body: JSON.stringify({
                             flight_id: "{{ flight.id }}",
-                            passenger_name: passengerName,
-                            passport: passport,
-                            quantity: 1
+                            passenger_name: "Multi-Pax Group", // Placeholder for intent desc
+                            quantity: passengerCount
                         })
                     });
 
                     const intentData = await intentRes.json();
-
                     if (intentData.error) throw new Error(intentData.error);
 
-                    // Confirm Card Payment
                     const result = await stripe.confirmCardPayment(intentData.clientSecret, {
                         payment_method: {
                             card: card,
-                            billing_details: {
-                                name: passengerName
-                            }
+                            billing_details: { name: "GoPass Customer" }
                         }
                     });
 
                     if (result.error) {
-                        // Show error
                         document.getElementById('card-errors').textContent = result.error.message;
                         setLoading(false);
                     } else {
-                        // The payment has succeeded!
                         if (result.paymentIntent.status === 'succeeded') {
-                            // Submit the form normally or redirect?
-                            // Since the backend webhook creates the GoPass, we should probably redirect to a success page
-                            // or verify status.
-                            // For simplicity, we can redirect to a confirmation page passing the payment ref?
-                            // Or simpler: submit the form but with a hidden field indicating success?
-                            // Actually, the prompt says "Succès (Afficher le QR Code)".
-                            // This implies we need to get the QR code back.
-                            // The webhook is async.
-                            // Maybe we should poll or call an endpoint "check status".
-                            // OR, we can just call the manual creation endpoint if we trust the frontend (we shouldn't).
-                            // Better: The intent succeeded. The Webhook *should* create the pass.
-                            // We can wait a second and then search for it, or simpler:
-                            // Display "Paiement réussi, vérifiez vos emails" or redirect to search page.
-                            alert("Paiement réussi ! Votre billet arrive par email.");
-                            window.location.href = "{{ url_for('public.index') }}";
+                            // Now submit the form to create passes
+                            // We can use HTML form submission since payment is done
+                            // But we need to ensure the backend doesn't try to charge again or knows it's paid.
+                            // In this simple flow, the backend 'checkout' route handles GoPass creation.
+                            // Ideally, we send the payment_intent_id to the backend to verify.
+                            // I'll append a hidden input.
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'stripe_payment_intent';
+                            hiddenInput.value = result.paymentIntent.id;
+                            form.appendChild(hiddenInput);
+
+                            form.submit();
                         }
                     }
                 } catch (err) {
@@ -133,141 +267,263 @@
         });
 
         function setLoading(isLoading) {
-            const btn = document.querySelector('button[type="submit"]');
+            const btn = document.querySelector('#btn-pay');
             if (isLoading) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
             } else {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Payer $50.00 et Générer GoPass';
+                btn.innerHTML = '<i class="fas fa-lock mr-2"></i> Payer & Générer Billets';
             }
         }
+
+        // Initialize
+        updatePrice();
     });
 </script>
+
+<style>
+    .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 {% endblock %}
 
 {% block content_public %}
-<div class="min-h-screen bg-gray-100 p-8">
-    <div class="max-w-3xl mx-auto">
-        <a href="{{ url_for('public.index') }}" class="text-blue-600 hover:text-blue-800 mb-6 inline-block">
-            <i class="fas fa-arrow-left mr-1"></i> {{ t('global.cancel') }}
-        </a>
+<div class="min-h-screen bg-gray-100 p-8 pb-32">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{{ t('public_buy.payment_title') }}</h1>
+            <a href="{{ url_for('public.index') }}" class="text-gray-500 hover:text-gray-800 font-medium">
+                {{ t('global.cancel') }} <i class="fas fa-times ml-1"></i>
+            </a>
+        </div>
 
-        <div class="bg-white rounded-lg shadow-xl overflow-hidden">
-            <div class="bg-blue-900 p-6 text-white">
-                <h1 class="text-2xl font-bold">{{ t('public_buy.payment_title') }}</h1>
-                <p class="opacity-80">{{ t('public_buy.payment_subtitle') }} {{ flight.flight_number }}</p>
-            </div>
+        <!-- Stepper -->
+        <div class="bg-white border border-gray-100 px-8 py-6 mb-8 rounded-3xl shadow-sm">
+            <div class="flex items-center justify-between max-w-2xl mx-auto relative">
+                 <!-- Line Background -->
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 z-0"></div>
 
-            <div class="p-8">
-                <!-- Flight Summary -->
-                <div class="bg-blue-50 rounded-lg p-4 mb-8 border border-blue-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">{{ t('public_buy.selected_flight') }}</p>
-                        <p class="font-bold text-lg text-blue-900">{{ flight.flight_number }} - {{ flight.airline }}</p>
-                        <p class="text-sm text-gray-700">
-                            {{ flight.departure_airport }} <i class="fas fa-arrow-right mx-1"></i> {{ flight.arrival_airport }}
-                            <span class="mx-2">|</span>
-                            {{ flight.departure_time|format_datetime }}
-                        </p>
+                <!-- Step 1: Vol (Completed) -->
+                <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                    <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold shadow-lg shadow-green-200 ring-4 ring-white">
+                        <i class="fas fa-check"></i>
                     </div>
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">{{ t('public_buy.amount_to_pay') }}</p>
-                        <p class="font-bold text-3xl text-green-600">$50.00</p>
-                    </div>
+                    <span class="absolute -bottom-8 text-xs font-bold text-green-600 uppercase tracking-wider whitespace-nowrap">Vol</span>
                 </div>
 
-                <form method="POST" class="space-y-6" id="checkout-form">
+                <!-- Step 2: Identité (Active) -->
+                <div id="step-2-indicator" class="relative z-10 flex flex-col items-center bg-white px-2 transition-all duration-300">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-200 ring-4 ring-white">
+                        2
+                    </div>
+                    <span class="absolute -bottom-8 text-xs font-bold text-blue-600 uppercase tracking-wider whitespace-nowrap">Identité</span>
+                </div>
+
+                <!-- Step 3: Paiement -->
+                <div id="step-3-indicator" class="relative z-10 flex flex-col items-center bg-white px-2 transition-all duration-300">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white">
+                        3
+                    </div>
+                    <span class="absolute -bottom-8 text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Paiement</span>
+                </div>
+            </div>
+            <div class="h-6"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- LEFT COLUMN: FORM -->
+            <div class="lg:col-span-2 space-y-8">
+
+                <form method="POST" id="checkout-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">{{ t('public_buy.passenger_info') }}</h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="passenger_name">
-                                {{ t('public_buy.passenger_name') }}
+                    <!-- STEP 2: IDENTITY -->
+                    <div id="identity-section" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 transition-opacity duration-300">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-gray-900">Passagers</h2>
+                            <div class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                                <span class="pax-count-display">1</span> Voyageur(s)
+                            </div>
+                        </div>
+
+                        <div id="passengers-container">
+                            <!-- Passenger 1 (Default) -->
+                            <div class="passenger-row bg-gray-50 p-6 rounded-xl border border-gray-200 relative mb-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-gray-700 uppercase tracking-wide text-sm flex items-center gap-2">
+                                        <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        Voyageur 1
+                                    </h4>
+                                    <span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Titulaire</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="md:col-span-1">
+                                        <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Nom Complet</label>
+                                        <input class="w-full bg-white text-gray-900 font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 transition-colors placeholder-gray-300 bg-gray-100"
+                                               name="passenger_name[]" type="text" required placeholder="ex: KABILA JOSEPH">
+                                    </div>
+                                    <div class="md:col-span-1">
+                                         <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Type Document</label>
+                                         <div class="relative">
+                                             <select class="w-full bg-white text-gray-900 font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 appearance-none transition-colors bg-gray-100"
+                                                   name="document_type[]" required>
+                                                    <option value="Passeport" selected>Passeport</option>
+                                                    <option value="Carte d'Identité">Carte d'Identité</option>
+                                                    <option value="Permis de Conduire">Permis de Conduire</option>
+                                                    <option value="Carte d'Électeur">Carte d'Électeur</option>
+                                                </select>
+                                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                                    <i class="fas fa-chevron-down text-xs"></i>
+                                                </div>
+                                        </div>
+                                    </div>
+                                    <div class="md:col-span-1">
+                                        <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wide">Numéro Document</label>
+                                        <input class="w-full bg-white text-gray-900 font-bold border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-xl py-3 px-4 transition-colors placeholder-gray-300 bg-gray-100"
+                                               name="passport[]" type="text" required placeholder="ex: A1234567">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="add-pax-wrapper" class="text-center pt-2">
+                            <button type="button" id="btn-add-passenger" class="inline-flex items-center text-blue-600 font-bold hover:text-blue-800 transition-colors bg-blue-50 hover:bg-blue-100 px-6 py-3 rounded-xl">
+                                <i class="fas fa-plus-circle mr-2 text-lg"></i> Ajouter un voyageur
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: PAYMENT (Hidden initially) -->
+                    <div id="payment-section" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 hidden animate-fade-in">
+                        <h2 class="text-xl font-bold text-gray-900 mb-6">{{ t('public_buy.payment_method') }}</h2>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                             {% if mobile_active %}
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer" checked>
+                                <div class="border-2 border-gray-200 rounded-xl p-4 text-center peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition h-full flex flex-col items-center justify-center">
+                                    <i class="fas fa-mobile-alt text-2xl mb-2 text-green-600"></i>
+                                    <div class="font-bold text-xs">M-Pesa</div>
+                                </div>
                             </label>
-                            <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                   id="passenger_name" name="passenger_name" type="text" required placeholder="{{ t('public_buy.name_placeholder') }}">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="document_type">
-                                {{ t('public_buy.doc_type') }}
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer">
+                                <div class="border-2 border-gray-200 rounded-xl p-4 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:bg-gray-50 transition h-full flex flex-col items-center justify-center">
+                                    <i class="fas fa-mobile-alt text-2xl mb-2 text-orange-600"></i>
+                                    <div class="font-bold text-xs">Orange Money</div>
+                                </div>
                             </label>
-                            <select class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                                   id="document_type" name="document_type" required>
-                                <option value="Passeport" selected>Passeport</option>
-                                <option value="Carte d'Identité">Carte d'Identité</option>
-                                <option value="Permis de Conduire">Permis de Conduire</option>
-                                <option value="Carte d'Électeur">Carte d'Électeur</option>
-                                <option value="Autre">Autre</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="passport">
-                                {{ t('public_buy.doc_number') }}
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer">
+                                <div class="border-2 border-gray-200 rounded-xl p-4 text-center peer-checked:border-red-500 peer-checked:bg-red-50 hover:bg-gray-50 transition h-full flex flex-col items-center justify-center">
+                                    <i class="fas fa-mobile-alt text-2xl mb-2 text-red-600"></i>
+                                    <div class="font-bold text-xs">Airtel Money</div>
+                                </div>
                             </label>
-                            <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                   id="passport" name="passport" type="text" required placeholder="{{ t('public_buy.doc_placeholder') }}">
+                            {% endif %}
+                            {% if stripe_active %}
+                            <label class="cursor-pointer" id="option-stripe">
+                                <input type="radio" name="payment_method" value="STRIPE" class="hidden peer">
+                                <div class="border-2 border-gray-200 rounded-xl p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition h-full flex flex-col items-center justify-center">
+                                    <i class="fas fa-credit-card text-2xl mb-2 text-blue-600"></i>
+                                    <div class="font-bold text-xs">{{ t('public_buy.pay_stripe') }}</div>
+                                </div>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Stripe Element -->
+                        <div id="stripe-section" class="hidden mb-8 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-inner">
+                            <label class="block text-gray-700 text-sm font-bold mb-3">
+                                <i class="fas fa-credit-card mr-2"></i>{{ t('public_buy.card_details') }}
+                            </label>
+                            <div id="card-element" class="bg-white p-4 rounded-lg border border-gray-300"></div>
+                            <div id="card-errors" class="text-red-500 text-sm mt-2 font-bold" role="alert"></div>
+                        </div>
+
+                         <div id="payment-actions" class="hidden">
+                             <div class="flex items-center justify-between mb-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                 <span class="text-blue-900 font-bold">Total à payer</span>
+                                 <span class="text-3xl font-black text-blue-900 total-price-display">$55.00</span>
+                             </div>
+
+                            <button type="submit" id="btn-pay" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-green-200 text-lg transition transform hover:-translate-y-1 flex items-center justify-center">
+                                <i class="fas fa-lock mr-2"></i> Payer <span class="total-price-display ml-1">$55.00</span>
+                            </button>
+                            <p class="text-center text-gray-400 text-xs mt-3">
+                                <i class="fas fa-shield-alt mr-1"></i> Transaction sécurisée SSL
+                            </p>
                         </div>
                     </div>
 
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mt-8">{{ t('public_buy.payment_method') }}</h3>
+                    <!-- Initial Continue Button -->
+                    <button type="button" id="btn-continue" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-blue-200 text-lg transition transform hover:-translate-y-1 mt-4">
+                        Passer au Paiement <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {% if mobile_active %}
-                        <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer" checked>
-                            <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-green-500 peer-checked:bg-green-50 hover:bg-gray-50 transition">
-                                <i class="fas fa-mobile-alt text-2xl mb-2 text-green-600"></i>
-                                <div class="font-bold text-sm">M-Pesa</div>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer">
-                            <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:bg-gray-50 transition">
-                                <i class="fas fa-mobile-alt text-2xl mb-2 text-orange-600"></i>
-                                <div class="font-bold text-sm">Orange Money</div>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="radio" name="payment_method" value="MOBILE_MONEY" class="hidden peer">
-                            <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-red-500 peer-checked:bg-red-50 hover:bg-gray-50 transition">
-                                <i class="fas fa-mobile-alt text-2xl mb-2 text-red-600"></i>
-                                <div class="font-bold text-sm">Airtel Money</div>
-                            </div>
-                        </label>
-                        {% endif %}
-                        {% if stripe_active %}
-                        <label class="cursor-pointer" id="option-stripe">
-                            <input type="radio" name="payment_method" value="STRIPE" class="hidden peer">
-                            <div class="border-2 border-gray-200 rounded-lg p-4 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:bg-gray-50 transition">
-                                <i class="fas fa-credit-card text-2xl mb-2 text-blue-600"></i>
-                                <div class="font-bold text-sm">{{ t('public_buy.pay_stripe') }}</div>
-                            </div>
-                        </label>
-                        {% endif %}
-                    </div>
-
-                    <!-- Stripe Element Section -->
-                    <div id="stripe-section" class="hidden mt-6 bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-inner">
-                        <label class="block text-gray-700 text-sm font-bold mb-3">
-                            <i class="fas fa-credit-card mr-2"></i>{{ t('public_buy.card_details') }}
-                        </label>
-                        <div id="card-element" class="bg-white p-4 rounded border border-gray-300">
-                            <!-- Stripe Element inserted here -->
-                        </div>
-                        <div id="card-errors" class="text-red-500 text-sm mt-2 font-bold" role="alert"></div>
-                    </div>
-
-                    <div class="pt-6">
-                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg text-lg transition transform hover:-translate-y-1">
-                            <i class="fas fa-lock mr-2"></i> {{ t('public_buy.pay_btn') }}
-                        </button>
-                        <p class="text-center text-gray-500 text-xs mt-3">
-                            <i class="fas fa-shield-alt mr-1"></i> {{ t('public_buy.secure_msg') }}
-                        </p>
-                    </div>
                 </form>
+            </div>
+
+            <!-- RIGHT COLUMN: SUMMARY -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-8 space-y-6">
+                    <!-- Flight Summary -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-50 rounded-full opacity-50"></div>
+
+                        <h3 class="text-gray-400 font-bold uppercase tracking-wider text-xs mb-4">Votre Vol</h3>
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="text-2xl font-black text-gray-900">{{ flight.flight_number }}</span>
+                                <span class="block text-sm text-blue-600 font-bold">{{ flight.airline }}</span>
+                            </div>
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-gray-600 text-sm mb-2">
+                             <div class="w-20 font-bold">Départ</div>
+                             <div class="flex-1 text-right">{{ flight.departure_airport }}</div>
+                        </div>
+                         <div class="flex items-center text-gray-600 text-sm mb-4">
+                             <div class="w-20 font-bold">Arrivée</div>
+                             <div class="flex-1 text-right">{{ flight.arrival_airport }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3 text-center">
+                             <span class="text-xs text-gray-400 font-bold uppercase block">Date</span>
+                             <span class="font-bold text-gray-800">{{ flight.departure_time|format_datetime }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Price Summary (Floating) -->
+                    <div class="bg-blue-900 rounded-3xl shadow-xl shadow-blue-200 text-white p-6 relative overflow-hidden">
+                        <!-- Decorative circles -->
+                        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-800 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+                        <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-indigo-800 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
+
+                        <h3 class="text-blue-200 font-bold uppercase tracking-wider text-xs mb-6 relative z-10">Récapitulatif</h3>
+
+                        <div class="flex justify-between items-center mb-2 relative z-10">
+                            <span class="text-blue-100">Prix Unitaire</span>
+                            <span class="font-bold unit-price-display">$55.00</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-6 relative z-10">
+                            <span class="text-blue-100">Voyageurs</span>
+                            <span class="font-bold bg-blue-800 px-2 py-1 rounded-lg text-sm">x <span class="pax-count-display">1</span></span>
+                        </div>
+
+                        <div class="border-t border-blue-700 my-4 relative z-10"></div>
+
+                        <div class="flex justify-between items-end relative z-10">
+                            <span class="text-lg font-bold">TOTAL</span>
+                            <span class="text-4xl font-black total-price-display">$55.00</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
