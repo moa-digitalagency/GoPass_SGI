@@ -433,3 +433,38 @@ class PaymentGateway(db.Model):
             'is_active': self.is_active,
             'config_json': self.config_json
         }
+
+class TelegramBotConfig(db.Model):
+    __tablename__ = 'telegram_bot_configs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    bot_token = db.Column(db.Text, nullable=False) # Encrypted
+    is_active = db.Column(db.Boolean, default=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class TelegramSubscriber(db.Model):
+    __tablename__ = 'telegram_subscribers'
+
+    chat_id = db.Column(db.String(50), primary_key=True)
+    username = db.Column(db.String(100))
+    first_name = db.Column(db.String(100))
+    status = db.Column(db.String(20), default='PENDING') # PENDING, APPROVED, REVOKED
+    role_label = db.Column(db.String(100))
+    subscriptions = db.Column(db.JSON) # List of event types
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+    approved_at = db.Column(db.DateTime)
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    approver = db.relationship('User', foreign_keys=[approved_by])
+
+    def to_dict(self):
+        return {
+            'chat_id': self.chat_id,
+            'username': self.username,
+            'first_name': self.first_name,
+            'status': self.status,
+            'role_label': self.role_label,
+            'subscriptions': self.subscriptions,
+            'requested_at': self.requested_at.isoformat() if self.requested_at else None,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None
+        }

@@ -67,7 +67,8 @@ def create_app(config_name=None):
     from routes.infrastructure import infrastructure_bp
     from routes.settings import settings_bp
     from routes.ops import ops_bp
-    
+    from routes.telegram import telegram_bp
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(users_bp)
@@ -79,6 +80,10 @@ def create_app(config_name=None):
     app.register_blueprint(infrastructure_bp)
     app.register_blueprint(settings_bp)
     app.register_blueprint(ops_bp)
+    app.register_blueprint(telegram_bp)
+
+    # CSRF Exemption for Webhooks
+    csrf.exempt(app.view_functions['telegram.webhook'])
     
     @app.route('/login-check')
     def login_check():
