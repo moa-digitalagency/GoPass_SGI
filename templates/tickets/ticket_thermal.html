@@ -47,7 +47,7 @@
             <div class="text-3xl font-black text-center my-1">{{ gopass.flight.flight_number }}</div>
         </div>
 
-        <div class="w-full mb-4">
+        <div class="w-full mb-2">
             <div class="flex justify-between items-baseline">
                 <span class="text-xs font-bold uppercase">DATE</span>
             </div>
@@ -55,28 +55,34 @@
              <div class="text-xs text-center font-bold">{{ gopass.flight.departure_time.strftime('%Y') }}</div>
         </div>
 
+        <div class="w-full mb-4 text-center">
+             <span class="text-xs font-bold uppercase border-2 border-black px-2 py-1 rounded inline-block">
+                {{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}
+             </span>
+        </div>
+
         <div class="w-full border-b border-black border-dashed mb-4"></div>
 
         <!-- Transaction Details -->
         <div class="w-full space-y-2 mb-4">
              <div>
-                <span class="text-[10px] font-bold uppercase block">Passager</span>
+                <span class="text-[10px] font-bold uppercase block">Passager / Passenger</span>
                 <span class="text-sm font-bold uppercase block truncate">{{ gopass.passenger_name[:20] }}{% if gopass.passenger_name|length > 20 %}...{% endif %}</span>
             </div>
              <div class="flex justify-between items-center pt-2">
-                <span class="text-[10px] font-bold uppercase">Prix</span>
+                <span class="text-[10px] font-bold uppercase">Prix / Price</span>
                 <span class="text-xl font-black">{{ gopass.price }} {{ gopass.currency }}</span>
             </div>
         </div>
 
         <!-- QR Code -->
-        <div class="mb-4 flex flex-col items-center">
-            <img src="data:image/png;base64,{{ qr_code }}" alt="QR" class="w-32 h-32 mb-1">
+        <div class="mb-6 flex flex-col items-center">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR" class="w-48 h-48 mb-1">
             <span class="text-[8px] uppercase">Scan for validation</span>
         </div>
 
         <!-- Footer / Traceability -->
-        <div class="w-full text-[8px] font-mono leading-tight space-y-1 pt-2 border-t border-black">
+        <div class="w-full text-[10px] font-bold font-mono leading-tight space-y-2 pt-2 border-t-2 border-black">
             <div class="flex justify-between">
                 <span>AGENT:</span>
                 <span>{{ gopass.seller.username if gopass.seller else 'WEB/AUTO' }}</span>
@@ -91,12 +97,12 @@
             </div>
              <div class="flex justify-between">
                 <span>REF:</span>
-                <span class="truncate max-w-[100px]">{{ gopass.payment_ref }}</span>
+                <span class="truncate max-w-[120px]">{{ gopass.payment_ref }}</span>
             </div>
         </div>
 
-        <div class="mt-4 text-center">
-            <p class="text-[8px] italic">*** BON VOYAGE ***</p>
+        <div class="mt-6 text-center">
+            <p class="text-[10px] italic font-bold">*** BON VOYAGE ***</p>
         </div>
     </div>
 </body>
