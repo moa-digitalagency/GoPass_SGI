@@ -191,6 +191,33 @@ class GoPassService:
 
         # Cas C: Mauvais Vol
         if str(gopass.flight_id) != str(flight_id):
+            gopass_date = gopass.flight.departure_time.date()
+            target_date = target_flight.departure_time.date() if target_flight else datetime.now().date()
+
+            # Sous-Cas: Date Différente -> ROUGE (Expiré)
+            if gopass_date != target_date:
+                log = AccessLog(
+                    pass_id=gopass.id,
+                    validator_id=agent_id,
+                    validation_time=datetime.utcnow(),
+                    status='EXPIRED'
+                )
+                db.session.add(log)
+                db.session.commit()
+
+                return {
+                    'status': 'error',
+                    'code': 'EXPIRED',
+                    'message': 'BILLET EXPIRÉ',
+                    'color': 'red',
+                    'data': {
+                        'valid_for_date': gopass.flight.departure_time.strftime('%d/%m/%Y'),
+                        'expected_date': target_flight.departure_time.strftime('%d/%m/%Y') if target_flight else 'N/A',
+                        'flight': gopass.flight.flight_number
+                    }
+                }
+
+            # Sous-Cas: Même Date, Mauvais Vol -> ORANGE
             log = AccessLog(
                 pass_id=gopass.id,
                 validator_id=agent_id,
