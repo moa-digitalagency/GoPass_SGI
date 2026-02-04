@@ -39,6 +39,46 @@ class FlightService:
         return Flight.query.get(flight_id)
 
     @staticmethod
+    def get_or_create_manual_flight(flight_number, date, airport_code):
+        # Normalize date to start of day for comparison
+        # Ensure date is a date object or datetime object
+        if isinstance(date, datetime):
+            check_date = date.date()
+        else:
+            check_date = date
+
+        start_of_day = datetime.combine(check_date, datetime.min.time())
+        end_of_day = start_of_day + timedelta(days=1)
+
+        flight = Flight.query.filter(
+            Flight.flight_number == flight_number,
+            Flight.departure_time >= start_of_day,
+            Flight.departure_time < end_of_day
+        ).first()
+
+        if flight:
+            return flight
+
+        # If not found, create a manual flight
+        # Default departure time to 12:00 if we only have a date
+        dep_time = datetime.combine(check_date, datetime.min.time()).replace(hour=12)
+
+        flight = Flight(
+            flight_number=flight_number,
+            airline="Unknown", # Manual entry
+            departure_airport=airport_code,
+            arrival_airport="UNK",
+            departure_time=dep_time,
+            arrival_time=dep_time + timedelta(hours=2), # Dummy duration
+            status='scheduled',
+            source='manual',
+            capacity=0
+        )
+        db.session.add(flight)
+        db.session.commit()
+        return flight
+
+    @staticmethod
     def create_manual_flight(flight_number, airline, dep_airport, arr_airport, dep_time, arr_time, capacity=0, aircraft_registration=None):
         flight = Flight(
             flight_number=flight_number,

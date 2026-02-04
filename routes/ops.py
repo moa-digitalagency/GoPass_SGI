@@ -38,13 +38,36 @@ def pos():
 @agent_required
 def pos_sale():
     data = request.get_json()
-    flight_id = data.get('flight_id')
+    flight_mode = data.get('flight_mode', 'today')
+
     passenger_name = data.get('passenger_name')
     passenger_passport = data.get('passenger_passport')
     passenger_document_type = data.get('passenger_document_type', 'Passeport')
 
-    if not flight_id or not passenger_name or not passenger_passport:
-        return jsonify({'error': 'Données manquantes'}), 400
+    flight_id = data.get('flight_id')
+
+    if flight_mode == 'manual':
+        manual_date_str = data.get('manual_flight_date')
+        manual_number = data.get('manual_flight_number')
+
+        if not manual_date_str or not manual_number:
+             return jsonify({'error': 'Informations de vol manquantes'}), 400
+
+        try:
+            manual_date = datetime.strptime(manual_date_str, '%Y-%m-%d').date()
+        except ValueError:
+             return jsonify({'error': 'Format de date invalide'}), 400
+
+        # Create or Get Flight
+        airport_code = current_user.location or 'FIH'
+        flight = FlightService.get_or_create_manual_flight(manual_number, manual_date, airport_code)
+        flight_id = flight.id
+    else:
+        if not flight_id:
+            return jsonify({'error': 'Vol non sélectionné'}), 400
+
+    if not passenger_name or not passenger_passport:
+        return jsonify({'error': 'Données passager manquantes'}), 400
 
     try:
         gopass = GoPassService.create_gopass(
@@ -57,11 +80,17 @@ def pos_sale():
             sales_channel='pos'
         )
 
+        issue_time = gopass.issue_date.strftime('%H:%M') if gopass.issue_date else datetime.now().strftime('%H:%M')
+
         return jsonify({
             'success': True,
             'gopass_id': gopass.id,
             'pdf_url': url_for('public.download_pdf', id=gopass.id, format='thermal'),
-            'price': gopass.price
+            'price': gopass.price,
+            'time': issue_time,
+            'flight_number': gopass.flight.flight_number,
+            'passenger_name': gopass.passenger_name,
+            'status': 'Payé'
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -12,132 +12,268 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ t('pos.title') }} - {{ t('global.app_name') }}</title>
+    <!-- Tailwind CSS (Local or CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="/static/js/ops/pos.js"></script>
+
+    <!-- Custom Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Scrollbar for list areas */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #E5E7EB;
+            border-radius: 20px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <!-- Top Bar -->
-    <header class="bg-primary text-white p-4 shadow-md flex justify-between items-center">
-        <div class="flex items-center">
-            <img id="pos-logo-rva" src="" class="h-10 w-auto bg-white rounded p-1 mr-3 hidden">
-            <i id="pos-default-icon" class="fas fa-cash-register text-2xl mr-3"></i>
-            <div>
-                <h1 class="text-xl font-bold">{{ t('pos.express_counter') }}</h1>
-                <p class="text-xs text-blue-200">{{ current_user.location }} - {{ today.strftime('%d/%m/%Y') }}</p>
-            </div>
+<body class="bg-[#F3F4F6] text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- 1. HEADER -->
+    <header class="bg-white border-b border-gray-200 h-16 flex justify-between items-center px-6 shadow-sm z-10 flex-shrink-0">
+        <!-- Left: Logo -->
+        <div class="flex items-center space-x-3">
+             <img id="pos-logo-rva" src="" class="h-8 w-auto hidden">
+             <div class="flex items-center text-blue-800 font-bold text-xl tracking-tight">
+                <i class="fas fa-plane-departure mr-2"></i>
+                <span>SGI-GP <span class="text-blue-600 font-normal">Agent</span></span>
+             </div>
         </div>
-        <div class="flex items-center space-x-4">
-            <div class="bg-green-700 px-4 py-2 rounded-lg flex flex-col items-end mr-4">
-                <span class="text-xs text-green-200">{{ t('pos.total_cash') }}</span>
-                <span class="font-bold text-lg" id="totalSalesDisplay">{{ total_sales|default(0.0) }} $</span>
+
+        <!-- Center: Badge -->
+        <div class="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold border border-blue-100 shadow-sm">
+            <i class="fas fa-desktop mr-2 text-blue-500"></i> Guichet N° {{ current_user.id }}
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="flex items-center space-x-6">
+            <!-- Total Caisse -->
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Total Session</span>
+                <span class="text-green-600 font-bold text-lg leading-none" id="totalSalesDisplay">{{ total_sales|default(0.0) }} $</span>
             </div>
-            <div class="text-right mr-4">
-                <p class="font-bold">{{ current_user.first_name }} {{ current_user.last_name }}</p>
-                <p class="text-xs text-blue-300">{{ t('pos.collecting_agent') }}</p>
+
+            <!-- Divider -->
+            <div class="h-8 w-px bg-gray-200"></div>
+
+            <!-- User & Logout -->
+            <div class="flex items-center space-x-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-gray-700">{{ current_user.first_name }}</p>
+                    <p class="text-xs text-gray-400">{{ current_user.location }}</p>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="group bg-red-50 hover:bg-red-100 p-2 rounded-lg text-red-500 transition-colors" title="Déconnexion">
+                    <i class="fas fa-power-off text-lg group-hover:scale-110 transition-transform"></i>
+                </a>
             </div>
-            <a href="{{ url_for('auth.logout') }}" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm transition">
-                <i class="fas fa-sign-out-alt mr-2"></i>{{ t('global.logout') }}
-            </a>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-8 flex justify-center items-start mt-10">
-        <div class="bg-white rounded-xl shadow-xl p-8 w-full max-w-2xl">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4">
-                <i class="fas fa-ticket-alt mr-2 text-primary"></i>{{ t('pos.new_sale') }}
-            </h2>
+    <!-- MAIN CONTENT (Split Screen) -->
+    <main class="flex-1 flex flex-col lg:flex-row p-4 lg:p-6 gap-6 overflow-y-auto lg:overflow-hidden">
 
-            <form id="posForm" class="space-y-6">
-                <!-- Flight Selection -->
-                <div>
-                    <label class="block text-gray-700 font-bold mb-2" for="flight_id">
-                        {{ t('pos.flight_today') }}
-                    </label>
-                    <div class="relative">
-                        <select id="flight_id" name="flight_id" class="w-full p-4 border border-gray-300 rounded-lg appearance-none text-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50" required>
-                            <option value="" disabled selected>{{ t('pos.select_flight_placeholder') }}</option>
-                            {% for flight in flights %}
-                            <option value="{{ flight.id }}">
-                                {{ flight.flight_number }} - {{ flight.airline }} ({{ flight.departure_time.strftime('%H:%M') }})
-                            </option>
-                            {% else %}
-                            <option value="" disabled>{{ t('pos.no_flight') }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
+        <!-- 2. GAUCHE : FORMULAIRE (65%) -->
+        <section class="w-full lg:w-[65%] flex flex-col lg:h-full flex-shrink-0">
+            <div class="bg-white rounded-2xl shadow-lg flex-col lg:flex-1 overflow-hidden relative h-auto min-h-[500px] lg:h-auto flex">
+
+                <!-- Card Header -->
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                        <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
+                            <i class="fas fa-ticket-alt"></i>
+                        </span>
+                        Émission de Titre de Voyage
+                    </h2>
+                    <div class="text-xs text-gray-400 font-medium">
+                        {{ today.strftime('%d %B %Y') }}
                     </div>
                 </div>
 
-                <!-- Passenger Name -->
-                <div>
-                    <label class="block text-gray-700 font-bold mb-2" for="passenger_name">
-                        {{ t('pos.passenger_name') }}
-                    </label>
-                    <input type="text" id="passenger_name" name="passenger_name" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="{{ t('pos.name_placeholder') }}" required autocomplete="off">
-                </div>
+                <!-- Scrollable Form Area -->
+                <div class="p-8 lg:overflow-y-auto flex-1 custom-scrollbar">
+                    <form id="posForm" class="space-y-8 max-w-3xl mx-auto">
 
-                <!-- Document Details -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-2" for="passenger_document_type">
-                            {{ t('pos.doc_type') }}
-                        </label>
-                        <div class="relative">
-                            <select id="passenger_document_type" name="passenger_document_type" class="w-full p-4 border border-gray-300 rounded-lg appearance-none text-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white" required>
-                                <option value="Passeport" selected>Passeport</option>
-                                <option value="Carte d'Identité">Carte d'Identité</option>
-                                <option value="Permis de Conduire">Permis de Conduire</option>
-                                <option value="Carte d'Électeur">Carte d'Électeur</option>
-                                <option value="Autre">Autre</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700">
-                                <i class="fas fa-chevron-down"></i>
+                        <!-- Composant A : Sélecteur de Mode -->
+                        <div class="bg-gray-100 p-1.5 rounded-xl flex shadow-inner">
+                            <button type="button" onclick="setFlightMode('today')" id="btn-mode-today" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600">
+                                <i class="fas fa-calendar-day mr-2"></i> Vols du Jour
+                            </button>
+                            <button type="button" onclick="setFlightMode('manual')" id="btn-mode-manual" class="flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all">
+                                <i class="fas fa-calendar-plus mr-2"></i> Vol Ultérieur / Manuel
+                            </button>
+                        </div>
+                        <input type="hidden" id="flight_mode" name="flight_mode" value="today">
+
+                        <!-- Zone Vol : TODAY -->
+                        <div id="zone-today" class="transition-all duration-300">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Sélectionner un vol</label>
+                            <div class="relative">
+                                <select id="flight_id" name="flight_id" class="w-full pl-4 pr-10 py-4 border border-gray-200 rounded-xl appearance-none text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-shadow hover:border-gray-300 text-lg">
+                                    <option value="" disabled selected>-- Choisir dans la liste --</option>
+                                    {% for flight in flights %}
+                                    <option value="{{ flight.id }}">
+                                        {{ flight.departure_time.strftime('%H:%M') }} | {{ flight.airline }} {{ flight.flight_number }} | -> {{ flight.arrival_airport }}
+                                    </option>
+                                    {% else %}
+                                    <option value="" disabled>Aucun vol prévu aujourd'hui</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-bold mb-2" for="passenger_passport">
-                            {{ t('pos.doc_number') }}
-                        </label>
-                        <input type="text" id="passenger_passport" name="passenger_passport" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="{{ t('pos.doc_placeholder') }}" required autocomplete="off">
-                    </div>
+
+                        <!-- Zone Vol : MANUAL -->
+                        <div id="zone-manual" class="hidden grid grid-cols-2 gap-6 transition-all duration-300">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Date de Départ</label>
+                                <input type="date" id="manual_flight_date" name="manual_flight_date" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Numéro de Vol</label>
+                                <input type="text" id="manual_flight_number" name="manual_flight_number" placeholder="ex: CAA-123" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm uppercase">
+                            </div>
+                        </div>
+
+                        <!-- Separator -->
+                        <div class="border-t border-gray-100"></div>
+
+                        <!-- Composant B : Passager -->
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nom Complet du Passager</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-user text-gray-300"></i>
+                                    </div>
+                                    <input type="text" id="passenger_name" name="passenger_name" class="w-full pl-11 pr-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm text-lg" placeholder="Entrer le nom" required autocomplete="off">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="col-span-1">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Type Doc.</label>
+                                    <div class="relative">
+                                        <select id="passenger_document_type" name="passenger_document_type" class="w-full p-4 border border-gray-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
+                                            <option value="Passeport" selected>Passeport</option>
+                                            <option value="Carte d'Identité">Carte d'ID</option>
+                                            <option value="Permis de Conduire">Permis</option>
+                                            <option value="Autre">Autre</option>
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                                            <i class="fas fa-chevron-down text-xs"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Numéro Document</label>
+                                    <input type="text" id="passenger_passport" name="passenger_passport" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm" placeholder="ex: A1234567" required autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="pt-6">
-                    <button type="submit" id="submitBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-8 rounded-lg text-2xl shadow-lg transform transition hover:scale-105 flex justify-center items-center">
-                        <i class="fas fa-money-bill-wave mr-4"></i>
-                        {{ t('pos.collect_cash') }}
-                    </button>
+                <!-- Composant C : Footer Validation -->
+                <div class="p-6 bg-gray-50 border-t border-gray-200 z-10">
+                    <div class="max-w-3xl mx-auto flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Montant à percevoir</p>
+                            <p class="text-3xl font-bold text-gray-800">50.00 $</p>
+                        </div>
+                        <button type="submit" form="posForm" id="submitBtn" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-emerald-200 transform transition hover:-translate-y-0.5 active:translate-y-0 flex items-center text-lg">
+                            <i class="fas fa-print mr-3"></i>
+                            <span>ENCAISSER & IMPRIMER</span>
+                        </button>
+                    </div>
                 </div>
-            </form>
+            </div>
+        </section>
 
-            <div id="messageArea" class="mt-4 hidden p-4 rounded-lg text-center font-bold"></div>
-        </div>
+        <!-- 3. DROITE : HISTORIQUE (35%) -->
+        <section class="w-full lg:w-[35%] flex flex-col lg:h-full flex-shrink-0 mt-6 lg:mt-0 pb-6 lg:pb-0">
+            <div class="bg-white rounded-2xl shadow-lg flex flex-col h-[400px] lg:h-full overflow-hidden border border-gray-100">
+                <div class="p-5 border-b border-gray-100 bg-gray-50/80 backdrop-blur">
+                    <h3 class="font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-history mr-2 text-blue-500"></i> Ventes Récentes
+                    </h3>
+                </div>
+
+                <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-gray-50/30">
+                    <!-- Empty State -->
+                    <div id="empty-state" class="flex flex-col items-center justify-center h-48 text-gray-400">
+                        <i class="fas fa-receipt text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm">Aucune vente cette session</p>
+                    </div>
+
+                    <!-- Dynamic Items will be appended here -->
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Hidden iframe for printing -->
     <iframe id="printFrame" style="display:none;"></iframe>
 
     <script>
+        // --- LOGIC ---
+
+        function setFlightMode(mode) {
+            document.getElementById('flight_mode').value = mode;
+
+            const btnToday = document.getElementById('btn-mode-today');
+            const btnManual = document.getElementById('btn-mode-manual');
+            const zoneToday = document.getElementById('zone-today');
+            const zoneManual = document.getElementById('zone-manual');
+
+            if (mode === 'today') {
+                btnToday.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600";
+                btnManual.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all";
+                zoneToday.classList.remove('hidden');
+                zoneManual.classList.add('hidden');
+
+                document.getElementById('flight_id').required = true;
+                document.getElementById('manual_flight_date').required = false;
+                document.getElementById('manual_flight_number').required = false;
+            } else {
+                btnToday.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all";
+                btnManual.className = "flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white text-blue-600";
+                zoneToday.classList.add('hidden');
+                zoneManual.classList.remove('hidden');
+
+                document.getElementById('flight_id').required = false;
+                document.getElementById('manual_flight_date').required = true;
+                document.getElementById('manual_flight_number').required = true;
+            }
+        }
+
         document.getElementById('posForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const btn = document.getElementById('submitBtn');
             const originalContent = btn.innerHTML;
-            const msgArea = document.getElementById('messageArea');
 
             // Disable button
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> {{ t("global.loading") }}';
-            msgArea.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> TRAITEMENT...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
 
             const formData = {
+                flight_mode: document.getElementById('flight_mode').value,
                 flight_id: document.getElementById('flight_id').value,
+                manual_flight_date: document.getElementById('manual_flight_date').value,
+                manual_flight_number: document.getElementById('manual_flight_number').value,
                 passenger_name: document.getElementById('passenger_name').value,
                 passenger_document_type: document.getElementById('passenger_document_type').value,
                 passenger_passport: document.getElementById('passenger_passport').value
@@ -156,40 +292,68 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // Success
-                    msgArea.textContent = "{{ t('pos.sale_success') }}";
-                    msgArea.className = "mt-4 p-4 rounded-lg text-center font-bold bg-green-100 text-green-800 block";
+                    // Success Feedback
+                    showToast('Vente effectuée avec succès !');
 
-                    // Clear name but keep flight selection for speed
+                    // Reset form partially
                     document.getElementById('passenger_name').value = '';
+                    document.getElementById('passenger_passport').value = '';
                     document.getElementById('passenger_name').focus();
 
-                    // Trigger Print
+                    // Print
                     printTicket(result.pdf_url);
 
-                    // Update Total Sales
+                    // Update Totals
                     if (result.price) {
                         updateTotalSales(result.price);
                     }
+
+                    // Add to History
+                    addToHistory(result);
+
                 } else {
                     throw new Error(result.error || 'Erreur inconnue');
                 }
             } catch (error) {
-                msgArea.textContent = "Erreur: " + error.message;
-                msgArea.className = "mt-4 p-4 rounded-lg text-center font-bold bg-red-100 text-red-800 block";
+                alert("Erreur: " + error.message);
             } finally {
                 // Restore button
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
             }
         });
 
+        function addToHistory(data) {
+            const list = document.getElementById('history-list');
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) emptyState.remove();
+
+            const item = document.createElement('div');
+            item.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center animate-fade-in-down";
+            item.innerHTML = `
+                <div>
+                    <div class="flex items-center space-x-2 mb-1">
+                        <span class="text-xs font-bold text-gray-400">${data.time}</span>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">${data.flight_number}</span>
+                    </div>
+                    <p class="font-bold text-gray-800 text-sm truncate max-w-[150px]">${data.passenger_name}</p>
+                    <p class="text-xs text-green-600 font-semibold mt-1">
+                        <i class="fas fa-check-circle mr-1"></i> Payé ${data.price} $
+                    </p>
+                </div>
+                <button onclick="printTicket('${data.pdf_url}')" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors" title="Réimprimer">
+                    <i class="fas fa-print"></i>
+                </button>
+            `;
+
+            // Insert at top
+            list.insertBefore(item, list.firstChild);
+        }
+
         function printTicket(url) {
-            // Option 1: Open in new window and print (might be blocked by popup blocker)
-            // Option 2: Use hidden iframe (better for automatic feeling)
             const iframe = document.getElementById('printFrame');
             iframe.src = url;
-
             iframe.onload = function() {
                 setTimeout(function() {
                     iframe.contentWindow.focus();
@@ -204,7 +368,36 @@
             document.getElementById('totalSalesDisplay').textContent = currentTotal.toFixed(1) + " $";
         }
 
-        // Fetch Branding
+        // Simple Toast
+        function showToast(message) {
+            // Check if toast container exists
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = "fixed bottom-6 right-6 z-50 flex flex-col space-y-2";
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = "bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl flex items-center transform transition-all duration-300 translate-y-10 opacity-0";
+            toast.innerHTML = `<i class="fas fa-check-circle text-green-400 mr-3"></i> ${message}`;
+
+            container.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            });
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Branding
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/settings/public')
                 .then(r => r.json())
@@ -213,11 +406,20 @@
                         const img = document.getElementById('pos-logo-rva');
                         img.src = data.rva_logo;
                         img.classList.remove('hidden');
-                        document.getElementById('pos-default-icon').classList.add('hidden');
                     }
                 })
                 .catch(console.error);
         });
     </script>
+
+    <style>
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down {
+            animation: fadeInDown 0.3s ease-out forwards;
+        }
+    </style>
 </body>
 </html>
