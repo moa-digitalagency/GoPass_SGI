@@ -96,20 +96,23 @@
                         <p class="text-xl font-bold text-gray-800 uppercase truncate leading-tight">{{ gopass.passenger_name }}</p>
                     </div>
 
-                    <!-- Class / Type -->
-                    <div class="pt-1">
-                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
-                         <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
-                    </div>
+                    <!-- Split Row: Class (Left) & Route (Right) with custom proportions -->
+                    <div class="col-span-2 grid grid-cols-[0.8fr_1.2fr] gap-4 pt-1">
+                        <!-- Class / Type -->
+                        <div>
+                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
+                             <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
+                        </div>
 
-                    <!-- Itinéraire + Airline -->
-                    <div class="pt-1">
-                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
-                         <div class="flex items-center gap-2">
-                            <p class="text-lg font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
-                            <span class="text-gray-300">|</span>
-                            <p class="text-sm font-bold text-blue-900 uppercase">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
-                         </div>
+                        <!-- Itinéraire + Airline -->
+                        <div>
+                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
+                             <div class="flex items-center gap-2">
+                                <p class="text-base font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
+                                <span class="text-gray-300">|</span>
+                                <p class="text-sm font-bold text-blue-900 uppercase">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
+                             </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,20 +202,23 @@
                         <p class="text-xl font-bold text-gray-800 uppercase truncate leading-tight">{{ gopass.passenger_name }}</p>
                     </div>
 
-                    <!-- Class / Type -->
-                    <div class="pt-1">
-                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
-                         <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
-                    </div>
+                    <!-- Split Row: Class (Left) & Route (Right) with custom proportions -->
+                    <div class="col-span-2 grid grid-cols-[0.8fr_1.2fr] gap-4 pt-1">
+                        <!-- Class / Type -->
+                        <div>
+                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
+                             <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
+                        </div>
 
-                    <!-- Itinéraire + Airline -->
-                    <div class="pt-1">
-                         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
-                         <div class="flex items-center gap-2">
-                            <p class="text-lg font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
-                            <span class="text-gray-300">|</span>
-                            <p class="text-sm font-bold text-blue-900 uppercase">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
-                         </div>
+                        <!-- Itinéraire + Airline -->
+                        <div>
+                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
+                             <div class="flex items-center gap-2">
+                                <p class="text-base font-bold text-gray-800 uppercase">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
+                                <span class="text-gray-300">|</span>
+                                <p class="text-sm font-bold text-blue-900 uppercase">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
+                             </div>
+                        </div>
                     </div>
                 </div>
             </div>
