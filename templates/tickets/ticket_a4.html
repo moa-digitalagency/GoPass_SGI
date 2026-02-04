@@ -97,7 +97,6 @@
                     </div>
 
                     <!-- Split Row: Class (Left) & Route (Right) with custom proportions -->
-                    <!-- Changed from 0.8fr_1.2fr to 0.6fr_1.4fr to give more space for long airline names -->
                     <div class="col-span-2 grid grid-cols-[0.6fr_1.4fr] gap-4 pt-1">
                         <!-- Class / Type -->
                         <div class="border-r border-gray-200 pr-2">
@@ -107,7 +106,7 @@
 
                         <!-- Itinéraire + Airline -->
                         <div>
-                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
+                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie <br> Route & Airline</p>
                              <div class="flex items-center gap-2">
                                 <p class="text-base font-bold text-gray-800 uppercase whitespace-nowrap">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                                 <span class="text-gray-300">|</span>
@@ -122,10 +121,10 @@
             <div class="grid grid-cols-2 gap-4 items-center mb-4">
                 <!-- Left: QR Code -->
                 <div class="flex flex-col items-center justify-center">
-                    <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-md">
+                    <div class="bg-white p-1 rounded-lg border border-gray-200 shadow-md">
                         <img src="data:image/png;base64,{{ qr_code }}" alt="QR Security" class="w-24 h-24 object-contain">
                     </div>
-                    <p class="text-center text-[8px] font-bold text-gray-500 mt-1 uppercase tracking-wider leading-none">
+                    <p class="text-center text-[8px] font-bold text-gray-500 mt-1 uppercase tracking-wider leading-relaxed">
                         Signature Numérique Inviolable<br>Unique Document
                     </p>
                 </div>
@@ -138,8 +137,8 @@
                          <p class="text-sm font-bold text-gray-800">{{ gopass.payment_method }}</p>
                      </div>
                      <div class="mt-1">
-                         <p class="text-[9px] font-bold text-gray-500 uppercase">Ref</p>
-                         <p class="text-[10px] text-gray-400 font-mono">{{ gopass.payment_ref }}</p>
+                         <p class="text-[8px] font-bold text-gray-500 uppercase">Référence de Paiement / Payment Reference</p>
+                         <p class="text-[10px] text-gray-800 font-mono">{{ gopass.payment_ref }}</p>
                      </div>
                 </div>
             </div>
@@ -213,7 +212,7 @@
 
                         <!-- Itinéraire + Airline -->
                         <div>
-                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie / Route & Airline</p>
+                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Itinéraire & Compagnie <br> Route & Airline</p>
                              <div class="flex items-center gap-2">
                                 <p class="text-base font-bold text-gray-800 uppercase whitespace-nowrap">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                                 <span class="text-gray-300">|</span>
@@ -228,10 +227,10 @@
             <div class="grid grid-cols-2 gap-4 items-center mb-4">
                 <!-- Left: QR Code -->
                 <div class="flex flex-col items-center justify-center">
-                    <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-md">
+                    <div class="bg-white p-1 rounded-lg border border-gray-200 shadow-md">
                         <img src="data:image/png;base64,{{ qr_code }}" alt="QR Security" class="w-24 h-24 object-contain">
                     </div>
-                    <p class="text-center text-[8px] font-bold text-gray-500 mt-1 uppercase tracking-wider leading-none">
+                    <p class="text-center text-[8px] font-bold text-gray-500 mt-1 uppercase tracking-wider leading-relaxed">
                         Signature Numérique Inviolable<br>Unique Document
                     </p>
                 </div>
@@ -244,8 +243,8 @@
                          <p class="text-sm font-bold text-gray-800">{{ gopass.payment_method }}</p>
                      </div>
                      <div class="mt-1">
-                         <p class="text-[9px] font-bold text-gray-500 uppercase">Ref</p>
-                         <p class="text-[10px] text-gray-400 font-mono">{{ gopass.payment_ref }}</p>
+                         <p class="text-[8px] font-bold text-gray-500 uppercase">Référence de Paiement / Payment Reference</p>
+                         <p class="text-[10px] text-gray-800 font-mono">{{ gopass.payment_ref }}</p>
                      </div>
                 </div>
             </div>

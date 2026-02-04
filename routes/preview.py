@@ -21,7 +21,7 @@ class MockUser:
 class MockGoPass:
     def __init__(self):
         self.flight = MockFlight()
-        self.passenger_name = 'JEAN DUPONT'
+        self.passenger_name = 'KALONJI WA KALONJI AISANCE'
         self.status = 'valide'
         self.price = 50.0
         self.currency = 'USD'
