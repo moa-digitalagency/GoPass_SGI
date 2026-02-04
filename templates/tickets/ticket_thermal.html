@@ -77,7 +77,7 @@
         <div class="w-full space-y-2 mb-4">
              <div>
                 <span class="text-[10px] font-bold uppercase block">Passager / Passenger</span>
-                <span class="text-sm font-bold uppercase block truncate">{{ gopass.passenger_name[:20] }}{% if gopass.passenger_name|length > 20 %}...{% endif %}</span>
+                <span class="text-sm font-bold uppercase block break-words leading-tight">{{ gopass.passenger_name }}</span>
             </div>
              <div class="flex justify-between items-center pt-2">
                 <span class="text-[10px] font-bold uppercase">Prix / Price</span>
@@ -88,7 +88,7 @@
         <!-- QR Code -->
         <div class="mb-6 flex flex-col items-center">
             <img src="data:image/png;base64,{{ qr_code }}" alt="QR" class="w-48 h-48 mb-1">
-            <span class="text-[8px] uppercase">Scan for validation</span>
+            <span class="text-[8px] uppercase text-center">SCANNER POUR VALIDATION / SCAN FOR VALIDATION</span>
         </div>
 
         <!-- Footer / Traceability -->
