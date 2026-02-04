@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Ticket</title>
+    <script src="/static/js/tailwindcss.js"></script>
+    <style>
+        /* 80mm width approx 302px (assuming 96dpi) */
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+        body {
+            width: 80mm;
+            margin: 0 auto;
+            background: white;
+            color: black;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            height: fit-content;
+        }
+        .thermal-container {
+            padding: 5mm 5mm 2mm 5mm;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .dashed-line {
+            border-top: 1px dashed black;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body class="text-black bg-white">
+    <div class="thermal-container flex flex-col items-center">
+        <!-- Header -->
+        <img src="/static/img/logo_rva.png" alt="RVA" class="h-12 w-auto mb-2 grayscale">
+        <h1 class="text-lg font-black uppercase tracking-widest mb-1">RVA / GO-PASS</h1>
+        <p class="text-[10px] font-bold uppercase text-center mb-4">Redevance de Développement (IDEF)</p>
+
+        <!-- Divider -->
+        <div class="w-full border-b-2 border-black mb-4"></div>
+
+        <!-- Critical Details -->
+        <div class="w-full mb-3 text-center">
+            <span class="text-xs font-bold uppercase block mb-1">VOL / FLIGHT</span>
+            <div class="text-3xl font-black text-center my-1 leading-none">{{ gopass.flight.flight_number }}</div>
+            <div class="text-[10px] font-bold text-center uppercase mb-1">
+                 {{ gopass.flight.airline|default('AIRLINE', true) }}
+            </div>
+        </div>
+
+        <div class="w-full mb-3 text-center">
+             <span class="text-xs font-bold uppercase block mb-1">DATE & HEURE / TIME</span>
+             <div class="text-xl font-bold text-center my-1 uppercase leading-none">
+                {{ gopass.flight.departure_time.strftime('%d/%m/%Y') }}
+             </div>
+             <div class="text-sm font-bold text-center uppercase">
+                {{ gopass.flight.departure_time.strftime('%H:%M') }} (EST)
+             </div>
+        </div>
+
+        <div class="w-full mb-3 mt-2 text-center">
+            <span class="text-xs font-bold uppercase block mb-1">ITINÉRAIRE / ROUTE</span>
+            <div class="text-lg font-black text-center uppercase leading-none">
+                {{ gopass.flight.departure_airport }} <span class="mx-1">➔</span> {{ gopass.flight.arrival_airport }}
+            </div>
+        </div>
+
+        <div class="w-full mb-4 text-center">
+             <span class="text-xs font-bold uppercase border-2 border-black px-2 py-1 rounded inline-block">
+                {{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}
+             </span>
+        </div>
+
+        <div class="w-full border-b border-black border-dashed mb-4"></div>
+
+        <!-- Transaction Details -->
+        <div class="w-full space-y-2 mb-4">
+             <div>
+                <span class="text-[10px] font-bold uppercase block">Passager / Passenger</span>
+                <span class="text-sm font-bold uppercase block break-words leading-tight">{{ gopass.passenger_name }}</span>
+            </div>
+             <div class="flex justify-between items-center pt-2">
+                <span class="text-[10px] font-bold uppercase">Prix / Price</span>
+                <span class="text-xl font-black">{{ gopass.price }} {{ gopass.currency }}</span>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="mb-6 flex flex-col items-center">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR" class="w-48 h-48 mb-1">
+            <span class="text-[8px] uppercase text-center">SCANNER POUR VALIDATION / SCAN FOR VALIDATION</span>
+        </div>
+
+        <!-- Footer / Traceability -->
+        <div class="w-full text-[10px] font-bold font-mono leading-tight space-y-2 pt-2 border-t-2 border-black">
+            <div class="flex justify-between">
+                <span>AGENT:</span>
+                <span>{{ gopass.seller.username if gopass.seller else 'WEB/AUTO' }}</span>
+            </div>
+             <div class="flex justify-between">
+                <span>TERM:</span>
+                <span>POS-{{ gopass.sold_by or '000' }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span>DATE:</span>
+                <span>{{ gopass.issue_date.strftime('%d/%m/%y %H:%M') }}</span>
+            </div>
+             <div class="flex justify-between">
+                <span>REF:</span>
+                <span class="truncate max-w-[120px]">{{ gopass.payment_ref }}</span>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center pb-1">
+            <p class="text-[10px] italic font-bold">*** BON VOYAGE ***</p>
+        </div>
+    </div>
+</body>
+</html>
