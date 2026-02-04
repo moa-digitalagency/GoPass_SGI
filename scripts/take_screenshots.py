@@ -66,10 +66,6 @@ def take_screenshots():
         print("Captured Search Page")
 
         # Get a flight ID from DB
-        # We need to query DB. Since we are in a separate process/thread from the app,
-        # we should use a separate app context or just connect to sqlite directly.
-        # But we can import app and models here because we added sys.path.
-
         app = create_app('development')
         with app.app_context():
             flight = Flight.query.first()
@@ -102,20 +98,49 @@ def take_screenshots():
         thermal_page.close()
         print("Captured Ticket Thermal")
 
-        # 9. Dashboard (Admin)
+        # 9. Admin Panel Pages (Submenus)
+        print("Starting Admin Panel capture...")
+        page.goto(f"{BASE_URL}/logout") # Ensure clean state
         page.goto(f"{BASE_URL}/login")
         page.fill('input[name="username"]', 'admin')
         page.fill('input[name="password"]', 'admin123')
         page.click('button[type="submit"]')
-        # Wait for url to contain dashboard
+
         try:
             page.wait_for_url(lambda url: "dashboard" in url, timeout=10000)
             page.wait_for_load_state('networkidle')
-            page.screenshot(path=f"{SCREENSHOT_DIR}/09_admin_dashboard.png", full_page=True)
-            print("Captured Admin Dashboard")
+            print("Logged in as Admin.")
+
+            admin_pages = [
+                ("/dashboard", "09_admin_01_dashboard.png"),
+                ("/reports", "09_admin_02_reports.png"),
+                ("/reports/anomalies", "09_admin_03_anomalies.png"),
+                ("/flights", "09_admin_04_flights.png"),
+                ("/finance/transactions", "09_admin_05_finance_transactions.png"),
+                ("/finance/deposits", "09_admin_06_finance_deposits.png"),
+                ("/finance/reconciliation", "09_admin_07_finance_reconciliation.png"),
+                ("/dashboard/telegram", "09_admin_08_telegram_config.png"),
+                ("/settings/tariffs", "09_admin_09_settings_tariffs.png"),
+                ("/settings/airports", "09_admin_10_settings_airports.png"),
+                ("/settings/airlines", "09_admin_11_settings_airlines.png"),
+                ("/infrastructure/devices", "09_admin_12_infra_devices.png"),
+                ("/infrastructure/printers", "09_admin_13_infra_printers.png"),
+                ("/infrastructure/security-keys", "09_admin_14_infra_keys.png"),
+                ("/users", "09_admin_15_users.png"),
+            ]
+
+            for path, filename in admin_pages:
+                url = f"{BASE_URL}{path}"
+                print(f"Navigating to {url}...")
+                page.goto(url)
+                # Wait a bit for charts/tables to render if needed
+                page.wait_for_load_state('networkidle')
+                page.screenshot(path=f"{SCREENSHOT_DIR}/{filename}", full_page=True)
+                print(f"Captured {filename}")
+
         except Exception as e:
-            print(f"Failed to capture Admin Dashboard: {e}")
-            page.screenshot(path=f"{SCREENSHOT_DIR}/09_admin_dashboard_error.png", full_page=True)
+            print(f"Failed during Admin Panel capture: {e}")
+            page.screenshot(path=f"{SCREENSHOT_DIR}/09_admin_error.png", full_page=True)
 
         # Logout
         page.goto(f"{BASE_URL}/logout")
