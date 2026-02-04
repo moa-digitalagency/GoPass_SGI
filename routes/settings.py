@@ -49,7 +49,9 @@ def airports():
             data = {
                 'iata_code': request.form.get('iata_code'),
                 'city': request.form.get('city'),
-                'type': request.form.get('type')
+                'type': request.form.get('type'),
+                'name': request.form.get('name'),
+                'country': request.form.get('country')
             }
             if SettingsService.create_airport(data):
                 flash('Aéroport ajouté.', 'success')
@@ -60,7 +62,9 @@ def airports():
             data = {
                 'iata_code': request.form.get('iata_code'),
                 'city': request.form.get('city'),
-                'type': request.form.get('type')
+                'type': request.form.get('type'),
+                'name': request.form.get('name'),
+                'country': request.form.get('country')
             }
             if SettingsService.update_airport(airport_id, data):
                 flash('Aéroport modifié.', 'success')
@@ -85,7 +89,10 @@ def airlines():
         if action == 'create':
             data = {
                 'name': request.form.get('name'),
-                'is_active': request.form.get('is_active') == 'on'
+                'is_active': request.form.get('is_active') == 'on',
+                'iata_code': request.form.get('iata_code'),
+                'icao_code': request.form.get('icao_code'),
+                'country': request.form.get('country')
             }
             logo = request.files.get('logo')
             if SettingsService.create_airline(data, logo):
@@ -96,7 +103,10 @@ def airlines():
             airline_id = request.form.get('id')
             data = {
                 'name': request.form.get('name'),
-                'is_active': request.form.get('is_active') == 'on'
+                'is_active': request.form.get('is_active') == 'on',
+                'iata_code': request.form.get('iata_code'),
+                'icao_code': request.form.get('icao_code'),
+                'country': request.form.get('country')
             }
             logo = request.files.get('logo')
             if SettingsService.update_airline(airline_id, data, logo):

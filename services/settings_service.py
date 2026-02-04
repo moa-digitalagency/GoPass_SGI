@@ -42,7 +42,9 @@ class SettingsService:
             airport = Airport(
                 iata_code=data['iata_code'].upper(),
                 city=data['city'],
-                type=data['type']
+                type=data['type'],
+                name=data.get('name'),
+                country=data.get('country')
             )
             db.session.add(airport)
             db.session.commit()
@@ -58,6 +60,8 @@ class SettingsService:
             airport.iata_code = data.get('iata_code', airport.iata_code).upper()
             airport.city = data.get('city', airport.city)
             airport.type = data.get('type', airport.type)
+            airport.name = data.get('name', airport.name)
+            airport.country = data.get('country', airport.country)
             try:
                 db.session.commit()
                 return airport
@@ -95,7 +99,10 @@ class SettingsService:
             airline = Airline(
                 name=data['name'],
                 logo_path=logo_path,
-                is_active=data.get('is_active', True)
+                is_active=data.get('is_active', True),
+                iata_code=data.get('iata_code'),
+                icao_code=data.get('icao_code'),
+                country=data.get('country')
             )
             db.session.add(airline)
             db.session.commit()
@@ -109,6 +116,9 @@ class SettingsService:
         airline = db.session.get(Airline, airline_id)
         if airline:
             airline.name = data.get('name', airline.name)
+            airline.iata_code = data.get('iata_code', airline.iata_code)
+            airline.icao_code = data.get('icao_code', airline.icao_code)
+            airline.country = data.get('country', airline.country)
 
             # Handle is_active. If it's passed as a boolean or 'on' string (from checkbox)
             if 'is_active' in data:

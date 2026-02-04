@@ -361,7 +361,9 @@ class Airport(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     iata_code = db.Column(db.String(3), unique=True, nullable=False)
+    name = db.Column(db.String(100))
     city = db.Column(db.String(100), nullable=False)
+    country = db.Column(db.String(50))
     type = db.Column(db.String(20), default='national') # national, international
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -369,7 +371,9 @@ class Airport(db.Model):
         return {
             'id': self.id,
             'iata_code': self.iata_code,
+            'name': self.name,
             'city': self.city,
+            'country': self.country,
             'type': self.type
         }
 
@@ -378,6 +382,9 @@ class Airline(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
+    iata_code = db.Column(db.String(3))
+    icao_code = db.Column(db.String(4))
+    country = db.Column(db.String(50))
     logo_path = db.Column(db.String(200)) # Path to uploaded logo
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -386,6 +393,9 @@ class Airline(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'iata_code': self.iata_code,
+            'icao_code': self.icao_code,
+            'country': self.country,
             'logo_path': self.logo_path,
             'is_active': self.is_active
         }

@@ -13,14 +13,39 @@
 {% block content %}
 <div class="mb-6 flex justify-between items-center">
     <h2 class="text-2xl font-bold text-gray-800">Gestion des Compagnies</h2>
-    <button onclick="openModal('createModal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        <i class="fas fa-plus mr-2"></i>Ajouter une compagnie
-    </button>
+    <div class="flex space-x-3">
+        <button id="syncAirlinesBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded flex items-center shadow-sm">
+            <i class="fas fa-sync-alt mr-2 transition-transform duration-700" id="syncIcon"></i>
+            <span id="syncText">Synchroniser via API</span>
+        </button>
+        <button onclick="openModal('createModal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow-sm">
+            <i class="fas fa-plus mr-2"></i>Ajouter une compagnie
+        </button>
+    </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Filters -->
+<div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-end border border-gray-100">
+    <div class="flex-1 min-w-[200px]">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+        <div class="relative rounded-md shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+            </div>
+            <input type="text" id="searchInput" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border" placeholder="Nom, Code IATA...">
+        </div>
+    </div>
+    <div class="w-48">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Pays</label>
+        <select id="countryFilter" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="">Tous les pays</option>
+        </select>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="airlinesGrid">
     {% for airline in airlines %}
-    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+    <div class="airline-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col" data-name="{{ airline.name|default('', true)|lower }}" data-iata="{{ airline.iata_code|default('', true)|lower }}" data-country="{{ airline.country|default('', true) }}">
         <div class="p-6 flex-1 flex flex-col items-center">
             <div class="h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4 overflow-hidden border">
                 {% if airline.logo_path %}
@@ -30,6 +55,19 @@
                 {% endif %}
             </div>
             <h3 class="text-lg font-bold text-gray-900 text-center">{{ airline.name }}</h3>
+
+            <div class="mt-2 text-sm text-gray-500 space-y-1 text-center">
+                {% if airline.iata_code or airline.icao_code %}
+                <p>
+                    {% if airline.iata_code %}<strong>IATA:</strong> {{ airline.iata_code }} {% endif %}
+                    {% if airline.icao_code %}<strong>ICAO:</strong> {{ airline.icao_code }}{% endif %}
+                </p>
+                {% endif %}
+                {% if airline.country %}
+                <p><i class="fas fa-flag mr-1"></i> {{ airline.country }}</p>
+                {% endif %}
+            </div>
+
             <div class="mt-2">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if airline.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
                     {% if airline.is_active %}Active{% else %}Inactive{% endif %}
@@ -67,6 +105,20 @@
                                 <div>
                                     <label for="name" class="block text-sm font-medium text-gray-700">Nom de la compagnie</label>
                                     <input type="text" name="name" id="name" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2" required>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="iata_code" class="block text-sm font-medium text-gray-700">Code IATA</label>
+                                        <input type="text" name="iata_code" id="iata_code" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2" maxlength="3">
+                                    </div>
+                                    <div>
+                                        <label for="icao_code" class="block text-sm font-medium text-gray-700">Code ICAO</label>
+                                        <input type="text" name="icao_code" id="icao_code" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2" maxlength="4">
+                                    </div>
+                                    <div>
+                                        <label for="country" class="block text-sm font-medium text-gray-700">Pays</label>
+                                        <input type="text" name="country" id="country" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md border p-2">
+                                    </div>
                                 </div>
                                 <div>
                                     <label for="logo" class="block text-sm font-medium text-gray-700">Logo (Optionnel)</label>
