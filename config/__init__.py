@@ -32,16 +32,11 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
 
-    # Security Hardening: Prevent SQLite in Production
+    # Security Hardening: Enforce PostgreSQL in Production
     if os.environ.get('FLASK_ENV') == 'production':
         db_url = os.environ.get('DATABASE_URL', '')
-        if db_url.startswith('sqlite'):
-            raise Exception("CRITICAL: SQLite not allowed in production")
         if not db_url.startswith('postgresql://'):
-            # Enforce PostgreSQL as per requirement "Vérifier que DATABASE_URL commence bien par postgresql://"
-            # If strictly enforcing, we might want to error here too, but the specific error message was for SQLite.
-            # I will ensure at least SQLite is blocked with the specific message.
-            pass
+            raise Exception("CRITICAL: Production environment requires PostgreSQL (DATABASE_URL must start with 'postgresql://')")
 
 config = {
     'development': DevelopmentConfig,
