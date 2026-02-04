@@ -7,7 +7,7 @@
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app
-from services import FlightService, GoPassService
+from services import FlightService, GoPassService, MockPaymentService
 from models import PaymentGateway, GoPass, db
 from datetime import datetime
 import io
@@ -88,10 +88,26 @@ def checkout(flight_id):
              flash("Veuillez ajouter au moins un passager.", "danger")
              return redirect(url_for('public.checkout', flight_id=flight_id))
 
-        # Generate a batch Payment Ref
-        # Using a mock Stripe-like ID if Stripe, else generic
-        ref_prefix = "ch_" if payment_method == 'STRIPE' else "WEB-"
-        batch_ref = f"{ref_prefix}{uuid.uuid4().hex[:12]}" if payment_method == 'STRIPE' else f"WEB-{uuid.uuid4().hex[:8].upper()}"
+        batch_ref = None
+        enable_demo_payment = current_app.config.get('ENABLE_DEMO_PAYMENT', False)
+
+        if enable_demo_payment:
+            mock_data = {
+                'card_number': request.form.get('card_number'),
+                'mobile_number': request.form.get('mobile_number')
+            }
+            result = MockPaymentService.process_payment(payment_method, mock_data)
+
+            if not result['success']:
+                flash(result['message'], "danger")
+                return redirect(url_for('public.checkout', flight_id=flight_id))
+
+            batch_ref = result['transaction_id']
+        else:
+            # Generate a batch Payment Ref
+            # Using a mock Stripe-like ID if Stripe, else generic
+            ref_prefix = "ch_" if payment_method == 'STRIPE' else "WEB-"
+            batch_ref = f"{ref_prefix}{uuid.uuid4().hex[:12]}" if payment_method == 'STRIPE' else f"WEB-{uuid.uuid4().hex[:8].upper()}"
 
         source_metadata = {
             "ip_address": request.remote_addr,
@@ -128,7 +144,8 @@ def checkout(flight_id):
             flash("Une erreur est survenue lors de la création des billets.", "danger")
             return redirect(url_for('public.checkout', flight_id=flight_id))
 
-    return render_template('public/checkout.html', flight=flight, stripe_active=stripe_active, mobile_active=mobile_active)
+    enable_demo_payment = current_app.config.get('ENABLE_DEMO_PAYMENT', False)
+    return render_template('public/checkout.html', flight=flight, stripe_active=stripe_active, mobile_active=mobile_active, enable_demo_payment=enable_demo_payment)
 
 @public_bp.route('/confirmation/batch/<ref>')
 def confirmation_batch(ref):
