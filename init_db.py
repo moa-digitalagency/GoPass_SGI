@@ -33,7 +33,7 @@ def check_and_update_schema(db, app):
         'pass_types': ['color', 'name'],
         'app_configs': ['value', 'description', 'updated_at'],
         'payment_gateways': ['is_active', 'config_json', 'provider'],
-        'transactions': ['uuid', 'agent_id', 'amount_collected', 'currency', 'payment_method', 'provider_ref', 'status', 'is_offline_sync', 'created_at'],
+        'transactions': ['uuid', 'agent_id', 'amount_collected', 'currency', 'payment_method', 'provider_ref', 'status', 'is_offline_sync', 'verification_source', 'flight_details', 'created_at'],
         'cash_deposits': ['agent_id', 'supervisor_id', 'amount', 'deposit_date', 'notes'],
         'mobile_money_logs': ['transaction_ref', 'amount', 'currency', 'provider', 'status', 'timestamp', 'reconciled'],
         'offline_sync_logs': ['agent_id', 'sync_time', 'record_count', 'status', 'details'],
@@ -72,7 +72,7 @@ def check_and_update_schema(db, app):
                         col_type = 'TIMESTAMP'
                     elif col in ['price', 'amount', 'amount_collected']:
                         col_type = 'FLOAT DEFAULT 0.0'
-                    elif col in ['config_json', 'subscriptions']:
+                    elif col in ['config_json', 'subscriptions', 'flight_details']:
                         col_type = 'JSON' # SQLite might treat this as TEXT, Postgres as JSON
                     elif col in ['value', 'key_value', 'notes', 'details']:
                         col_type = 'TEXT'

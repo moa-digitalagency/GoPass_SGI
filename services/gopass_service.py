@@ -6,7 +6,7 @@
  * Auditer par : La CyberConfiance, www.cyberconfiance.com
 """
 
-from models import db, GoPass, Flight, User, AccessLog, AppConfig
+from models import db, GoPass, Flight, User, AccessLog, AppConfig, Transaction
 from datetime import datetime
 import json
 import hashlib
@@ -25,7 +25,7 @@ from utils.i18n import get_text
 
 class GoPassService:
     @staticmethod
-    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter'):
+    def create_gopass(flight_id, passenger_name, passenger_passport, passenger_document_type='Passeport', price=50.0, currency='USD', payment_ref=None, payment_method='Cash', sold_by=None, sales_channel='counter', verification_source='manual', flight_details=None):
         flight = Flight.query.get(flight_id)
         if not flight:
             raise ValueError("Vol invalide")
@@ -39,6 +39,25 @@ class GoPassService:
         }
         token_string = json.dumps(token_data, sort_keys=True)
         token_hash = hashlib.sha256(token_string.encode()).hexdigest()
+
+        # Create Transaction Record for Audit
+        # Check if sold_by is valid (it should be an ID)
+        if sold_by:
+            transaction = Transaction(
+                agent_id=sold_by,
+                amount_collected=price,
+                currency=currency,
+                payment_method=payment_method,
+                provider_ref=payment_ref or f"PAY-{uuid.uuid4().hex[:8].upper()}",
+                status='completed',
+                verification_source=verification_source,
+                flight_details=flight_details
+            )
+            db.session.add(transaction)
+            db.session.flush() # Generate ID
+            transaction_id = transaction.id
+        else:
+            transaction_id = None
 
         # In a real system, we would sign this with a private key.
         # For now, the hash acts as the secure token stored in DB.
@@ -56,7 +75,8 @@ class GoPassService:
             payment_method=payment_method,
             sold_by=sold_by,
             sales_channel=sales_channel,
-            status='valid'
+            status='valid',
+            transaction_id=transaction_id
         )
 
         db.session.add(gopass)

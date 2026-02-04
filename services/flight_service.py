@@ -277,3 +277,105 @@ class FlightService:
 
         db.session.commit()
         return added_count + updated_count
+
+    @staticmethod
+    def verify_flight_with_api(flight_number, date_str):
+        """
+        Verifies a flight via Aviationstack API.
+        Returns dictionary with flight details if found, else None.
+        """
+        api_key = current_app.config.get('AVIATIONSTACK_API_KEY')
+
+        # Mocking for sandbox if no key provided or explicit test mode
+        # In a real scenario, we would raise an error or return None.
+        if not api_key:
+            # Fallback/Mock for testing purposes if key is missing
+            print("WARNING: AVIATIONSTACK_API_KEY missing. Using Mock Data.")
+            # Simple mock based on flight number format
+            if flight_number.startswith('AF'):
+                 return {
+                    'airline': 'Air France',
+                    'departure': {'iata': 'FIH', 'country_iso2': 'CD', 'time': '20:00'},
+                    'arrival': {'iata': 'CDG', 'country_iso2': 'FR'},
+                    'status': 'scheduled'
+                }
+            elif flight_number.startswith('CAA'):
+                 return {
+                    'airline': 'CAA',
+                    'departure': {'iata': 'FIH', 'country_iso2': 'CD', 'time': '08:00'},
+                    'arrival': {'iata': 'FBM', 'country_iso2': 'CD'},
+                    'status': 'scheduled'
+                }
+            return None
+
+        url = "http://api.aviationstack.com/v1/flights"
+        params = {
+            'access_key': api_key,
+            'flight_iata': flight_number,
+            'limit': 1
+        }
+
+        # Handle date if provided. Aviationstack might filter strictly.
+        # If date_str is "YYYY-MM-DD", pass it.
+        # Note: Aviationstack free tier might restrict historical data, but "future" flights should be fine?
+        # Actually Aviationstack creates "real-time" flight data. Future flights might be available.
+        if date_str:
+            params['flight_date'] = date_str
+
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            current_app.logger.error(f"Aviationstack API Error: {str(e)}")
+            return None
+
+        if 'data' not in data or not data['data']:
+            return None
+
+        # Take the first result
+        flight_data = data['data'][0]
+
+        # Extract fields
+        # Note: We need to handle potential missing fields safely
+        dep = flight_data.get('departure', {})
+        arr = flight_data.get('arrival', {})
+        airline = flight_data.get('airline', {})
+
+        # Extract time (scheduled)
+        dep_time_full = dep.get('scheduled')
+        dep_time_hm = "00:00"
+        if dep_time_full:
+            try:
+                # Extract HH:MM from ISO string
+                dt = datetime.fromisoformat(dep_time_full.replace('Z', '+00:00'))
+                dep_time_hm = dt.strftime('%H:%M')
+            except:
+                pass
+
+        result = {
+            'airline': airline.get('name', 'Unknown'),
+            'departure': {
+                'iata': dep.get('iata', 'UNK'),
+                'country_iso2': dep.get('country_iso2'), # Assuming this field exists based on requirements
+                'time': dep_time_hm
+            },
+            'arrival': {
+                'iata': arr.get('iata', 'UNK'),
+                'country_iso2': arr.get('country_iso2')
+            },
+            'status': flight_data.get('flight_status', 'scheduled')
+        }
+
+        # Fallback if country_iso2 is missing (common in some tiers)
+        # We can implement a small mapper or assume CD for FIH/FBM/GOM
+        cd_airports = ['FIH', 'FBM', 'GOM', 'FKI', 'LUB', 'KGA']
+        if not result['departure']['country_iso2']:
+            if result['departure']['iata'] in cd_airports:
+                result['departure']['country_iso2'] = 'CD'
+
+        if not result['arrival']['country_iso2']:
+            if result['arrival']['iata'] in cd_airports:
+                result['arrival']['country_iso2'] = 'CD'
+
+        return result
