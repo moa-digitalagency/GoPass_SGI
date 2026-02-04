@@ -100,7 +100,7 @@
                     <!-- Changed from 0.8fr_1.2fr to 0.6fr_1.4fr to give more space for long airline names -->
                     <div class="col-span-2 grid grid-cols-[0.6fr_1.4fr] gap-4 pt-1">
                         <!-- Class / Type -->
-                        <div>
+                        <div class="border-r border-gray-200 pr-2">
                              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
                              <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
                         </div>
@@ -111,8 +111,7 @@
                              <div class="flex items-center gap-2">
                                 <p class="text-base font-bold text-gray-800 uppercase whitespace-nowrap">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                                 <span class="text-gray-300">|</span>
-                                <!-- Added whitespace-nowrap and slightly smaller font if needed (text-xs md:text-sm) but keeping text-sm for now as space is wider -->
-                                <p class="text-sm font-bold text-blue-900 uppercase whitespace-nowrap">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
+                                <p class="text-[10px] font-black text-blue-900 uppercase whitespace-nowrap">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
                              </div>
                         </div>
                     </div>
@@ -207,7 +206,7 @@
                     <!-- Split Row: Class (Left) & Route (Right) with custom proportions -->
                     <div class="col-span-2 grid grid-cols-[0.6fr_1.4fr] gap-4 pt-1">
                         <!-- Class / Type -->
-                        <div>
+                        <div class="border-r border-gray-200 pr-2">
                              <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Classe / Type</p>
                              <p class="text-sm font-bold text-gray-800 uppercase">{{ 'INTERNATIONAL' if gopass.price > 20 else 'NATIONAL' }}</p>
                         </div>
@@ -218,7 +217,7 @@
                              <div class="flex items-center gap-2">
                                 <p class="text-base font-bold text-gray-800 uppercase whitespace-nowrap">{{ gopass.flight.departure_airport }} <i class="fas fa-arrow-right text-blue-500 text-xs mx-1"></i> {{ gopass.flight.arrival_airport }}</p>
                                 <span class="text-gray-300">|</span>
-                                <p class="text-xs font-black text-blue-900 uppercase whitespace-nowrap">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
+                                <p class="text-[10px] font-black text-blue-900 uppercase whitespace-nowrap">{{ gopass.flight.airline|default('AIRLINE', true) }}</p>
                              </div>
                         </div>
                     </div>
