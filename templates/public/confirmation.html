@@ -9,38 +9,61 @@
 {% extends "base.html" %}
 
 {% block content_public %}
-<div class="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
-    <div class="max-w-2xl w-full">
-        <div class="bg-white rounded-lg shadow-xl overflow-hidden text-center p-8">
-            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600 text-4xl">
+<div class="min-h-screen bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto text-center">
+
+        <!-- Success Header -->
+        <div class="bg-white rounded-3xl p-12 shadow-xl mb-8 animate-fade-in-up">
+            <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 mx-auto mb-6 text-5xl shadow-lg shadow-green-200">
                 <i class="fas fa-check"></i>
             </div>
+            <h1 class="text-4xl font-black text-gray-900 mb-4">Félicitations !</h1>
+            <p class="text-xl text-gray-600 mb-8">
+                Voici vos <span class="font-bold text-blue-600">{{ passes|length }} GoPass</span>. Ils ont également été envoyés par email.
+            </p>
 
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ t('public_buy.payment_confirmed') }}</h1>
-            <p class="text-gray-600 mb-8">{{ t('public_buy.gopass_generated') }}</p>
-
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8 inline-block w-full max-w-md">
-                <h3 class="text-lg font-bold mb-4 text-blue-900">{{ t('global.app_name') }} #{{ gopass.id }}</h3>
-
-                {% if qr_base64 %}
-                <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" class="mx-auto mb-4 border-4 border-white shadow-sm rounded-lg">
-                {% else %}
-                <div class="w-48 h-48 bg-gray-200 mx-auto mb-4 flex items-center justify-center">QR Code</div>
-                {% endif %}
-
-                <p class="font-bold text-gray-800">{{ gopass.passenger_name }}</p>
-                <p class="text-sm text-gray-600">{{ gopass.flight.flight_number }} - {{ gopass.flight.departure_time|format_datetime }}</p>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-4 justify-center">
-                <a href="{{ url_for('public.download_pdf', id=gopass.id) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition flex items-center justify-center">
-                    <i class="fas fa-file-pdf mr-2"></i> {{ t('public_buy.download_pdf') }}
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <a href="{{ url_for('public.download_batch', ref=batch_ref) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-blue-300 text-lg transition transform hover:-translate-y-1 inline-flex items-center justify-center">
+                    <i class="fas fa-file-pdf mr-2"></i> Télécharger tout (PDF unique)
                 </a>
-                <a href="{{ url_for('public.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-full shadow transition">
-                    {{ t('public_buy.finish') }}
+                <a href="{{ url_for('public.index') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 px-8 rounded-xl transition inline-flex items-center justify-center">
+                    <i class="fas fa-home mr-2"></i> Retour à l'accueil
                 </a>
             </div>
         </div>
+
+        <!-- Tickets Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for item in passes %}
+            <div class="bg-white rounded-2xl shadow-md p-6 border border-gray-100 flex flex-col items-center relative overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <!-- Top Decoration -->
+                <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+
+                <h3 class="font-bold text-gray-900 text-lg mb-1 uppercase tracking-wide">{{ item.gopass.passenger_name }}</h3>
+                <p class="text-sm text-gray-500 mb-4">{{ item.gopass.passenger_document_type }} - {{ item.gopass.passenger_passport }}</p>
+
+                <div class="bg-gray-50 p-4 rounded-xl mb-4 border border-dashed border-gray-300">
+                    <img src="data:image/png;base64,{{ item.qr_base64 }}" alt="QR Code" class="w-32 h-32 mx-auto mix-blend-multiply">
+                </div>
+
+                <div class="w-full border-t border-gray-100 pt-4 flex justify-between items-center text-sm">
+                    <div class="text-left">
+                        <span class="block font-bold text-gray-800">{{ item.gopass.flight.flight_number }}</span>
+                        <span class="text-xs text-gray-400">{{ item.gopass.flight.departure_time.strftime('%d/%m') }}</span>
+                    </div>
+                    <a href="{{ url_for('public.download_pdf', id=item.gopass.id) }}" class="text-blue-600 hover:text-blue-800 font-bold text-xs uppercase tracking-wide bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100 transition">
+                        <i class="fas fa-download mr-1"></i> PDF
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
     </div>
 </div>
+
+<style>
+    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 {% endblock %}

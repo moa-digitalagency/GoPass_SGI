@@ -11,6 +11,39 @@
 {% block content_public %}
 <div class="min-h-screen bg-gray-100 p-8">
     <div class="max-w-4xl mx-auto">
+        <!-- Stepper (Progress Bar) -->
+        <div class="bg-white border border-gray-100 px-8 py-6 mb-8 rounded-3xl shadow-sm">
+            <div class="flex items-center justify-between max-w-2xl mx-auto relative">
+                 <!-- Line Background -->
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 z-0"></div>
+
+                <!-- Step 1: Vol (Completed) -->
+                <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg shadow-blue-200 ring-4 ring-white">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="absolute -bottom-8 text-xs font-bold text-blue-600 uppercase tracking-wider whitespace-nowrap">Vol</span>
+                </div>
+
+                <!-- Step 2: Identité -->
+                <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white">
+                        2
+                    </div>
+                    <span class="absolute -bottom-8 text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Identité</span>
+                </div>
+
+                <!-- Step 3: Paiement -->
+                <div class="relative z-10 flex flex-col items-center bg-white px-2">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold ring-4 ring-white">
+                        3
+                    </div>
+                    <span class="absolute -bottom-8 text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Paiement</span>
+                </div>
+            </div>
+            <div class="h-6"></div> <!-- Spacer for labels -->
+        </div>
+
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-gray-800">{{ t('public_buy.search_results') }}</h1>
             <a href="{{ url_for('public.index') }}" class="text-blue-600 hover:text-blue-800">
@@ -47,9 +80,9 @@
 
                     <div>
                         <a href="{{ url_for('public.checkout', flight_id=flight.id) }}"
-                           class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow inline-flex items-center">
-                            <span>{{ t('public_buy.buy_btn') }}</span>
-                            <i class="fas fa-chevron-right ml-2"></i>
+                           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow inline-flex items-center">
+                            <span>Continuer vers Identité</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
                         </a>
                     </div>
                 </div>

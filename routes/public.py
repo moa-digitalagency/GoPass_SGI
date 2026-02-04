@@ -8,12 +8,13 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app
 from services import FlightService, GoPassService
-from models import PaymentGateway
+from models import PaymentGateway, GoPass, db
 from datetime import datetime
 import io
 import qrcode
 import base64
 import json
+import uuid
 
 public_bp = Blueprint('public', __name__)
 
@@ -60,9 +61,6 @@ def checkout(flight_id):
     mobile_active = any(g.provider == 'MOBILE_MONEY_AGGREGATOR' and g.is_active for g in gateways)
 
     if request.method == 'POST':
-        passenger_name = request.form.get('passenger_name')
-        passport = request.form.get('passport')
-        document_type = request.form.get('document_type', 'Passeport')
         payment_method = request.form.get('payment_method')
 
         if payment_method == 'STRIPE' and not stripe_active:
@@ -73,44 +71,91 @@ def checkout(flight_id):
              flash("Le paiement par Mobile Money est désactivé.", "danger")
              return redirect(url_for('public.checkout', flight_id=flight_id))
 
-        gopass = GoPassService.create_gopass(
-            flight_id=flight.id,
-            passenger_name=passenger_name,
-            passenger_passport=passport,
-            passenger_document_type=document_type,
-            payment_method=payment_method
-        )
+        # Multi-pax parsing
+        passenger_names = request.form.getlist('passenger_name[]')
+        passports = request.form.getlist('passport[]')
+        doc_types = request.form.getlist('document_type[]')
 
-        return redirect(url_for('public.confirmation', id=gopass.id))
+        if not passenger_names:
+            # Fallback for single pax (legacy form)
+            p_name = request.form.get('passenger_name')
+            if p_name:
+                passenger_names = [p_name]
+                passports = [request.form.get('passport')]
+                doc_types = [request.form.get('document_type', 'Passeport')]
+
+        if not passenger_names:
+             flash("Veuillez ajouter au moins un passager.", "danger")
+             return redirect(url_for('public.checkout', flight_id=flight_id))
+
+        # Generate a batch Payment Ref
+        batch_ref = f"WEB-{uuid.uuid4().hex[:8].upper()}"
+
+        try:
+            for i in range(len(passenger_names)):
+                name = passenger_names[i]
+                passport = passports[i]
+                dtype = doc_types[i] if i < len(doc_types) else 'Passeport'
+
+                if name and passport:
+                    GoPassService.create_gopass(
+                        flight_id=flight.id,
+                        passenger_name=name,
+                        passenger_passport=passport,
+                        passenger_document_type=dtype,
+                        payment_method=payment_method,
+                        payment_ref=batch_ref,
+                        commit=False
+                    )
+
+            db.session.commit()
+            return redirect(url_for('public.confirmation_batch', ref=batch_ref))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating passes: {e}")
+            flash("Une erreur est survenue lors de la création des billets.", "danger")
+            return redirect(url_for('public.checkout', flight_id=flight_id))
 
     return render_template('public/checkout.html', flight=flight, stripe_active=stripe_active, mobile_active=mobile_active)
 
+@public_bp.route('/confirmation/batch/<ref>')
+def confirmation_batch(ref):
+    gopasses = GoPass.query.filter_by(payment_ref=ref).all()
+    if not gopasses:
+        flash("Aucun billet trouvé.", "warning")
+        return redirect(url_for('public.index'))
+
+    passes_data = []
+    for gp in gopasses:
+        qr_payload = {
+            "id_billet": gp.id,
+            "vol": gp.flight.flight_number,
+            "date": gp.flight.departure_time.strftime('%Y-%m-%d'),
+            "hash_signature": gp.token
+        }
+        qr_data = json.dumps(qr_payload)
+
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        qr_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        passes_data.append({'gopass': gp, 'qr_base64': qr_base64})
+
+    return render_template('public/confirmation.html', passes=passes_data, batch_ref=ref)
+
 @public_bp.route('/confirmation/<int:id>')
 def confirmation(id):
+    # Backward compatibility redirect
     gopass = GoPassService.get_gopass(id)
     if not gopass:
         return redirect(url_for('public.index'))
-
-    # Generate QR Content
-    qr_payload = {
-        "id_billet": gopass.id,
-        "vol": gopass.flight.flight_number,
-        "date": gopass.flight.departure_time.strftime('%Y-%m-%d'),
-        "hash_signature": gopass.token
-    }
-    qr_data = json.dumps(qr_payload)
-
-    # Generate QR Base64 for display
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(qr_data)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-    qr_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-
-    return render_template('public/confirmation.html', gopass=gopass, qr_base64=qr_base64)
+    return redirect(url_for('public.confirmation_batch', ref=gopass.payment_ref))
 
 @public_bp.route('/download/<int:id>')
 def download_pdf(id):
@@ -125,5 +170,20 @@ def download_pdf(id):
 
     buffer = io.BytesIO(pdf_bytes)
     filename = f"GoPass_{gopass.flight.flight_number}_{gopass.id}.pdf"
+
+    return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
+
+@public_bp.route('/download/batch/<ref>')
+def download_batch(ref):
+    gopasses = GoPass.query.filter_by(payment_ref=ref).all()
+    if not gopasses:
+        return "Billets introuvables", 404
+
+    from flask import session
+    lang = session.get('lang', 'fr')
+    pdf_bytes = GoPassService.generate_bulk_pdf(gopasses, lang=lang)
+
+    buffer = io.BytesIO(pdf_bytes)
+    filename = f"GoPasses_{ref}.pdf"
 
     return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
