@@ -87,24 +87,36 @@ def check_and_update_schema(db, app):
                     except Exception as e:
                         print(f"Failed to add column '{col}' to '{table}': {e}")
 
-    # Check for index on validation_time in access_logs
-    if 'access_logs' in existing_tables:
-        indexes = inspector.get_indexes('access_logs')
-        has_index = False
-        for idx in indexes:
-            if 'validation_time' in idx['column_names']:
-                has_index = True
-                break
+    # Check for indexes
+    indexes_to_check = [
+        ('access_logs', 'ix_access_logs_validation_time', 'validation_time'),
+        ('access_logs', 'ix_access_logs_status', 'status'),
+        ('flights', 'ix_flights_departure_airport', 'departure_airport'),
+        ('flights', 'ix_flights_departure_time', 'departure_time'),
+        ('flights', 'ix_flights_status', 'status'),
+        ('gopasses', 'ix_gopasses_flight_id', 'flight_id'),
+        ('gopasses', 'ix_gopasses_scan_date', 'scan_date'),
+    ]
 
-        if not has_index:
-            print("Creating index on access_logs.validation_time...")
-            try:
-                with db.engine.connect() as conn:
-                    conn.execute(text("CREATE INDEX ix_access_logs_validation_time ON access_logs (validation_time)"))
-                    conn.commit()
-                print("Index created.")
-            except Exception as e:
-                print(f"Failed to create index: {e}")
+    for table_name, index_name, column_name in indexes_to_check:
+        if table_name in existing_tables:
+            indexes = inspector.get_indexes(table_name)
+            has_index = False
+            for idx in indexes:
+                # Check if this column is part of any index
+                if column_name in idx['column_names']:
+                    has_index = True
+                    break
+
+            if not has_index:
+                print(f"Creating index {index_name} on {table_name}.{column_name}...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text(f"CREATE INDEX {index_name} ON {table_name} ({column_name})"))
+                        conn.commit()
+                    print(f"Index {index_name} created.")
+                except Exception as e:
+                    print(f"Failed to create index {index_name}: {e}")
 
     print("Schema check completed.")
 

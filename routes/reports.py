@@ -31,16 +31,34 @@ AIRPORT_COORDS = {
     'MJM': {'lat': -6.1219, 'lng': 23.5714, 'name': "Mbuji-Mayi"},
 }
 
+def _get_scanned_counts(flight_ids):
+    if not flight_ids:
+        return {}
+    results = db.session.query(
+        GoPass.flight_id,
+        func.count(GoPass.id)
+    ).filter(
+        GoPass.flight_id.in_(flight_ids),
+        GoPass.scan_date != None
+    ).group_by(
+        GoPass.flight_id
+    ).all()
+    return {r[0]: r[1] for r in results}
+
 @reports_bp.route('/')
 @login_required
 def index():
     # 1. Anti-Coulage (Audit)
     # Get recent flights (e.g. last 10)
     flights = Flight.query.order_by(Flight.departure_time.desc()).limit(10).all()
+
+    # Batch fetch scanned counts (N+1 optimization)
+    flight_ids = [f.id for f in flights]
+    scanned_counts = _get_scanned_counts(flight_ids)
+
     audit_data = []
     for f in flights:
-        # Scanned count: GoPasses for this flight that have been scanned (scan_date is not None)
-        scanned_count = GoPass.query.filter_by(flight_id=f.id).filter(GoPass.scan_date != None).count()
+        scanned_count = scanned_counts.get(f.id, 0)
         audit_data.append({
             'flight_number': f.flight_number,
             'manifest': f.manifest_pax_count,
@@ -152,6 +170,10 @@ def export_csv_report():
     # Reuse Audit Logic
     flights = Flight.query.order_by(Flight.departure_time.desc()).limit(50).all()
 
+    # Batch fetch scanned counts
+    flight_ids = [f.id for f in flights]
+    scanned_counts = _get_scanned_counts(flight_ids)
+
     output = io.StringIO()
     writer = csv.writer(output)
 
@@ -167,7 +189,7 @@ def export_csv_report():
     writer.writerow(['--- AUDIT VOLS ---'])
     writer.writerow(['Vol', 'Date', 'Manifeste', 'Scannés', 'Statut'])
     for f in flights:
-        scanned_count = GoPass.query.filter_by(flight_id=f.id).filter(GoPass.scan_date != None).count()
+        scanned_count = scanned_counts.get(f.id, 0)
         status = 'Alarme' if scanned_count > f.manifest_pax_count else 'OK'
         writer.writerow([f.flight_number, f.departure_time, f.manifest_pax_count, scanned_count, status])
 
@@ -183,6 +205,10 @@ def export_pdf_report():
     # Gather Data
     revenue_query = db.session.query(GoPass.payment_method, func.sum(GoPass.price)).filter(GoPass.payment_status == 'paid').group_by(GoPass.payment_method).all()
     flights = Flight.query.order_by(Flight.departure_time.desc()).limit(20).all()
+
+    # Batch fetch scanned counts
+    flight_ids = [f.id for f in flights]
+    scanned_counts = _get_scanned_counts(flight_ids)
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
@@ -213,7 +239,7 @@ def export_pdf_report():
     elements.append(Paragraph("Audit Anti-Coulage (Derniers Vols)", styles['Heading2']))
     data = [['Vol', 'Date', 'Manifeste', 'Scannés', 'Écart']]
     for f in flights:
-        scanned = GoPass.query.filter_by(flight_id=f.id).filter(GoPass.scan_date != None).count()
+        scanned = scanned_counts.get(f.id, 0)
         diff = scanned - f.manifest_pax_count
         data.append([
             f.flight_number,

@@ -75,11 +75,11 @@ class Flight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     flight_number = db.Column(db.String(20), nullable=False) # e.g. CAA-BU1421
     airline = db.Column(db.String(100), nullable=False)
-    departure_airport = db.Column(db.String(10), nullable=False)
+    departure_airport = db.Column(db.String(10), nullable=False, index=True)
     arrival_airport = db.Column(db.String(10), nullable=False)
-    departure_time = db.Column(db.DateTime, nullable=False)
+    departure_time = db.Column(db.DateTime, nullable=False, index=True)
     arrival_time = db.Column(db.DateTime)
-    status = db.Column(db.String(20), default='scheduled') # scheduled, active, landed, cancelled
+    status = db.Column(db.String(20), default='scheduled', index=True) # scheduled, active, landed, cancelled
     source = db.Column(db.String(20), default='manual') # api, manual
     capacity = db.Column(db.Integer, default=0)
     aircraft_registration = db.Column(db.String(20)) # e.g. 9Q-CBA
@@ -158,7 +158,7 @@ class GoPass(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(64), unique=True, nullable=False) # The QR content (hashed/signed)
-    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False)
+    flight_id = db.Column(db.Integer, db.ForeignKey('flights.id'), nullable=False, index=True)
     
     pass_number = db.Column(db.String(20), unique=True)
 
@@ -185,7 +185,7 @@ class GoPass(db.Model):
 
     # Scan Details
     scanned_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    scan_date = db.Column(db.DateTime)
+    scan_date = db.Column(db.DateTime, index=True)
     scan_location = db.Column(db.String(50))
     
     issue_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -254,7 +254,7 @@ class AccessLog(db.Model):
     pass_id = db.Column(db.Integer, db.ForeignKey('gopasses.id'))
     validator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     validation_time = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    status = db.Column(db.String(20), default='valid')
+    status = db.Column(db.String(20), default='valid', index=True)
     is_offline = db.Column(db.Boolean, default=False)
 
     pass_record = db.relationship('GoPass')
