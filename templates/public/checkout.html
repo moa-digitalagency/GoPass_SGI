@@ -25,6 +25,8 @@
         // --- DOM ELEMENTS ---
         const step2Indicator = document.getElementById('step-2-indicator');
         const step3Indicator = document.getElementById('step-3-indicator');
+        const mobileStepNum = document.getElementById('mobile-step-num');
+        const mobileStepName = document.getElementById('mobile-step-name');
         const identitySection = document.getElementById('identity-section');
         const paymentSection = document.getElementById('payment-section');
         const btnContinue = document.getElementById('btn-continue');
@@ -58,7 +60,7 @@
                         </span>
                         Voyageur ${index + 1}
                     </h4>
-                    ${index > 0 ? `<button type="button" class="text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-wide remove-pax flex items-center"><i class="fas fa-trash-alt mr-1"></i> Supprimer</button>` : '<span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Titulaire</span>'}
+                    ${index > 0 ? `<button type="button" class="w-12 h-12 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors remove-pax" title="Supprimer"><i class="fas fa-trash-alt text-lg"></i></button>` : '<span class="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Titulaire</span>'}
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-1">
@@ -139,6 +141,13 @@
 
                 step3Indicator.classList.remove('bg-gray-200', 'text-gray-500');
                 step3Indicator.classList.add('bg-blue-600', 'text-white');
+
+                // Update Mobile Stepper
+                if(mobileStepNum) {
+                    mobileStepNum.textContent = "3";
+                    mobileStepName.textContent = "Paiement";
+                    document.getElementById('mobile-progress-bar').style.width = "100%";
+                }
 
                 // Toggle Buttons
                 btnContinue.classList.add('hidden');
@@ -327,8 +336,8 @@
             </a>
         </div>
 
-        <!-- Stepper -->
-        <div class="bg-white border border-gray-100 px-8 py-6 mb-8 rounded-3xl shadow-sm">
+        <!-- Desktop Stepper -->
+        <div class="hidden md:block bg-white border border-gray-100 px-8 py-6 mb-8 rounded-3xl shadow-sm">
             <div class="flex items-center justify-between max-w-2xl mx-auto relative">
                  <!-- Line Background -->
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 z-0"></div>
@@ -358,6 +367,17 @@
                 </div>
             </div>
             <div class="h-6"></div>
+        </div>
+
+        <!-- Mobile Stepper (Compact) -->
+        <div class="md:hidden bg-white border border-gray-100 px-6 py-4 mb-6 rounded-2xl shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-bold text-gray-500 uppercase tracking-wide">Étape <span id="mobile-step-num" class="text-blue-600">2</span>/3</span>
+                <span id="mobile-step-name" class="font-bold text-gray-800">Identité</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="mobile-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 66%"></div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

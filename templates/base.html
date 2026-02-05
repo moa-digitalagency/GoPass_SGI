@@ -20,11 +20,14 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
     {% if current_user.is_authenticated and (not request.endpoint or not request.endpoint.startswith('public.')) %}
-    <div class="flex">
+    <div class="flex relative">
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
-        <aside class="w-64 bg-blue-900 min-h-screen fixed left-0 top-0 text-white shadow-2xl z-50 flex flex-col">
+        <aside id="admin-sidebar" class="w-64 bg-blue-900 min-h-screen fixed left-0 top-0 text-white shadow-2xl z-50 flex flex-col transform transition-transform duration-300 -translate-x-full lg:translate-x-0">
             <!-- Sidebar Header -->
-            <div class="h-20 flex items-center justify-center border-b border-blue-800/50 bg-blue-950/30 shrink-0">
+            <div class="h-20 flex items-center justify-center border-b border-blue-800/50 bg-blue-950/30 shrink-0 relative">
                 <div class="flex items-center gap-3">
                     <img src="{{ url_for('static', filename='img/logo_rva.png') }}" alt="RVA" class="h-8 w-auto bg-white rounded p-1">
                     <div class="flex flex-col">
@@ -32,6 +35,10 @@
                         <span class="text-[0.6rem] uppercase text-blue-300 font-bold tracking-widest">Admin Panel</span>
                     </div>
                 </div>
+                <!-- Close Button (Mobile Only) -->
+                <button onclick="toggleSidebar()" class="absolute right-4 top-1/2 -translate-y-1/2 lg:hidden text-blue-300 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
 
             <!-- Navigation -->
@@ -128,16 +135,23 @@
         </aside>
 
         <!-- Main Content Wrapper -->
-        <main class="flex-1 ml-64 min-h-screen flex flex-col bg-gray-50">
+        <main class="flex-1 lg:ml-64 ml-0 min-h-screen flex flex-col bg-gray-50 transition-all duration-300">
             <!-- Admin Top Header -->
-            <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 h-20 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-                <div>
-                     <h2 class="text-2xl font-bold text-gray-800 tracking-tight">
-                        {% block header_title %}Tableau de Bord{% endblock %}
-                    </h2>
-                    <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">
-                        SGI-GP Portail de Gestion
-                    </p>
+            <header class="bg-white/90 backdrop-blur-md border-b border-gray-200 h-20 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+                <div class="flex items-center gap-4">
+                     <!-- Mobile Toggle Button -->
+                     <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 text-gray-600 hover:text-blue-900 focus:outline-none">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+
+                    <div>
+                         <h2 class="text-xl md:text-2xl font-bold text-gray-800 tracking-tight">
+                            {% block header_title %}Tableau de Bord{% endblock %}
+                        </h2>
+                        <p class="text-[0.65rem] md:text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">
+                            SGI-GP Portail de Gestion
+                        </p>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-4">
