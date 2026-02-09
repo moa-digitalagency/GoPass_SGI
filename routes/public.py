@@ -7,6 +7,7 @@
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app
+from sqlalchemy.orm import joinedload
 from services import FlightService, GoPassService, MockPaymentService
 from models import PaymentGateway, GoPass, db
 from datetime import datetime
@@ -149,7 +150,7 @@ def checkout(flight_id):
 
 @public_bp.route('/confirmation/batch/<ref>')
 def confirmation_batch(ref):
-    gopasses = GoPass.query.filter_by(payment_ref=ref).all()
+    gopasses = GoPass.query.options(joinedload(GoPass.flight)).filter_by(payment_ref=ref).all()
     if not gopasses:
         flash("Aucun billet trouvé.", "warning")
         return redirect(url_for('public.index'))
