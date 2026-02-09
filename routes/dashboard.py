@@ -58,9 +58,25 @@ def index():
         func.date(Flight.departure_time) == today
     ).all()
 
+    # Optimized: Fetch scanned counts for all flights in one query
+    flight_ids = [f.id for f in todays_flights]
+    scanned_counts_map = {}
+
+    if flight_ids:
+        scanned_counts_query = db.session.query(
+            GoPass.flight_id,
+            func.count(GoPass.id)
+        ).filter(
+            GoPass.flight_id.in_(flight_ids),
+            GoPass.scan_date != None
+        ).group_by(
+            GoPass.flight_id
+        ).all()
+        scanned_counts_map = {flight_id: count for flight_id, count in scanned_counts_query}
+
     audit_data = []
     for f in todays_flights:
-        scanned_count = GoPass.query.filter_by(flight_id=f.id).filter(GoPass.scan_date != None).count()
+        scanned_count = scanned_counts_map.get(f.id, 0)
         audit_data.append({
             'flight_number': f.flight_number,
             'declared': f.manifest_pax_count,
