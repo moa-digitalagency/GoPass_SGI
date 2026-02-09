@@ -20,6 +20,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm, mm
+from reportlab.lib.utils import ImageReader
 from flask import current_app
 from utils.i18n import get_text
 
@@ -129,6 +130,19 @@ class GoPassService:
             logo_gopass = None
 
         return logo_rva, logo_gopass
+
+    @staticmethod
+    def _load_image_resource(path):
+        """
+        Helper to load an image resource into memory (ImageReader) to avoid repeated I/O.
+        Returns the ImageReader object or the original path if loading fails.
+        """
+        if path:
+            try:
+                return ImageReader(path)
+            except Exception:
+                pass
+        return path
 
     @staticmethod
     def validate_gopass(token, flight_id, agent_id, location):
@@ -527,6 +541,10 @@ class GoPassService:
         # Pre-fetch logos
         logo_rva, logo_gopass = GoPassService._get_logo_paths()
 
+        # Optimize by loading images into memory
+        logo_rva = GoPassService._load_image_resource(logo_rva)
+        logo_gopass = GoPassService._load_image_resource(logo_gopass)
+
         p = canvas.Canvas(buffer, pagesize=(width, height))
         GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang, logo_rva, logo_gopass)
 
@@ -552,6 +570,10 @@ class GoPassService:
 
         # Pre-fetch logos once
         logo_rva, logo_gopass = GoPassService._get_logo_paths()
+
+        # Optimize by loading images into memory once
+        logo_rva = GoPassService._load_image_resource(logo_rva)
+        logo_gopass = GoPassService._load_image_resource(logo_gopass)
 
         qr_paths = []
 
