@@ -82,7 +82,12 @@ def scan_pass():
 @login_required
 def search_passes():
     query = request.args.get('q', '')
-    passes = GoPass.query.options(joinedload(GoPass.flight)).filter(
+    passes = GoPass.query.options(
+        joinedload(GoPass.flight),
+        joinedload(GoPass.holder),
+        joinedload(GoPass.seller),
+        joinedload(GoPass.pass_type)
+    ).filter(
         GoPass.token.ilike(f'%{query}%')
     ).limit(10).all()
 
