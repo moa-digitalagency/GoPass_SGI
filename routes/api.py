@@ -99,6 +99,9 @@ def recent_validations():
     limit = request.args.get('limit', 10, type=int)
     validations = AccessLog.query.options(
         joinedload(AccessLog.pass_record).joinedload(GoPass.flight),
+        joinedload(AccessLog.pass_record).joinedload(GoPass.holder),
+        joinedload(AccessLog.pass_record).joinedload(GoPass.seller),
+        joinedload(AccessLog.pass_record).joinedload(GoPass.pass_type),
         joinedload(AccessLog.validator)
     ).order_by(
         AccessLog.validation_time.desc()
