@@ -1,4 +1,5 @@
 import requests
+import threading
 from flask import current_app
 from models import db, Airport, Airline
 
@@ -66,42 +67,52 @@ class ExternalDataSync:
         if not api_key or api_key == 'mock_key':
             return cls._mock_sync_airlines()
 
-        params = {
-            'access_key': api_key,
-            'limit': 100,
-            'airline_status': 'active'
-        }
+        app = current_app._get_current_object()
+        thread = threading.Thread(target=cls._perform_sync_airlines, args=(app, api_key))
+        thread.start()
 
-        try:
-            response = requests.get(f"{cls.BASE_URL}/airlines", params=params)
-            response.raise_for_status()
-            data = response.json()
+        return {"status": "success", "message": "Synchronization started in background"}
 
-            if 'data' not in data:
-                 return {"status": "error", "message": "Invalid API response structure"}
+    @classmethod
+    def _perform_sync_airlines(cls, app, api_key):
+        with app.app_context():
+            params = {
+                'access_key': api_key,
+                'limit': 100,
+                'airline_status': 'active'
+            }
 
-            count = 0
-            for item in data['data']:
-                name = item.get('airline_name')
-                if not name:
-                    continue
+            try:
+                response = requests.get(f"{cls.BASE_URL}/airlines", params=params)
+                response.raise_for_status()
+                data = response.json()
 
-                airline = db.session.query(Airline).filter_by(name=name).first()
-                if not airline:
-                    airline = Airline(name=name)
-                    db.session.add(airline)
+                if 'data' not in data:
+                    print("Error syncing airlines: Invalid API response structure")
+                    return
 
-                airline.iata_code = item.get('iata_code')
-                airline.icao_code = item.get('icao_code')
-                airline.country = item.get('country_name')
+                count = 0
+                for item in data['data']:
+                    name = item.get('airline_name')
+                    if not name:
+                        continue
 
-                count += 1
+                    airline = db.session.query(Airline).filter_by(name=name).first()
+                    if not airline:
+                        airline = Airline(name=name)
+                        db.session.add(airline)
 
-            db.session.commit()
-            return {"status": "success", "count": count, "message": f"Synced {count} airlines from API"}
+                    airline.iata_code = item.get('iata_code')
+                    airline.icao_code = item.get('icao_code')
+                    airline.country = item.get('country_name')
 
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+                    count += 1
+
+                db.session.commit()
+                print(f"Synced {count} airlines from API")
+
+            except Exception as e:
+                print(f"Error syncing airlines: {e}")
 
     @classmethod
     def _mock_sync_airports(cls):
