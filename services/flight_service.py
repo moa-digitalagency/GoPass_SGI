@@ -209,24 +209,35 @@ class FlightService:
         updated_count = 0
 
         for item in data['data']:
-            if not item.get('flight') or not item.get('departure') or not item.get('arrival'):
+            if not isinstance(item, dict):
                 continue
 
-            flight_number = item['flight'].get('iata') or item['flight'].get('number')
+            flight_info = item.get('flight')
+            dep_info = item.get('departure')
+            arr_info = item.get('arrival')
+            airline_info = item.get('airline')
+
+            if not isinstance(flight_info, dict) or not isinstance(dep_info, dict) or not isinstance(arr_info, dict):
+                continue
+
+            flight_number = flight_info.get('iata') or flight_info.get('number')
             if not flight_number:
                 continue
 
             try:
-                dep_time_str = item['departure'].get('scheduled')
-                arr_time_str = item['arrival'].get('scheduled')
+                dep_time_str = dep_info.get('scheduled')
+                arr_time_str = arr_info.get('scheduled')
 
-                if not dep_time_str:
+                if not dep_time_str or not isinstance(dep_time_str, str):
                     continue
 
                 dep_time = datetime.fromisoformat(dep_time_str)
                 arr_time = None
-                if arr_time_str:
-                    arr_time = datetime.fromisoformat(arr_time_str)
+                if arr_time_str and isinstance(arr_time_str, str):
+                    try:
+                        arr_time = datetime.fromisoformat(arr_time_str)
+                    except (ValueError, TypeError):
+                        pass
 
                 if dep_time.tzinfo is not None:
                     dep_time = dep_time.astimezone(None).replace(tzinfo=None)
@@ -235,13 +246,13 @@ class FlightService:
                 if arr_time:
                     arr_time = arr_time.replace(tzinfo=None)
 
-            except ValueError:
+            except (ValueError, TypeError):
                 continue
 
-            airline = item['airline'].get('name', 'Unknown Airline')
-            dep_airport = item['departure'].get('iata', airport_code)
-            arr_airport = item['arrival'].get('iata', 'UNK')
-            status = item.get('flight_status', 'scheduled')
+            airline = (airline_info.get('name') or 'Unknown Airline') if isinstance(airline_info, dict) else 'Unknown Airline'
+            dep_airport = dep_info.get('iata') or airport_code
+            arr_airport = arr_info.get('iata') or 'UNK'
+            status = item.get('flight_status') or 'scheduled'
 
             # Check if exists by flight number and DATE (ignoring time)
             start_of_day = dep_time.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -335,36 +346,43 @@ class FlightService:
 
         # Take the first result
         flight_data = data['data'][0]
+        if not isinstance(flight_data, dict):
+            return None
 
         # Extract fields
         # Note: We need to handle potential missing fields safely
-        dep = flight_data.get('departure', {})
-        arr = flight_data.get('arrival', {})
-        airline = flight_data.get('airline', {})
+        dep = flight_data.get('departure')
+        if not isinstance(dep, dict): dep = {}
+
+        arr = flight_data.get('arrival')
+        if not isinstance(arr, dict): arr = {}
+
+        airline = flight_data.get('airline')
+        if not isinstance(airline, dict): airline = {}
 
         # Extract time (scheduled)
-        dep_time_full = dep.get('scheduled')
         dep_time_hm = "00:00"
-        if dep_time_full:
+        dep_time_full = dep.get('scheduled')
+        if isinstance(dep_time_full, str) and dep_time_full:
             try:
                 # Extract HH:MM from ISO string
                 dt = datetime.fromisoformat(dep_time_full.replace('Z', '+00:00'))
                 dep_time_hm = dt.strftime('%H:%M')
-            except:
+            except (ValueError, TypeError):
                 pass
 
         result = {
-            'airline': airline.get('name', 'Unknown'),
+            'airline': airline.get('name') or 'Unknown',
             'departure': {
-                'iata': dep.get('iata', 'UNK'),
+                'iata': dep.get('iata') or 'UNK',
                 'country_iso2': dep.get('country_iso2'), # Assuming this field exists based on requirements
                 'time': dep_time_hm
             },
             'arrival': {
-                'iata': arr.get('iata', 'UNK'),
+                'iata': arr.get('iata') or 'UNK',
                 'country_iso2': arr.get('country_iso2')
             },
-            'status': flight_data.get('flight_status', 'scheduled')
+            'status': flight_data.get('flight_status') or 'scheduled'
         }
 
         # Fallback if country_iso2 is missing (common in some tiers)
