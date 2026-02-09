@@ -14,6 +14,9 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 class FlightService:
+    # List of known Congolese airports for fallback logic
+    CONGOLESE_AIRPORTS = ['FIH', 'FBM', 'GOM', 'FKI', 'LUB', 'KGA']
+
     @staticmethod
     def get_flights(airport_code=None, date=None, status=None):
         query = Flight.query
@@ -386,14 +389,13 @@ class FlightService:
         }
 
         # Fallback if country_iso2 is missing (common in some tiers)
-        # We can implement a small mapper or assume CD for FIH/FBM/GOM
-        cd_airports = ['FIH', 'FBM', 'GOM', 'FKI', 'LUB', 'KGA']
+        # We check against known Congolese airports to default to 'CD'
         if not result['departure']['country_iso2']:
-            if result['departure']['iata'] in cd_airports:
+            if result['departure']['iata'] in FlightService.CONGOLESE_AIRPORTS:
                 result['departure']['country_iso2'] = 'CD'
 
         if not result['arrival']['country_iso2']:
-            if result['arrival']['iata'] in cd_airports:
+            if result['arrival']['iata'] in FlightService.CONGOLESE_AIRPORTS:
                 result['arrival']['country_iso2'] = 'CD'
 
         return result
