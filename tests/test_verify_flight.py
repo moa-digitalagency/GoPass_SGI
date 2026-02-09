@@ -73,3 +73,29 @@ def test_create_gopass_transaction(app):
         assert txn.verification_source == 'api'
         assert txn.flight_details == flight_details
         assert txn.amount_collected == 55.0
+
+def test_verify_flight_fallback(app):
+    """Test fallback to CD for known Congolese airports when API returns None for country_iso2."""
+    with app.app_context():
+        app.config['AVIATIONSTACK_API_KEY'] = 'test_key'
+
+        with patch('services.flight_service.requests.get') as mock_get:
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            # Mock missing country_iso2 for FIH (Departure) and FBM (Arrival)
+            mock_response.json.return_value = {
+                'data': [{
+                    'airline': {'name': 'CAA'},
+                    'departure': {'iata': 'FIH', 'country_iso2': None, 'scheduled': '2023-01-01T08:00:00+00:00'},
+                    'arrival': {'iata': 'FBM', 'country_iso2': None},
+                    'flight_status': 'scheduled'
+                }]
+            }
+            mock_get.return_value = mock_response
+
+            result = FlightService.verify_flight_with_api('CAA001', '2023-01-01')
+
+            assert result is not None
+            # Fallback should kick in
+            assert result['departure']['country_iso2'] == 'CD'
+            assert result['arrival']['country_iso2'] == 'CD'
