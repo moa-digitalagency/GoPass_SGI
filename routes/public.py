@@ -94,8 +94,8 @@ def checkout(flight_id):
 
         if enable_demo_payment:
             mock_data = {
-                'card_number': request.form.get('card_number'),
-                'mobile_number': request.form.get('mobile_number')
+                'card_number': request.form.get('card_number', ''),
+                'mobile_number': request.form.get('mobile_number', '')
             }
             result = MockPaymentService.process_payment(payment_method, mock_data)
 
