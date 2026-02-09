@@ -95,6 +95,42 @@ class GoPassService:
         return GoPass.query.filter_by(token=token).first()
 
     @staticmethod
+    def _get_logo_paths():
+        """
+        Resolves the paths for RVA and GoPass logos.
+        Returns a tuple (logo_rva_path, logo_gopass_path).
+        Paths are verified to exist; returns None if not found.
+        """
+        # Logo RVA
+        rva_conf = AppConfig.query.get('logo_rva_url')
+        logo_rva = None
+        if rva_conf and rva_conf.value and rva_conf.value.startswith('/static/'):
+            logo_rva = os.path.join(current_app.static_folder, rva_conf.value.replace('/static/', '', 1))
+
+        if not logo_rva or not os.path.exists(logo_rva):
+            logo_rva = os.path.join(current_app.static_folder, 'img/logo_rva.png')
+
+        if not os.path.exists(logo_rva):
+            logo_rva = None
+
+        # Logo GoPass
+        gopass_conf = AppConfig.query.get('logo_gopass_ticket_url')
+        if not gopass_conf or not gopass_conf.value:
+            gopass_conf = AppConfig.query.get('logo_gopass_url')
+
+        logo_gopass = None
+        if gopass_conf and gopass_conf.value and gopass_conf.value.startswith('/static/'):
+            logo_gopass = os.path.join(current_app.static_folder, gopass_conf.value.replace('/static/', '', 1))
+
+        if not logo_gopass or not os.path.exists(logo_gopass):
+            logo_gopass = os.path.join(current_app.static_folder, 'img/logo_gopass.png')
+
+        if not os.path.exists(logo_gopass):
+            logo_gopass = None
+
+        return logo_rva, logo_gopass
+
+    @staticmethod
     def validate_gopass(token, flight_id, agent_id, location):
         """
         Logic for validation (Cas A, B, C, D)
@@ -279,8 +315,12 @@ class GoPassService:
         }
 
     @staticmethod
-    def _draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang='fr'):
+    def _draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang='fr', logo_rva_path=False, logo_gopass_path=False):
         t = lambda k: get_text(k, lang)
+
+        # Resolve logos if not provided (backward compatibility / fallback)
+        if logo_rva_path is False and logo_gopass_path is False:
+            logo_rva_path, logo_gopass_path = GoPassService._get_logo_paths()
 
         if fmt == 'thermal':
             # MODULE B: THERMAL TICKET (80mm)
@@ -294,19 +334,9 @@ class GoPassService:
 
             # 1. En-tête Compact
             # Logo RVA (Monochrome)
-            rva_conf = AppConfig.query.get('logo_rva_url')
-            logo_rva = None
-            if rva_conf and rva_conf.value:
-                # Convert URL to path
-                if rva_conf.value.startswith('/static/'):
-                    logo_rva = os.path.join(current_app.static_folder, rva_conf.value.replace('/static/', '', 1))
-
-            if not logo_rva or not os.path.exists(logo_rva):
-                logo_rva = os.path.join(current_app.static_folder, 'img/logo_rva.png')
-
-            if os.path.exists(logo_rva):
+            if logo_rva_path:
                 img_w, img_h = 20*mm, 20*mm
-                p.drawImage(logo_rva, (width - img_w)/2, y - img_h, width=img_w, height=img_h)
+                p.drawImage(logo_rva_path, (width - img_w)/2, y - img_h, width=img_w, height=img_h)
                 y -= (img_h + 2*mm)
 
             draw_centered("RVA - GO PASS", y, "Helvetica-Bold", 12)
@@ -366,34 +396,14 @@ class GoPassService:
             # MODULE A: A4 PDF (E-GoPass)
 
             # 1. En-tête (Header)
-            # Fetch Logos from Config
-            rva_conf = AppConfig.query.get('logo_rva_url')
-            logo_rva = None
-            if rva_conf and rva_conf.value and rva_conf.value.startswith('/static/'):
-                 logo_rva = os.path.join(current_app.static_folder, rva_conf.value.replace('/static/', '', 1))
-
-            if not logo_rva or not os.path.exists(logo_rva):
-                logo_rva = os.path.join(current_app.static_folder, 'img/logo_rva.png')
-
-            gopass_conf = AppConfig.query.get('logo_gopass_ticket_url')
-            if not gopass_conf or not gopass_conf.value:
-                # Fallback to general platform logo if ticket specific one is not set
-                gopass_conf = AppConfig.query.get('logo_gopass_url')
-
-            logo_gopass = None
-            if gopass_conf and gopass_conf.value and gopass_conf.value.startswith('/static/'):
-                 logo_gopass = os.path.join(current_app.static_folder, gopass_conf.value.replace('/static/', '', 1))
-
-            if not logo_gopass or not os.path.exists(logo_gopass):
-                logo_gopass = os.path.join(current_app.static_folder, 'img/logo_gopass.png')
 
             # Logo Gauche: RVA
-            if os.path.exists(logo_rva):
-                p.drawImage(logo_rva, 2*cm, height - 3.5*cm, width=2.5*cm, height=2.5*cm, preserveAspectRatio=True)
+            if logo_rva_path:
+                p.drawImage(logo_rva_path, 2*cm, height - 3.5*cm, width=2.5*cm, height=2.5*cm, preserveAspectRatio=True)
 
             # Logo Droite: GoPass
-            if os.path.exists(logo_gopass):
-                p.drawImage(logo_gopass, width - 4.5*cm, height - 3.5*cm, width=2.5*cm, height=2.5*cm, preserveAspectRatio=True)
+            if logo_gopass_path:
+                p.drawImage(logo_gopass_path, width - 4.5*cm, height - 3.5*cm, width=2.5*cm, height=2.5*cm, preserveAspectRatio=True)
 
             # Titre Central
             title_y = height - 2*cm
@@ -514,8 +524,11 @@ class GoPassService:
         else:
             width, height = A4
 
+        # Pre-fetch logos
+        logo_rva, logo_gopass = GoPassService._get_logo_paths()
+
         p = canvas.Canvas(buffer, pagesize=(width, height))
-        GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang)
+        GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, fmt, lang, logo_rva, logo_gopass)
 
         p.showPage()
         p.save()
@@ -537,13 +550,16 @@ class GoPassService:
         width, height = A4 # Bulk PDF assumes A4 for now
         p = canvas.Canvas(buffer, pagesize=(width, height))
 
+        # Pre-fetch logos once
+        logo_rva, logo_gopass = GoPassService._get_logo_paths()
+
         qr_paths = []
 
         for gopass in gopass_list:
             qr_path = GoPassService._create_qr_temp(gopass)
             qr_paths.append(qr_path)
 
-            GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, 'a4', lang)
+            GoPassService._draw_gopass_on_canvas(p, gopass, width, height, qr_path, 'a4', lang, logo_rva, logo_gopass)
             p.showPage()
 
         p.save()
