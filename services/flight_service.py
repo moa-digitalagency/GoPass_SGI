@@ -10,6 +10,7 @@ from models import db, Flight, FlightManifest
 from datetime import datetime, timedelta
 import requests
 import os
+import threading
 from flask import current_app
 from werkzeug.utils import secure_filename
 
@@ -140,7 +141,7 @@ class FlightService:
                     # Check if row is not empty (at least one cell has value)
                     if any(row):
                         count += 1
-            except Exception as e:
+            except Exception:
                 # If parsing fails, we still kept the file
                 pass
 
@@ -167,7 +168,6 @@ class FlightService:
             raise ValueError("Vol introuvable")
 
         # Validate status
-        valid_statuses = ['scheduled', 'active', 'landed', 'cancelled', 'open_for_sale', 'boarding', 'closed']
         # Map user friendly statuses if needed, but we will use the internal strings.
         # The prompt asked for: "Ouvert à la vente", "Embarquement", "Clôturé"
         # We can map these to internal codes or just use them.
@@ -178,12 +178,33 @@ class FlightService:
         return flight
 
     @staticmethod
-    def sync_flights_from_api(airport_code='FIH', date=None):
+    def sync_flights_from_api(airport_code='FIH', date=None, background=False):
         """
         Sync flights from AviationStack API.
+        If background=True, runs in a separate thread and returns None.
+        Otherwise, runs synchronously and returns added+updated count.
         """
+        app = current_app._get_current_object()
+
+        if background:
+            def background_task(app_obj, *args):
+                with app_obj.app_context():
+                    FlightService._perform_sync_flights_task(*args)
+
+            thread = threading.Thread(target=background_task, args=(app, airport_code, date))
+            thread.start()
+            return None
+        else:
+            return FlightService._perform_sync_flights_task(airport_code, date)
+
+    @staticmethod
+    def _perform_sync_flights_task(airport_code, date):
+        # We assume we are in an app context (either from request or background task wrapper)
         api_key = current_app.config.get('AVIATIONSTACK_API_KEY')
         if not api_key:
+            # Log error instead of raising if in background thread?
+            # But for synchronous call, we want exception.
+            # Let's keep exception, it will be caught by thread wrapper (or crash thread) and caller (if sync).
             raise Exception("AVIATIONSTACK_API_KEY not configured in application config")
 
         url = "http://api.aviationstack.com/v1/flights"
@@ -355,13 +376,16 @@ class FlightService:
         # Extract fields
         # Note: We need to handle potential missing fields safely
         dep = flight_data.get('departure')
-        if not isinstance(dep, dict): dep = {}
+        if not isinstance(dep, dict):
+            dep = {}
 
         arr = flight_data.get('arrival')
-        if not isinstance(arr, dict): arr = {}
+        if not isinstance(arr, dict):
+            arr = {}
 
         airline = flight_data.get('airline')
-        if not isinstance(airline, dict): airline = {}
+        if not isinstance(airline, dict):
+            airline = {}
 
         # Extract time (scheduled)
         dep_time_hm = "00:00"

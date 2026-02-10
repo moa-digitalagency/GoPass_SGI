@@ -7,10 +7,10 @@
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
-from models import Flight, db
+from flask_login import login_required
+from models import Flight
 from services import FlightService
-from security import admin_required, agent_required
+from security import agent_required
 from datetime import datetime
 
 flights_bp = Blueprint('flights', __name__, url_prefix='/flights')
@@ -34,7 +34,7 @@ def index():
             # Filter by date range (start of day to end of day)
             # Or just >= date
             query = query.filter(Flight.departure_time >= date)
-        except:
+        except ValueError:
             pass
 
     flights = query.order_by(Flight.departure_time.desc()).paginate(
@@ -95,11 +95,11 @@ def sync():
             flash('Format de date invalide.', 'warning')
 
     try:
-        count = FlightService.sync_flights_from_api(airport, date=date)
+        FlightService.sync_flights_from_api(airport, date=date, background=True)
         msg_date = date_str if date_str else "Aujourd'hui"
-        flash(f'{count} vols synchronisés depuis l\'API pour {airport} ({msg_date}).', 'success')
+        flash(f'Synchronisation des vols démarrée en arrière-plan pour {airport} ({msg_date}).', 'success')
     except Exception as e:
-        flash(f'Erreur de synchronisation: {str(e)}', 'danger')
+        flash(f'Erreur de démarrage de la synchronisation: {str(e)}', 'danger')
 
     return redirect(url_for('flights.index'))
 
