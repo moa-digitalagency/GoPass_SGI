@@ -11,8 +11,12 @@ from datetime import datetime, timedelta
 import requests
 import os
 import threading
+import asyncio
+import logging
 from flask import current_app
 from werkzeug.utils import secure_filename
+
+logger = logging.getLogger(__name__)
 
 class FlightService:
     # List of known Congolese airports for fallback logic
@@ -320,7 +324,20 @@ class FlightService:
         Returns dictionary with flight details if found, else None.
         """
         api_key = current_app.config.get('AVIATIONSTACK_API_KEY')
+        return FlightService._verify_flight_logic(api_key, flight_number, date_str)
 
+    @staticmethod
+    async def verify_flight_with_api_async(flight_number, date_str):
+        """
+        Asynchronously verifies a flight via Aviationstack API.
+        Returns dictionary with flight details if found, else None.
+        """
+        api_key = current_app.config.get('AVIATIONSTACK_API_KEY')
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, FlightService._verify_flight_logic, api_key, flight_number, date_str)
+
+    @staticmethod
+    def _verify_flight_logic(api_key, flight_number, date_str):
         # Mocking for sandbox if no key provided or explicit test mode
         # In a real scenario, we would raise an error or return None.
         if not api_key:
@@ -363,13 +380,13 @@ class FlightService:
             response.raise_for_status()
             data = response.json()
         except Exception as e:
-            current_app.logger.error(f"Aviationstack API Error: {str(e)}")
+            logger.error(f"Aviationstack API Error: {str(e)}")
             return None
 
         if 'error' in data:
             error_info = data['error'].get('info', 'Unknown error')
             error_code = data['error'].get('code', 'Unknown code')
-            current_app.logger.error(f"Aviationstack API returned error: {error_code} - {error_info}")
+            logger.error(f"Aviationstack API returned error: {error_code} - {error_info}")
             return None
 
         if 'data' not in data or not data['data']:

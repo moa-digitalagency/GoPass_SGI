@@ -106,7 +106,7 @@ def test_verify_flight_api_error_handling(app):
         app.config['AVIATIONSTACK_API_KEY'] = 'test_key'
 
         with patch('services.flight_service.requests.get') as mock_get, \
-             patch.object(app.logger, 'error') as mock_logger:
+             patch('services.flight_service.logger.error') as mock_logger:
 
             mock_response = MagicMock()
             mock_response.status_code = 200
@@ -125,3 +125,30 @@ def test_verify_flight_api_error_handling(app):
 
             # Verify that the logger was called with the expected message
             mock_logger.assert_called_with('Aviationstack API returned error: function_access_restricted - The current subscription plan does not support this API function.')
+
+@pytest.mark.anyio
+async def test_verify_flight_with_api_async(app):
+    """Test the asynchronous version of verify_flight_with_api."""
+    with app.app_context():
+        app.config['AVIATIONSTACK_API_KEY'] = 'test_key'
+
+        # We need to patch requests.get so it's visible in the thread executor
+        with patch('services.flight_service.requests.get') as mock_get:
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
+                'data': [{
+                    'airline': {'name': 'Async Airline'},
+                    'departure': {'iata': 'FIH', 'country_iso2': 'CD', 'scheduled': '2023-01-01T20:00:00+00:00'},
+                    'arrival': {'iata': 'CDG', 'country_iso2': 'FR'},
+                    'flight_status': 'scheduled'
+                }]
+            }
+            mock_get.return_value = mock_response
+
+            result = await FlightService.verify_flight_with_api_async('AF456', '2023-01-01')
+
+            assert result is not None
+            assert result['airline'] == 'Async Airline'
+            assert result['departure']['country_iso2'] == 'CD'
+            assert result['arrival']['country_iso2'] == 'FR'
