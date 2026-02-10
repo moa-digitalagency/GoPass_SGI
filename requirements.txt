@@ -27,3 +27,4 @@ pytest
 Flask-WTF==1.2.1
 cryptography
 python-telegram-bot
+asgiref==3.11.1

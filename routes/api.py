@@ -365,7 +365,7 @@ def stripe_webhook():
 
 @api_bp.route('/external/verify-flight', methods=['POST'])
 @login_required
-def verify_flight():
+async def verify_flight():
     data = request.get_json()
     flight_number = data.get('flight_number')
     flight_date = data.get('flight_date')
@@ -373,7 +373,7 @@ def verify_flight():
     if not flight_number or not flight_date:
         return jsonify({'error': 'Missing flight_number or flight_date'}), 400
 
-    flight_data = FlightService.verify_flight_with_api(flight_number, flight_date)
+    flight_data = await FlightService.verify_flight_with_api_async(flight_number, flight_date)
 
     if not flight_data:
         # Returning 200 with found=False is easier for frontend than 404, but requirement says "Retourner 404".
