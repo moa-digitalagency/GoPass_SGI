@@ -293,16 +293,63 @@ class GoPassService:
 
         # Cas A: Succès
         if gopass.status == 'valid':
-            # Mark as consumed
+            # Mark as consumed - Atomic Update
+            scan_time = datetime.utcnow()
+
+            # Atomic update to prevent race conditions (especially on DBs without row locking)
+            rows_updated = GoPass.query.filter(
+                GoPass.id == gopass.id,
+                GoPass.status == 'valid'
+            ).update({
+                'status': 'consumed',
+                'scanned_by': agent_id,
+                'scan_date': scan_time,
+                'scan_location': location
+            }, synchronize_session=False)
+
+            if rows_updated == 0:
+                # Race condition: Status changed since we read it
+                db.session.rollback()
+                # Re-fetch the updated object
+                gopass = GoPass.query.get(gopass.id)
+
+                # Check new status and return appropriate error
+                if gopass.status == 'consumed':
+                    original_scan = {
+                        'scan_date': gopass.scan_date.strftime('%Y-%m-%d %H:%M:%S') if gopass.scan_date else 'N/A',
+                        'scanned_by': gopass.scanner.username if gopass.scanner else 'Inconnu',
+                        'location': gopass.scan_location
+                    }
+                    return {
+                        'status': 'error',
+                        'code': 'ALREADY_SCANNED',
+                        'message': 'DÉJÀ SCANNÉ',
+                        'color': 'red',
+                        'data': {
+                            'passenger': gopass.passenger_name,
+                            'flight': gopass.flight.flight_number,
+                            'original_scan': original_scan
+                        }
+                    }
+                else:
+                    return {
+                        'status': 'error',
+                        'code': 'STATUS_CHANGED',
+                        'message': 'ÉTAT MODIFIÉ',
+                        'color': 'red',
+                        'data': None
+                    }
+
+            # Update successful - Sync local object for response
             gopass.status = 'consumed'
             gopass.scanned_by = agent_id
-            gopass.scan_date = datetime.utcnow()
+            gopass.scan_date = scan_time
             gopass.scan_location = location
 
             log = AccessLog(
                 pass_id=gopass.id,
                 validator_id=agent_id,
-                validation_time=gopass.scan_date,
+                validation_time=scan_time,
                 status='VALID'
             )
             db.session.add(log)
