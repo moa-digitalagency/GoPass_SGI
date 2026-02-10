@@ -352,8 +352,9 @@ class FlightService:
 
         # Handle date if provided. Aviationstack might filter strictly.
         # If date_str is "YYYY-MM-DD", pass it.
-        # Note: Aviationstack free tier might restrict historical data, but "future" flights should be fine?
-        # Actually Aviationstack creates "real-time" flight data. Future flights might be available.
+        # Note: Aviationstack free tier restricts both historical and future data access.
+        # Only "Real-Time Flights" (typically today) are available on the Free plan.
+        # We pass the date if provided, but requests for past/future dates may fail on Free tier.
         if date_str:
             params['flight_date'] = date_str
 
@@ -363,6 +364,12 @@ class FlightService:
             data = response.json()
         except Exception as e:
             current_app.logger.error(f"Aviationstack API Error: {str(e)}")
+            return None
+
+        if 'error' in data:
+            error_info = data['error'].get('info', 'Unknown error')
+            error_code = data['error'].get('code', 'Unknown code')
+            current_app.logger.error(f"Aviationstack API returned error: {error_code} - {error_info}")
             return None
 
         if 'data' not in data or not data['data']:

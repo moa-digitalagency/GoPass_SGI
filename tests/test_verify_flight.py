@@ -99,3 +99,29 @@ def test_verify_flight_fallback(app):
             # Fallback should kick in
             assert result['departure']['country_iso2'] == 'CD'
             assert result['arrival']['country_iso2'] == 'CD'
+
+def test_verify_flight_api_error_handling(app):
+    """Test that the service handles API errors (like plan limits) gracefully and logs them."""
+    with app.app_context():
+        app.config['AVIATIONSTACK_API_KEY'] = 'test_key'
+
+        with patch('services.flight_service.requests.get') as mock_get, \
+             patch.object(app.logger, 'error') as mock_logger:
+
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            # Mock an API error response (e.g., plan limit reached)
+            mock_response.json.return_value = {
+                'error': {
+                    'code': 'function_access_restricted',
+                    'info': 'The current subscription plan does not support this API function.'
+                }
+            }
+            mock_get.return_value = mock_response
+
+            result = FlightService.verify_flight_with_api('AF123', '2023-01-01')
+
+            assert result is None
+
+            # Verify that the logger was called with the expected message
+            mock_logger.assert_called_with('Aviationstack API returned error: function_access_restricted - The current subscription plan does not support this API function.')
