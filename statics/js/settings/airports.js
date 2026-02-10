@@ -60,8 +60,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if(data.status === 'success') {
-                    alert('Synchronisation réussie: ' + data.count + ' aéroports mis à jour.');
-                    window.location.reload();
+                    if (data.count !== undefined) {
+                        alert('Synchronisation réussie: ' + data.count + ' aéroports mis à jour.');
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Synchronisation lancée en arrière-plan. Les données seront mises à jour progressivement.');
+                        setTimeout(() => window.location.reload(), 2000);
+                    }
                 } else {
                     alert('Erreur: ' + (data.message || 'Erreur inconnue'));
                 }

@@ -16,50 +16,60 @@ class ExternalDataSync:
         if not api_key or api_key == 'mock_key':
             return cls._mock_sync_airports()
 
-        # Fetch active airports
-        params = {
-            'access_key': api_key,
-            'limit': 100  # Default limit
-        }
+        app = current_app._get_current_object()
+        thread = threading.Thread(target=cls._perform_sync_airports, args=(app, api_key))
+        thread.start()
 
-        try:
-            response = requests.get(f"{cls.BASE_URL}/airports", params=params)
-            response.raise_for_status()
-            data = response.json()
+        return {"status": "success", "message": "Synchronization started in background"}
 
-            if 'data' not in data:
-                return {"status": "error", "message": "Invalid API response structure"}
+    @classmethod
+    def _perform_sync_airports(cls, app, api_key):
+        with app.app_context():
+            # Fetch active airports
+            params = {
+                'access_key': api_key,
+                'limit': 100  # Default limit
+            }
 
-            count = 0
-            for item in data['data']:
-                iata = item.get('iata_code')
-                if not iata:
-                    continue
+            try:
+                response = requests.get(f"{cls.BASE_URL}/airports", params=params)
+                response.raise_for_status()
+                data = response.json()
 
-                # Check if exists
-                airport = db.session.query(Airport).filter_by(iata_code=iata).first()
-                if not airport:
-                    airport = Airport(iata_code=iata, city=item.get('airport_name', 'Unknown')) # Fallback
-                    db.session.add(airport)
+                if 'data' not in data:
+                    print("Error syncing airports: Invalid API response structure")
+                    return
 
-                airport.name = item.get('airport_name')
-                airport.country = item.get('country_name')
-                # Aviationstack doesn't always provide city clearly in free tier or standard response, sometimes it is same as airport name
-                # We update city if valid
-                if item.get('city_iata_code'): # Usually just a code, but maybe helpful?
-                    pass
+                count = 0
+                for item in data['data']:
+                    iata = item.get('iata_code')
+                    if not iata:
+                        continue
 
-                # Update type logic (heuristic)
-                if airport.country and airport.country.lower() != 'congo': # Assuming 'congo' refers to local context if needed, but 'national' vs 'international' is complex.
-                    airport.type = 'international'
+                    # Check if exists
+                    airport = db.session.query(Airport).filter_by(iata_code=iata).first()
+                    if not airport:
+                        airport = Airport(iata_code=iata, city=item.get('airport_name', 'Unknown')) # Fallback
+                        db.session.add(airport)
 
-                count += 1
+                    airport.name = item.get('airport_name')
+                    airport.country = item.get('country_name')
+                    # Aviationstack doesn't always provide city clearly in free tier or standard response, sometimes it is same as airport name
+                    # We update city if valid
+                    if item.get('city_iata_code'): # Usually just a code, but maybe helpful?
+                        pass
 
-            db.session.commit()
-            return {"status": "success", "count": count, "message": f"Synced {count} airports from API"}
+                    # Update type logic (heuristic)
+                    if airport.country and airport.country.lower() != 'congo': # Assuming 'congo' refers to local context if needed, but 'national' vs 'international' is complex.
+                        airport.type = 'international'
 
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+                    count += 1
+
+                db.session.commit()
+                print(f"Synced {count} airports from API")
+
+            except Exception as e:
+                print(f"Error syncing airports: {e}")
 
     @classmethod
     def sync_airlines(cls):

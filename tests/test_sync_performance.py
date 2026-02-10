@@ -4,7 +4,7 @@ import time
 import os
 import threading
 from app import create_app
-from models import db, Airline
+from models import db, Airline, Airport
 from services.external_data_sync import ExternalDataSync
 
 class BenchmarkSync(unittest.TestCase):
@@ -69,6 +69,51 @@ class BenchmarkSync(unittest.TestCase):
             # Verify data IS in DB now
             count_after = db.session.query(Airline).count()
             self.assertEqual(count_after, 2, "Data should be in DB after background task completes")
+
+    def test_sync_airports_performance(self):
+        # Explicitly set the API key to ensure we test the real sync path
+        self.app.config['AVIATIONSTACK_API_KEY'] = 'real_looking_key_for_test'
+
+        # Mock the requests.get call to be slow
+        with patch('requests.get') as mock_get:
+            # Setup the mock response
+            mock_response = MagicMock()
+            mock_response.raise_for_status.return_value = None
+            mock_response.json.return_value = {
+                'data': [
+                    {"airport_name": "Test Airport", "iata_code": "TST", "country_name": "TestLand"}
+                ]
+            }
+
+            # Simulate network delay
+            def side_effect(*args, **kwargs):
+                time.sleep(1.0)
+                return mock_response
+
+            mock_get.side_effect = side_effect
+
+            start_time = time.time()
+            result = ExternalDataSync.sync_airports()
+            end_time = time.time()
+            duration = end_time - start_time
+
+            print(f"Sync call took {duration:.4f} seconds")
+
+            # Assert non-blocking behavior
+            self.assertLess(duration, 0.5, "Sync should be non-blocking and return immediately")
+            self.assertEqual(result['status'], 'success')
+            self.assertIn('background', result['message'])
+
+            # Verify that data is NOT yet in DB (immediately)
+            count_immediate = db.session.query(Airport).count()
+            self.assertEqual(count_immediate, 0, "Data should not be in DB yet")
+
+            # Wait for thread to complete
+            time.sleep(1.5)
+
+            # Verify data IS in DB now
+            count_after = db.session.query(Airport).count()
+            self.assertEqual(count_after, 1, "Data should be in DB after background task completes")
 
 if __name__ == '__main__':
     unittest.main()
