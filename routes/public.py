@@ -8,7 +8,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app
 from sqlalchemy.orm import joinedload
-from services import FlightService, GoPassService, MockPaymentService
+from services import FlightService, GoPassService, MockPaymentService, FinanceService, SettingsService
 from models import PaymentGateway, GoPass, db
 from datetime import datetime
 import io
@@ -63,6 +63,7 @@ def checkout(flight_id):
 
     if request.method == 'POST':
         payment_method = request.form.get('payment_method')
+        selected_currency = request.form.get('currency', 'USD')
 
         if payment_method == 'STRIPE' and not stripe_active:
              flash("Le paiement par Stripe est désactivé.", "danger")
@@ -116,6 +117,9 @@ def checkout(flight_id):
             "platform": "Web Store"
         }
 
+        # Calculate price per pax
+        price_per_pax = FinanceService.calculate_flight_price(flight, selected_currency)
+
         try:
             for i in range(len(passenger_names)):
                 name = passenger_names[i]
@@ -128,6 +132,8 @@ def checkout(flight_id):
                         passenger_name=name,
                         passenger_passport=passport,
                         passenger_document_type=dtype,
+                        price=price_per_pax,
+                        currency=selected_currency,
                         payment_method=payment_method,
                         payment_ref=batch_ref,
                         sales_channel='WEB',
@@ -146,7 +152,34 @@ def checkout(flight_id):
             return redirect(url_for('public.checkout', flight_id=flight_id))
 
     enable_demo_payment = current_app.config.get('ENABLE_DEMO_PAYMENT', False)
-    return render_template('public/checkout.html', flight=flight, stripe_active=stripe_active, mobile_active=mobile_active, enable_demo_payment=enable_demo_payment)
+
+    # Pricing Options
+    gen_settings = SettingsService.get_general_settings()
+    currencies = gen_settings.get('currencies', [])
+    rates = gen_settings.get('rates', {})
+
+    base_price = FinanceService.calculate_flight_price(flight, 'USD')
+
+    pricing_options = {}
+    pricing_options['USD'] = base_price
+
+    for code in currencies:
+        rate = float(rates.get(code, 1.0))
+        pricing_options[code] = round(base_price * rate, 2)
+
+    # Combine USD + others unique
+    avail_currencies = ['USD']
+    for c in currencies:
+        if c != 'USD':
+            avail_currencies.append(c)
+
+    return render_template('public/checkout.html',
+                           flight=flight,
+                           stripe_active=stripe_active,
+                           mobile_active=mobile_active,
+                           enable_demo_payment=enable_demo_payment,
+                           pricing_options=pricing_options,
+                           available_currencies=avail_currencies)
 
 @public_bp.route('/confirmation/batch/<ref>')
 def confirmation_batch(ref):

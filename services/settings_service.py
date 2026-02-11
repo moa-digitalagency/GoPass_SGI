@@ -6,9 +6,10 @@
  * Auditer par : La CyberConfiance, www.cyberconfiance.com
 """
 
-from models import db, Airport, Airline, Tariff
+from models import db, Airport, Airline, Tariff, AppConfig
 from sqlalchemy.exc import IntegrityError
 import os
+import json
 import time
 from werkzeug.utils import secure_filename
 from flask import current_app
@@ -19,6 +20,65 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 class SettingsService:
+    @staticmethod
+    def get_config(key, default=None):
+        config = db.session.get(AppConfig, key)
+        return config.value if config else default
+
+    @staticmethod
+    def set_config(key, value, description=None):
+        config = db.session.get(AppConfig, key)
+        if not config:
+            config = AppConfig(key=key)
+            db.session.add(config)
+
+        config.value = str(value)
+        if description:
+            config.description = description
+
+        db.session.commit()
+        return config
+
+    @staticmethod
+    def get_general_settings():
+        region = SettingsService.get_config('system_region', 'CD')
+        timezone = SettingsService.get_config('system_timezone', 'Africa/Kinshasa')
+        base_currency = SettingsService.get_config('base_currency', 'USD')
+
+        currencies_json = SettingsService.get_config('secondary_currencies', '[]')
+        try:
+            currencies = json.loads(currencies_json)
+        except:
+            currencies = []
+
+        rates_json = SettingsService.get_config('exchange_rates', '{}')
+        try:
+            rates = json.loads(rates_json)
+        except:
+            rates = {}
+
+        return {
+            'region': region,
+            'timezone': timezone,
+            'base_currency': base_currency,
+            'currencies': currencies,
+            'rates': rates
+        }
+
+    @staticmethod
+    def update_general_settings(data):
+        if 'region' in data:
+            SettingsService.set_config('system_region', data['region'], 'System Region')
+        if 'timezone' in data:
+            SettingsService.set_config('system_timezone', data['timezone'], 'System Timezone')
+        if 'base_currency' in data:
+            SettingsService.set_config('base_currency', data['base_currency'], 'Base Currency')
+        if 'currencies' in data:
+            SettingsService.set_config('secondary_currencies', json.dumps(data['currencies']), 'Enabled Currencies')
+        if 'rates' in data:
+            SettingsService.set_config('exchange_rates', json.dumps(data['rates']), 'Exchange Rates')
+        return True
+
     @staticmethod
     def get_all_tariffs():
         return Tariff.query.order_by(Tariff.flight_type, Tariff.passenger_category).all()

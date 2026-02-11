@@ -9,7 +9,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import login_required, current_user
 from models import User, Flight, GoPass, AccessLog, AppConfig, PaymentGateway, db
-from services import FlightService, GoPassService, FinanceService
+from services import FlightService, GoPassService, FinanceService, SettingsService
 from security import agent_required, admin_required
 from datetime import datetime
 from sqlalchemy.orm import joinedload
@@ -238,12 +238,26 @@ def public_settings():
     stripe_gw = PaymentGateway.query.filter_by(provider='STRIPE').first()
     stripe_enabled = stripe_gw.is_active if stripe_gw else False
 
+    # fetch general settings
+    gen_settings = SettingsService.get_general_settings()
+
     return jsonify({
         'rva_logo': rva.value if rva else None,
         'gopass_logo': gopass.value if gopass else None,
         'gopass_ticket_logo': gopass_ticket.value if gopass_ticket else None,
-        'stripe_enabled': stripe_enabled
+        'stripe_enabled': stripe_enabled,
+        'general': gen_settings
     })
+
+@api_bp.route('/settings/general', methods=['POST'])
+@login_required
+def update_general_settings():
+    if current_user.role not in ['admin', 'tech']:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    SettingsService.update_general_settings(data)
+    return jsonify({'message': 'Paramètres mis à jour'})
 
 @api_bp.route('/payment/toggle/<provider>', methods=['POST'])
 @login_required
@@ -282,13 +296,16 @@ def create_payment_intent():
             quantity = 1
 
         # Calculate amount server-side
-        # Default price 50 USD if not found
-        price_conf = AppConfig.query.get('idef_price_int')
-        price = float(price_conf.value) if price_conf else 50.0
+        flight = FlightService.get_flight(flight_id)
+        if not flight:
+            return jsonify({'error': 'Flight not found'}), 404
+
+        req_currency = data.get('currency', 'USD')
+        price = FinanceService.calculate_flight_price(flight, req_currency)
 
         # Amount in cents
         amount = int(price * quantity * 100)
-        currency = 'usd'
+        currency = req_currency.lower()
 
         intent = stripe.PaymentIntent.create(
             amount=amount,
@@ -383,19 +400,15 @@ async def verify_flight():
         return jsonify({'found': False, 'message': 'Vol introuvable dans la base globale.'}), 404
 
     # Pricing Logic
-    # Règle : Si Dep_Country == 'CD' ET Arr_Country == 'CD' => TARIF DOMESTIQUE (ex: 15$).
-    # Sinon => TARIF INTERNATIONAL (ex: 55$).
+    price = FinanceService.calculate_flight_price(flight_data, 'USD')
 
     dep_country = flight_data['departure'].get('country_iso2')
     arr_country = flight_data['arrival'].get('country_iso2')
 
-    price = 55.00
+    # Determine type label
+    region = SettingsService.get_general_settings()['region']
     pricing_type = "INTERNATIONAL"
-
-    # Logic: Both must be CD for Domestic
-    # We treat None as Non-CD (International) for revenue safety.
-    if dep_country == 'CD' and arr_country == 'CD':
-        price = 15.00
+    if dep_country == region and arr_country == region:
         pricing_type = "DOMESTIQUE"
 
     return jsonify({
