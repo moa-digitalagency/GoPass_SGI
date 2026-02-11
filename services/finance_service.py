@@ -151,3 +151,54 @@ class FinanceService:
         writer.writerow(headers)
         writer.writerows(data)
         return output.getvalue()
+
+    @staticmethod
+    def calculate_flight_price(flight, target_currency='USD'):
+        from services.settings_service import SettingsService
+        from services.flight_service import FlightService
+        from models import Airport
+
+        # Get System Region (e.g. 'CD')
+        settings = SettingsService.get_general_settings()
+        system_region = settings.get('region', 'CD')
+
+        dep_country = None
+        arr_country = None
+
+        if isinstance(flight, dict):
+            # API Data
+            dep_country = flight.get('departure', {}).get('country_iso2')
+            arr_country = flight.get('arrival', {}).get('country_iso2')
+        else:
+            # SQLAlchemy Model
+            dep_airport = Airport.query.filter_by(iata_code=flight.departure_airport).first()
+            if dep_airport:
+                dep_country = dep_airport.country
+            elif flight.departure_airport in FlightService.CONGOLESE_AIRPORTS:
+                dep_country = 'CD'
+
+            arr_airport = Airport.query.filter_by(iata_code=flight.arrival_airport).first()
+            if arr_airport:
+                arr_country = arr_airport.country
+            elif flight.arrival_airport in FlightService.CONGOLESE_AIRPORTS:
+                arr_country = 'CD'
+
+        # Determine Base Price (USD)
+        price_dom = float(SettingsService.get_config('price_domestic', 15.0))
+        price_int = float(SettingsService.get_config('price_international', 55.0))
+
+        price = price_int
+        # Logic: If both are system_region (e.g. CD), then Domestic.
+        # Default to International if country info is missing
+        if dep_country == system_region and arr_country == system_region:
+            price = price_dom
+
+        # Convert Currency
+        if target_currency == 'USD':
+            return price
+
+        # Get rate
+        rates = settings.get('rates', {})
+        rate = float(rates.get(target_currency, 1.0))
+
+        return round(price * rate, 2)

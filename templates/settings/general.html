@@ -15,6 +15,51 @@
     <h2 class="text-2xl font-bold text-gray-800">{{ t('settings.general') }}</h2>
 </div>
 
+<!-- System & Localization Section -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Système & Localisation</h3>
+    <form id="general-settings-form">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Region -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Région (Code Pays)</label>
+                <input type="text" id="system_region" class="w-full border p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="ex: CD">
+            </div>
+
+            <!-- Timezone -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fuseau Horaire</label>
+                <input type="text" id="system_timezone" class="w-full border p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="ex: Africa/Kinshasa">
+            </div>
+
+            <!-- Base Currency -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Devise Principale</label>
+                <input type="text" id="base_currency" class="w-full border p-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="ex: USD">
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <h4 class="text-md font-medium text-gray-700 mb-2">Devises Secondaires & Taux de Change</h4>
+            <p class="text-sm text-gray-500 mb-4">Définissez les devises acceptées et leur taux par rapport à la devise principale (ex: 1 USD = 2800 CDF).</p>
+
+            <div id="currency-list" class="space-y-4">
+                <!-- Dynamic rows -->
+            </div>
+
+            <button type="button" onclick="addCurrencyRow()" class="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center">
+                <i class="fas fa-plus mr-1"></i> Ajouter une devise
+            </button>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-semibold transition">
+                 Enregistrer
+             </button>
+        </div>
+    </form>
+</div>
+
 <!-- Branding Section -->
 <div class="bg-white rounded-lg shadow-md p-6 mb-8">
     <h3 class="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{{ t('settings.branding') }}</h3>
@@ -122,6 +167,22 @@
 
             // Finance Init
             document.getElementById('toggle-stripe').checked = data.stripe_enabled;
+
+            // General Settings Init
+            if (data.general) {
+                document.getElementById('system_region').value = data.general.region || '';
+                document.getElementById('system_timezone').value = data.general.timezone || '';
+                document.getElementById('base_currency').value = data.general.base_currency || '';
+
+                // Populate Currencies
+                const currencies = data.general.currencies || [];
+                const rates = data.general.rates || {};
+
+                currencies.forEach(curr => {
+                    addCurrencyRow(curr, rates[curr]);
+                });
+            }
+
         } catch (e) {
             console.error("Failed to load settings", e);
         }
@@ -217,5 +278,78 @@
         img.classList.remove('hidden');
         icon.classList.add('hidden');
     }
+
+    function addCurrencyRow(code = '', rate = '') {
+        const container = document.getElementById('currency-list');
+        const id = Date.now() + Math.random().toString(36).substr(2, 9);
+
+        const html = `
+            <div class="flex items-center space-x-4 bg-gray-50 p-3 rounded border border-gray-200" id="row-${id}">
+                <div class="flex-1">
+                    <label class="block text-xs text-gray-500">Code (ex: CDF)</label>
+                    <input type="text" name="currency_code[]" value="${code}" class="w-full border p-1 rounded focus:ring-blue-500 focus:border-blue-500 uppercase" placeholder="CDF">
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs text-gray-500">Taux (1 BASE = X)</label>
+                    <input type="number" step="0.0001" name="currency_rate[]" value="${rate}" class="w-full border p-1 rounded focus:ring-blue-500 focus:border-blue-500" placeholder="2800">
+                </div>
+                <div class="pt-4">
+                    <button type="button" onclick="document.getElementById('row-${id}').remove()" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    document.getElementById('general-settings-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const region = document.getElementById('system_region').value;
+        const timezone = document.getElementById('system_timezone').value;
+        const base_currency = document.getElementById('base_currency').value;
+
+        const currencyInputs = document.querySelectorAll('input[name="currency_code[]"]');
+        const rateInputs = document.querySelectorAll('input[name="currency_rate[]"]');
+
+        const currencies = [];
+        const rates = {};
+
+        for(let i=0; i<currencyInputs.length; i++) {
+            const code = currencyInputs[i].value.toUpperCase();
+            const rate = parseFloat(rateInputs[i].value);
+
+            if (code && !isNaN(rate)) {
+                currencies.push(code);
+                rates[code] = rate;
+            }
+        }
+
+        const payload = {
+            region,
+            timezone,
+            base_currency,
+            currencies,
+            rates
+        };
+
+        try {
+            const res = await fetch('/api/settings/general', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Paramètres enregistrés avec succès.');
+            } else {
+                alert('Erreur lors de l\'enregistrement.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erreur réseau.');
+        }
+    });
 </script>
 {% endblock %}

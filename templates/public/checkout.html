@@ -13,9 +13,9 @@
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         // --- CONFIGURATION ---
-        // Determine Unit Price (Default to 55.00 as per prompt, or derived logic)
-        // For this mission, we respect the prompt's explicit "$55.00" example.
-        const unitPrice = 55.00;
+        const pricingOptions = {{ pricing_options|tojson }};
+        let currentCurrency = 'USD'; // Default
+        let unitPrice = pricingOptions[currentCurrency];
 
         // DEMO MODE FLAG
         const isDemoMode = {{ 'true' if enable_demo_payment else 'false' }};
@@ -33,18 +33,34 @@
         const btnAddPassenger = document.getElementById('btn-add-passenger');
         const passengersContainer = document.getElementById('passengers-container');
         const form = document.getElementById('checkout-form');
+        const currencySelector = document.getElementById('currency-selector');
+        const formCurrencyInput = document.getElementById('form-currency');
 
         // --- PRICING LOGIC ---
         function updatePrice() {
-            const total = (passengerCount * unitPrice).toFixed(2);
+            const total = passengerCount * unitPrice;
+
+            const formatPrice = (val) => {
+                return val.toLocaleString('fr-FR', { style: 'currency', currency: currentCurrency });
+            };
+
             document.querySelectorAll('.total-price-display').forEach(el => {
-                el.textContent = '$' + total;
+                el.textContent = formatPrice(total);
             });
             document.querySelectorAll('.pax-count-display').forEach(el => {
                 el.textContent = passengerCount;
             });
             document.querySelectorAll('.unit-price-display').forEach(el => {
-                el.textContent = '$' + unitPrice.toFixed(2);
+                el.textContent = formatPrice(unitPrice);
+            });
+        }
+
+        if (currencySelector) {
+            currencySelector.addEventListener('change', (e) => {
+                currentCurrency = e.target.value;
+                unitPrice = pricingOptions[currentCurrency];
+                formCurrencyInput.value = currentCurrency;
+                updatePrice();
             });
         }
 
@@ -386,6 +402,7 @@
 
                 <form method="POST" id="checkout-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="currency" id="form-currency" value="USD">
 
                     <!-- STEP 2: IDENTITY -->
                     <div id="identity-section" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 transition-opacity duration-300">
@@ -580,6 +597,15 @@
                         <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-indigo-800 rounded-full mix-blend-multiply filter blur-2xl opacity-50"></div>
 
                         <h3 class="text-blue-200 font-bold uppercase tracking-wider text-xs mb-6 relative z-10">Récapitulatif</h3>
+
+                        <div class="flex justify-between items-center mb-4 relative z-10">
+                            <span class="text-blue-100">Devise</span>
+                            <select id="currency-selector" class="bg-blue-800 text-white border border-blue-700 rounded p-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                {% for curr in available_currencies %}
+                                <option value="{{ curr }}">{{ curr }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
                         <div class="flex justify-between items-center mb-2 relative z-10">
                             <span class="text-blue-100">Prix Unitaire</span>
