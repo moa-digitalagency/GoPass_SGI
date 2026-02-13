@@ -1,28 +1,18 @@
-# GO-PASS SGI-GP Documentation
+# Documentation SGI-GP
 
-## Système de Gestion Intégrée GO-PASS
+Bienvenue dans l'espace de documentation technique et fonctionnelle du projet **SGI-GP**.
 
-### Overview
-GO-PASS SGI-GP is an integrated pass management system for issuing, validating, and tracking access passes.
+## Index des Documents
 
-### Features
-- User management with role-based access control
-- Pass generation with QR codes
-- Pass validation interface
-- Access logging and audit trail
-- Dashboard with statistics
+### 1. Vue d'Ensemble
+*   **[Bible des Fonctionnalités](features_full_list.md)** : Référence exhaustive de toutes les features.
+*   **[Stratégie Métier](STRATEGY.md)** : Règles de gestion, concept "Flight-Bound" et modèle économique.
 
-### User Roles
-- **Admin**: Full system access
-- **Agent**: Can manage passes and users
-- **Holder**: Can view their own passes
+### 2. Technique
+*   **[Architecture Technique](ARCHITECTURE.md)** : Stack, Schéma BDD, Sécurité.
+*   **[Référence API](API.md)** : Endpoints, paramètres et exemples JSON.
+*   **[Données de Test](TEST_DATA.md)** : Jeux de données pour la QA et les Démos.
 
-### Default Credentials
-- Admin: `admin` / `admin123`
-- Agent: `agent` / `agent123`
-
-### API Endpoints
-- `GET /api/passes/search?q=query` - Search passes
-- `GET /api/users/search?q=query` - Search users
-- `POST /api/validate` - Validate a pass
-- `GET /api/statistics` - Get system statistics
+### 3. Opérationnel
+*   **[Guide de Déploiement](DEPLOYMENT.md)** : Installation serveur et production.
+*   **[Manuel Utilisateur](MANUAL.md)** : Guides par rôle (Admin, Agent, Contrôleur).
