@@ -15,12 +15,12 @@ SGI-GP est une plateforme complète de gestion des titres de transport ("GoPass"
 
 Toute la documentation technique et fonctionnelle se trouve dans le dossier `docs/` :
 
-*   📖 **[Bible des Fonctionnalités](docs/features_full_list.md)** : Le détail exhaustif de chaque module.
-*   🏗 **[Architecture Technique](docs/ARCHITECTURE.md)** : Stack, Modèle de Données, Sécurité.
-*   🚀 **[Guide de Déploiement](docs/DEPLOYMENT.md)** : Installation Serveur & Production.
-*   📘 **[Manuel Utilisateur](docs/MANUAL.md)** : Guides pour Agents, Contrôleurs et Admins.
-*   🎯 **[Stratégie Métier](docs/STRATEGY.md)** : Règles de gestion "Flight-Bound" et Anti-Fraude.
-*   🔌 **[API Reference](docs/API.md)** : Endpoints pour intégration Mobile/Web.
+*   📖 **[Bible des Fonctionnalités](docs/SGI-GP_features_full_list.md)** : Le détail exhaustif de chaque module.
+*   🏗 **[Architecture Technique](docs/SGI-GP_ARCHITECTURE.md)** : Stack, Modèle de Données, Sécurité.
+*   🚀 **[Guide de Déploiement](docs/SGI-GP_DEPLOYMENT.md)** : Installation Serveur & Production.
+*   📘 **[Manuel Utilisateur](docs/SGI-GP_MANUAL.md)** : Guides pour Agents, Contrôleurs et Admins.
+*   🎯 **[Stratégie Métier](docs/SGI-GP_STRATEGY.md)** : Règles de gestion "Flight-Bound" et Anti-Fraude.
+*   🔌 **[API Reference](docs/SGI-GP_API.md)** : Endpoints pour intégration Mobile/Web.
 
 ---
 
