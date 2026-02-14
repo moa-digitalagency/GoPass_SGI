@@ -1,0 +1,39 @@
+{% extends "errors/layout.html" %}
+
+{% block title %}400 - Mauvaise Requête{% endblock %}
+
+{% block error_body %}
+    <div class="text-center max-w-xl mx-auto space-y-6">
+        <div class="flex justify-center mb-6">
+             <lottie-player
+                src="https://lottie.host/62572979-5835-4235-862d-0665d9575916/J981249762.json"
+                background="transparent"
+                speed="1"
+                style="width: 280px; height: 280px;"
+                loop
+                autoplay>
+            </lottie-player>
+            <!-- Note: Replace src with {{ url_for('static', filename='img/lottie/400-bad-request.json') }} -->
+        </div>
+
+        <h1 class="text-3xl md:text-5xl font-black text-gray-900 mb-2 tracking-tight">
+            C'est pas moi, c'est toi.
+        </h1>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 text-left rounded-r-xl shadow-sm">
+            <p class="text-lg text-gray-700 font-bold mb-2">
+                "J'ai presque compris, mais ta demande est mal fichue."
+            </p>
+            <p class="text-sm text-gray-600 italic">
+                Sérieusement, le serveur est confus. C'est une erreur de syntaxe client (Bad Request).
+                Vérifiez vos données, votre URL, ou essayez d'être plus clair la prochaine fois.
+            </p>
+        </div>
+
+        <div class="pt-6">
+            <a href="{{ url_for('dashboard.index') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-yellow-700 bg-yellow-100 hover:bg-yellow-200 transition-colors shadow-sm">
+                <i class="fas fa-sync-alt mr-2"></i> Je vais réessayer proprement
+            </a>
+        </div>
+    </div>
+{% endblock %}

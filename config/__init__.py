@@ -23,6 +23,10 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     WTF_CSRF_ENABLED = True
     
+    # Error Handling & Retention Config
+    SUPPORT_WHATSAPP = os.environ.get('SUPPORT_WHATSAPP', '243860493345')
+    LEAD_MAGNET_LINK = os.environ.get('LEAD_MAGNET_LINK', 'https://tidycal.com/moamyoneart/consultation-gratuite-15-min')
+
     LANGUAGES = ['fr', 'en']
     DEFAULT_LANGUAGE = 'fr'
 

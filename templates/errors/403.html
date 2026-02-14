@@ -1,0 +1,49 @@
+{% extends "errors/layout.html" %}
+
+{% block title %}403 - Accès Interdit{% endblock %}
+
+{% block error_body %}
+    <div class="text-center max-w-xl mx-auto space-y-6">
+        <div class="flex justify-center mb-6">
+             <lottie-player
+                src="https://lottie.host/92398438-5182-4211-9426-347526315252/J98241512.json"
+                background="transparent"
+                speed="1"
+                style="width: 250px; height: 250px;"
+                loop
+                autoplay>
+            </lottie-player>
+            <!-- Note: Replace src with {{ url_for('static', filename='img/lottie/403-forbidden.json') }} -->
+        </div>
+
+        <h1 class="text-3xl md:text-5xl font-black text-gray-900 mb-2 uppercase tracking-tight">
+            Zone Restreinte
+        </h1>
+
+        <p class="text-xl text-gray-600 font-bold">
+            Halte là ! Vos papiers ne sont pas en règle pour cette zone.
+        </p>
+
+        <div class="bg-red-50 p-6 rounded-xl border border-red-100 shadow-inner">
+            <div class="flex items-start gap-4 text-left">
+                <i class="fas fa-shield-alt text-3xl text-red-500 mt-1"></i>
+                <div>
+                    <h3 class="font-bold text-red-900">Accès Refusé (403)</h3>
+                    <p class="text-sm text-red-700 mt-1 font-medium">
+                        Cette page existe, mais vous n'avez pas les accréditations nécessaires pour la voir.
+                        Inutile d'insister, la sécurité est formelle.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+            <a href="{{ url_for('auth.login') }}" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition-colors transform hover:-translate-y-1">
+                <i class="fas fa-id-card mr-2"></i> Changer d'identité
+            </a>
+             <a href="{{ url_for('dashboard.index') }}" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors transform hover:-translate-y-1">
+                <i class="fas fa-arrow-left mr-2"></i> Rebrousser chemin
+            </a>
+        </div>
+    </div>
+{% endblock %}

@@ -71,6 +71,9 @@ def create_app(config_name=None):
     from routes.preview import preview_bp
     from routes.api_sync import api_sync_bp
     from routes.api_export import api_export_bp
+    from routes.errors import register_error_handlers
+
+    register_error_handlers(app)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
