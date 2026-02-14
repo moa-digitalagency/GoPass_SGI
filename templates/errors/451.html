@@ -1,0 +1,55 @@
+{% extends "errors/layout.html" %}
+
+{% block title %}451 - Censuré{% endblock %}
+
+{% block error_body %}
+    <div class="fixed inset-0 bg-gray-900 text-white flex flex-col items-center justify-center z-50 p-4 font-mono overflow-y-auto">
+        <div class="max-w-2xl text-center space-y-6 m-auto">
+            <!-- Lottie Placeholder -->
+            <div class="flex justify-center mb-4 opacity-80 hover:opacity-100 transition-opacity duration-500">
+                <lottie-player
+                    src="https://lottie.host/932230e5-77b3-4f96-b6fb-c50efc425026/GjV9q6j7q2.json"
+                    background="transparent"
+                    speed="0.8"
+                    style="width: 250px; height: 250px;"
+                    loop
+                    autoplay>
+                </lottie-player>
+                <!--
+                     Note: Replace src with {{ url_for('static', filename='img/lottie/451-burning-book.json') }}
+                -->
+            </div>
+
+            <div class="border-4 border-red-600 p-8 relative bg-gray-800 shadow-2xl shadow-red-900/50 rotate-1 transform transition-transform hover:rotate-0 duration-300">
+                <div class="absolute -top-5 -left-5 bg-red-600 text-white font-black px-4 py-1 uppercase tracking-widest text-sm rotate-12 shadow-lg">
+                    Classified
+                </div>
+
+                <h1 class="text-5xl font-black text-red-500 mb-4 tracking-tighter">ERREUR 451</h1>
+
+                <p class="text-xl text-gray-300 mb-6 font-bold">
+                    "C'était un plaisir de brûler."
+                </p>
+
+                <p class="text-gray-400 text-sm leading-relaxed mb-8">
+                    Cette page a été retirée de la circulation pour des raisons légales ou de censure géographique.
+                    Comme dans les pages de Bradbury, certaines connaissances sont jugées trop dangereuses pour être affichées ici.
+                    Ce contenu a été incinéré par les autorités compétentes.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url_for('dashboard.index') }}" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-mono uppercase tracking-wider text-xs border border-gray-600 transition-all hover:border-gray-400">
+                        <i class="fas fa-undo mr-2"></i>Retour à la base
+                    </a>
+                    <a href="https://wa.me/{{ whatsapp_number|default('243860493345') }}" target="_blank" class="px-6 py-3 bg-red-900/50 hover:bg-red-900 text-red-200 font-mono uppercase tracking-wider text-xs border border-red-800 transition-all hover:border-red-600">
+                        <i class="fas fa-file-contract mr-2"></i>Contester la censure
+                    </a>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-600 mt-8">
+                Ref: US Code 451 - Unavailable For Legal Reasons
+            </p>
+        </div>
+    </div>
+{% endblock %}
